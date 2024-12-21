@@ -128,3 +128,13 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# VSCode
+.vscode/
+.vscode-test/
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+out/
