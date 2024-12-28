@@ -1,16 +1,20 @@
 import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginButton from "./LoginButton";
 import LogoutButton from "./LogoutButton";
+import LandingPage from "./LandingPage";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Welcome to Learn-Link</h1>
-        <LoginButton />
-        <LogoutButton />
-      </header>
-    </div>
+    <BrowserRouter>
+      <div className="App">
+        <header className="App-header">
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+          </Routes>
+        </header>
+      </div>
+    </BrowserRouter>
   );
 }
 
