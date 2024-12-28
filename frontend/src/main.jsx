@@ -7,9 +7,9 @@ import App from './App';
 const root = createRoot(document.getElementById('root'));
 
 root.render(
-<Auth0Provider
-    domain="dev-pyorfej5cpbzhghw.us.auth0.com"
-    clientId="Uo0A7YhUYel4OYWMh5fLxBpF5ptjEndx"
+  <Auth0Provider
+    domain={import.meta.env.VITE_DOMAIN}
+    clientId={import.meta.env.VITE_CLIENT_ID}
     authorizationParams={{
       redirect_uri: window.location.origin
     }}
