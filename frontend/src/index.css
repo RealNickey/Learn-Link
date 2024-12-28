@@ -66,3 +66,24 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Landing Page Styles */
+.landing-page {
+  text-align: center;
+  padding: 2rem;
+}
+
+.get-started-button {
+  background-color: #646cff;
+  color: white;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.get-started-button:hover {
+  background-color: #535bf2;
+}
