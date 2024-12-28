@@ -1,4 +1,3 @@
-// filepath: /c:/Users/aswin/OneDrive/Documents/GitHub/Learn-Link/frontend/src/LogoutButton.jsx
 import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 
