@@ -1,8 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import "./styles/LandingPage.css";
 
 const LandingPage = () => {
   const { loginWithRedirect } = useAuth0();
+
+  useEffect(() => {
+    document.body.classList.add("landing-page-body");
+    return () => {
+      document.body.classList.remove("landing-page-body");
+    };
+  }, []);
 
   return (
     <div className="landing-page">
