@@ -1,30 +1,107 @@
 .dashboard-container {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 2px;
+  height: 100vh;
+  background-color: #1e1e1e;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #252526;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
-  text-align: left;
-  max-width: 800px;
-  margin: 20px auto;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.main-content {
+  flex: 1;
+  background-color: #1e1e1e;
+  color: #ffffff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section {
+  background: #2d2d2d;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 2px solid #3c3c3c;
+}
+
+.div1 {
+  grid-column: span 2 / span 2;
+  grid-row: span 4 / span 4;
+  grid-column-start: 1;
+  grid-row-start: 2;
+}
+
+.div2 {
+  grid-column: span 5 / span 5;
+  grid-row: span 4 / span 4;
+  grid-column-start: 3;
+  grid-row-start: 1;
+}
+
+.div3 {
+  grid-column: span 2 / span 2;
+  grid-row: span 3 / span 3;
+  grid-column-start: 8;
+  grid-row-start: 2;
+}
+
+.div4 {
+  grid-column: span 2 / span 2;
+  grid-column-start: 8;
+  grid-row-start: 1;
+}
+
+.div5 {
+  grid-column: span 5 / span 5;
+  grid-column-start: 3;
+  grid-row-start: 5;
+}
+
+.div6 {
+  grid-column: span 2 / span 2;
+  grid-column-start: 8;
+  grid-row-start: 5;
+}
+
+.div7 {
+  grid-column: span 2 / span 2;
+  grid-column-start: 1;
+  grid-row-start: 1;
 }
 
 .profile-image {
+  border-radius: 50%;
   width: 100px;
   height: 100px;
-  border-radius: 50%;
-  margin-bottom: 15px;
+  object-fit: cover;
+  margin-bottom: 10px;
 }
 
 .user-info {
-  margin: 20px 0;
+  text-align: center;
 }
 
 .user-name {
-  font-size: 24px;
-  margin: 10px 0;
-  color: #333;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 
 .user-email {
-  color: #666;
+  font-size: 14px;
+  color: #cccccc;
 }
