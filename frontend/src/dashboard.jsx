@@ -1,6 +1,7 @@
 import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import './styles/dashboard.css';
+import { FileUpload } from "./components/ui/file-upload";
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
@@ -51,6 +52,10 @@ const Profile = () => {
         <div className="section div7">
           <h2>Section 7</h2>
           <p>Content for section 7</p>
+        </div>
+        <div className="section div8">
+          <h2>File Upload</h2>
+          <FileUpload onChange={(files) => console.log(files)} />
         </div>
       </div>
     )
