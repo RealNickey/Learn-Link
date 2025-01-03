@@ -1,8 +1,8 @@
 .dashboard-container {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  gap: 2px;
+  grid-template-rows: repeat(8, 1fr);
+  gap: 8px;
   height: 100vh;
   background-color: #1e1e1e;
 }
@@ -40,47 +40,46 @@
 
 .div1 {
   grid-column: span 2 / span 2;
-  grid-row: span 4 / span 4;
-  grid-column-start: 1;
-  grid-row-start: 2;
+  grid-row: span 5 / span 5;
 }
 
 .div2 {
-  grid-column: span 5 / span 5;
-  grid-row: span 4 / span 4;
-  grid-column-start: 3;
-  grid-row-start: 1;
+  grid-column: span 2 / span 2;
+  grid-row: span 3 / span 3;
+  grid-column-start: 1;
+  grid-row-start: 6;
 }
 
 .div3 {
-  grid-column: span 2 / span 2;
-  grid-row: span 3 / span 3;
-  grid-column-start: 8;
-  grid-row-start: 2;
-}
-
-.div4 {
-  grid-column: span 2 / span 2;
-  grid-column-start: 8;
+  grid-column: span 5 / span 5;
+  grid-row: span 7 / span 7;
+  grid-column-start: 3;
   grid-row-start: 1;
 }
 
-.div5 {
+.div4 {
   grid-column: span 5 / span 5;
   grid-column-start: 3;
-  grid-row-start: 5;
+  grid-row-start: 8;
+}
+
+.div5 {
+  grid-column: span 2 / span 2;
+  grid-column-start: 8;
+  grid-row-start: 1;
 }
 
 .div6 {
   grid-column: span 2 / span 2;
+  grid-row: span 6 / span 6;
   grid-column-start: 8;
-  grid-row-start: 5;
+  grid-row-start: 2;
 }
 
 .div7 {
   grid-column: span 2 / span 2;
-  grid-column-start: 1;
-  grid-row-start: 1;
+  grid-column-start: 8;
+  grid-row-start: 8;
 }
 
 .profile-image {
