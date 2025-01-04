@@ -1,10 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import './styles/dashboard.css';
 import { FileUpload } from "./components/ui/file-upload";
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
+  const [files, setFiles] = useState([]);
+  
+  const handleFileUpload = (files) => {
+    setFiles(files);
+    console.log(files);
+  };
 
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
@@ -30,7 +36,9 @@ const Profile = () => {
           </div>
         </div>
         <div className="section div2">
-          <FileUpload />
+          <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-white dark:bg-black border-neutral-200 dark:border-neutral-800 rounded-lg">
+            <FileUpload onChange={handleFileUpload} />
+          </div>
         </div>
         <div className="section div3">
           
