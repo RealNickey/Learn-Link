@@ -35,10 +35,8 @@ const Profile = () => {
             <p className="user-email">{user.email}</p>
           </div>
         </div>
-        <div className="section div2">
-          <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-white dark:bg-black border-neutral-200 dark:border-neutral-800 rounded-lg">
+          <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-white dark:bg-black border-neutral-200 dark:border-neutral-800 rounded-lg div2 ">
             <FileUpload onChange={handleFileUpload} />
-          </div>
         </div>
         <div className="section div3">
           
