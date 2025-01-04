@@ -34,8 +34,7 @@ const Profile = () => {
           <p>Content for section 2</p>
         </div>
         <div className="section div3">
-          <h2>Section 3</h2>
-          <p>Content for section 3</p>
+          
         </div>
         <div className="section div4">
           <h2>Section 4</h2>
@@ -53,10 +52,7 @@ const Profile = () => {
           <h2>Section 7</h2>
           <p>Content for section 7</p>
         </div>
-        <div className="section div8">
-          <h2>File Upload</h2>
-          <FileUpload onChange={(files) => console.log(files)} />
-        </div>
+        
       </div>
     )
   );
