@@ -1,8 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .dashboard-container {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  gap: 2px;
+  grid-template-rows: repeat(8, 1fr);
+  gap: 8px;
   height: 100vh;
   background-color: #1e1e1e;
 }
@@ -40,53 +44,52 @@
 
 .div1 {
   grid-column: span 2 / span 2;
-  grid-row: span 4 / span 4;
-  grid-column-start: 1;
-  grid-row-start: 2;
+  grid-row: span 5 / span 5;
 }
 
 .div2 {
-  grid-column: span 5 / span 5;
-  grid-row: span 4 / span 4;
-  grid-column-start: 3;
-  grid-row-start: 1;
+  grid-column: span 2 / span 2;
+  grid-row: span 3 / span 3;
+  grid-column-start: 1;
+  grid-row-start: 6;
 }
 
 .div3 {
-  grid-column: span 2 / span 2;
-  grid-row: span 3 / span 3;
-  grid-column-start: 8;
-  grid-row-start: 2;
-}
-
-.div4 {
-  grid-column: span 2 / span 2;
-  grid-column-start: 8;
+  grid-column: span 5 / span 5;
+  grid-row: span 7 / span 7;
+  grid-column-start: 3;
   grid-row-start: 1;
 }
 
-.div5 {
+.div4 {
   grid-column: span 5 / span 5;
   grid-column-start: 3;
-  grid-row-start: 5;
+  grid-row-start: 8;
+}
+
+.div5 {
+  grid-column: span 2 / span 2;
+  grid-column-start: 8;
+  grid-row-start: 1;
 }
 
 .div6 {
   grid-column: span 2 / span 2;
+  grid-row: span 6 / span 6;
   grid-column-start: 8;
-  grid-row-start: 5;
+  grid-row-start: 2;
 }
 
 .div7 {
   grid-column: span 2 / span 2;
-  grid-column-start: 1;
-  grid-row-start: 1;
+  grid-column-start: 8;
+  grid-row-start: 8;
 }
 
 .profile-image {
   border-radius: 50%;
-  width: 100px;
-  height: 100px;
+  width: 50px;
+  height: 50px;
   object-fit: cover;
   margin-bottom: 10px;
 }
@@ -104,4 +107,43 @@
 .user-email {
   font-size: 14px;
   color: #cccccc;
+}
+
+@layer base {
+  :root {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 210 20% 98%;
+    --primary-foreground: 220.9 39.3% 11%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 216 12.2% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

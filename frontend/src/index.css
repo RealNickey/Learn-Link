@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add if not already present */
+.dark {
+  color-scheme: dark;
+}
