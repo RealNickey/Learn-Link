@@ -36,7 +36,7 @@ const Profile = () => {
         <div className="section div3"></div>
         <div className="section div4">
           <PlaceholdersAndVanishInput
-            placeholders={["Placeholder 1", "Placeholder 2", "Placeholder 3"]}
+            placeholders={["What is Virutal Reality", "Which are the types of CSS", "Which are the layers of OSI model"]}
             onChange={(e) => console.log(e.target.value)}
             onSubmit={(e) => console.log("Submitted:", e)}
           />
