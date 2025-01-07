@@ -39,7 +39,6 @@ const Profile = () => {
         </div>
         <div className="section div4">
           <h2>Section 4</h2>
-          <p>Content for section 4</p>
         </div>
         <div className="section div5">
           <div className="user-info">
