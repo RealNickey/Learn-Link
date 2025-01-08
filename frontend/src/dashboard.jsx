@@ -49,7 +49,7 @@ const Profile = () => {
           </div>
         </div>
         <div className="section div2">
-          <h2>Section 2</h2>
+          
           
         </div>
         <div className="section div3">
