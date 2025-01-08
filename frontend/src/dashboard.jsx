@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import './styles/dashboard.css';
+import "./styles/dashboard.css";
 import { FileUpload } from "./components/ui/file-upload";
+import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-vanish-input";
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
   const [files, setFiles] = useState([]);
-  
+
   const handleFileUpload = (files) => {
     setFiles(files);
     console.log(files);
@@ -28,18 +29,17 @@ const Profile = () => {
   return (
     isAuthenticated && (
       <div className="dashboard-container">
-        <div className="section div1">
-          
+        <div className="section div1"></div>
+        <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
+          <FileUpload onChange={handleFileUpload} />
         </div>
-          <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
-            <FileUpload onChange={handleFileUpload} />
-        </div>
-        <div className="section div3">
-          
-        </div>
+        <div className="section div3"></div>
         <div className="section div4">
-          <h2>Section 4</h2>
-          <p>Content for section 4</p>
+          <PlaceholdersAndVanishInput
+            placeholders={["What is Virutal Reality", "Which are the types of CSS", "Which are the layers of OSI model"]}
+            onChange={(e) => console.log(e.target.value)}
+            onSubmit={(e) => console.log("Submitted:", e)}
+          />
         </div>
         <div className="section div5">
           <div className="user-info">
@@ -55,7 +55,6 @@ const Profile = () => {
           <h2>Section 7</h2>
           <p>Content for section 7</p>
         </div>
-        
       </div>
     )
   );
