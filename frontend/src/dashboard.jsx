@@ -45,7 +45,24 @@ const Profile = () => {
           <div className="user-info">
             <img className="profile-image" src={user.picture} alt={user.name} />
             <h2 className="user-name">{user.name}</h2>
+            <p className="user-email">{user.email}</p>
           </div>
+        </div>
+        <div className="section div2">
+          <h2>Section 2</h2>
+          
+        </div>
+        <div className="section div3">
+          <h2>Section 3</h2>
+          <p>Content for section 3</p>
+        </div>
+        <div className="section div4">
+          <h2>Section 4</h2>
+          <p>Content for section 4</p>
+        </div>
+        <div className="section div5">
+          <h2>Section 5</h2>
+          <p>Content for section 5</p>
         </div>
         <div className="section div6">
           <h2>Section 6</h2>
