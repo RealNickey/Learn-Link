@@ -13,7 +13,7 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="landing-page">
+    <div className="landing-page fade-in">
       <h1>Welcome to Learn-Link</h1>
       <p>Your one-stop solution for learning and collaboration.</p>
       <div>
