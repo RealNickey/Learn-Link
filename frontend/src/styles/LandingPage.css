@@ -4,7 +4,6 @@
   text-align: center;
   padding: 2rem;
   font-family: 'Roboto', sans-serif;
-  animation: fadeIn 0.5s ease-in-out;
 }
 
 .get-started-button {
@@ -21,11 +20,7 @@
 
 .get-started-button:hover {
   background-color: #535bf2;
-  transform: translateY(-3px) scale(1.07);
-}
-
-.get-started-button:active {
-  transform: scale(0.95);
+  transform: scale(1.05);
 }
 
 h1 {
@@ -62,7 +57,7 @@ a:hover {
   align-items: center;
   background-image: radial-gradient(circle, #646cff 1px, transparent 1px);
   background-size: 20px 20px;
-  animation: backgroundAnimation 5s linear infinite;
+  animation: backgroundAnimation 10s linear infinite;
   font-family: 'Roboto', sans-serif;
 }
 
@@ -73,11 +68,6 @@ a:hover {
   100% {
     background-position: 20px 20px;
   }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 /* Light mode styles */
