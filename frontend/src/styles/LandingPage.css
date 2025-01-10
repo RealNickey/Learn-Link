@@ -4,7 +4,7 @@
   text-align: center;
   padding: 3rem;
   font-family: 'Roboto', sans-serif;
-  animation: fadeIn 0.5s ease-in-out;
+  animation: fadeIn 0.5s ease-in-out, subtleMove 1s ease-in-out;
 }
 
 .get-started-button {
@@ -78,6 +78,15 @@ a:hover {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes subtleMove {
+  0% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 /* Light mode styles */
