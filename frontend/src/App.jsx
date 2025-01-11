@@ -1,17 +1,25 @@
-import React from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LandingPage from "./LandingPage";
-import Profile from './dashboard';
+
+const LandingPage = lazy(() => import("./LandingPage"));
+const Profile = lazy(() => import('./dashboard'));
 
 function App() {
+  useEffect(() => {
+    // Preload the Profile component
+    import('./dashboard');
+  }, []);
+
   return (
     <Router>
       <div className="App">
         <header className="App-header">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/dashboard" element={<Profile />} />
-          </Routes>
+          <Suspense fallback={<div>Loading...</div>}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/dashboard" element={<Profile />} />
+            </Routes>
+          </Suspense>
         </header>
       </div>
     </Router>
