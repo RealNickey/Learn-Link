@@ -6,6 +6,8 @@ import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-van
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button"; 
 import { Toaster } from "./components/ui/toaster";
+import { FloatingDock } from "./components/ui/floating-dock";
+
 
 export const ToastDemo = () => {
   const { toast } = useToast();
