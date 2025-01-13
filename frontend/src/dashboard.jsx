@@ -6,6 +6,7 @@ import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-van
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button"; 
 import { Toaster } from "./components/ui/toaster";
+import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 
 export const ToastDemo = () => {
   const { toast } = useToast();
@@ -75,7 +76,17 @@ const Profile = () => {
             <ToastDemo />
           </div>
           <div className="section div7">
-            <p>Content for section 7</p>
+            <Dock>
+              <DockIcon>
+                <img src="https://via.placeholder.com/40" alt="Icon 1" />
+              </DockIcon>
+              <DockIcon>
+                <img src="https://via.placeholder.com/40" alt="Icon 2" />
+              </DockIcon>
+              <DockIcon>
+                <img src="https://via.placeholder.com/40" alt="Icon 3" />
+              </DockIcon>
+            </Dock>
           </div>
         </div>
         <Toaster />
