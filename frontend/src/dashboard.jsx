@@ -6,8 +6,6 @@ import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-van
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button"; 
 import { Toaster } from "./components/ui/toaster";
-import { FloatingDock } from "./components/ui/floating-dock";
-
 
 export const ToastDemo = () => {
   const { toast } = useToast();
@@ -77,7 +75,6 @@ const Profile = () => {
             <ToastDemo />
           </div>
           <div className="section div7">
-            <h2>Section 7</h2>
             <p>Content for section 7</p>
           </div>
         </div>
