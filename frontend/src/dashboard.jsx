@@ -4,7 +4,7 @@ import "./styles/dashboard.css";
 import { FileUpload } from "./components/ui/file-upload";
 import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-vanish-input";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "./components/ui/button"; 
+import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 
@@ -59,20 +59,26 @@ const Profile = () => {
           <div className="section div3"></div>
           <div className="section div4">
             <PlaceholdersAndVanishInput
-              placeholders={["What is Virutal Reality", "Which are the types of CSS", "Which are the layers of OSI model"]}
+              placeholders={[
+                "What is Virutal Reality",
+                "Which are the types of CSS",
+                "Which are the layers of OSI model",
+              ]}
               onChange={(e) => console.log(e.target.value)}
               onSubmit={(e) => console.log("Submitted:", e)}
             />
           </div>
           <div className="section div5">
             <div className="user-info">
-              <img className="profile-image" src={user.picture} alt={user.name} />
+              <img
+                className="profile-image"
+                src={user.picture}
+                alt={user.name}
+              />
               <h2 className="user-name">{user.name}</h2>
             </div>
           </div>
           <div className="section div6">
-            <h2>Section 6</h2>
-            <p>Content for section 6</p>
             <ToastDemo />
           </div>
           <div className="section div7">
