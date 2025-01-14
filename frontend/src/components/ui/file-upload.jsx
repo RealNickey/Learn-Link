@@ -41,6 +41,14 @@ export const FileUpload = ({ onChange }) => {
       });
       return;
     }
+    if (files.length + newFiles.length > 3) {
+      toast({
+        title: "File limit exceeded",
+        description: "You can only upload up to 3 PDF files",
+        variant: "destructive",
+      });
+      return;
+    }
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
     onChange && onChange(newFiles);
   };
@@ -50,7 +58,7 @@ export const FileUpload = ({ onChange }) => {
   };
 
   const { getRootProps, isDragActive } = useDropzone({
-    multiple: false,
+    multiple: true,
     noClick: true,
     onDrop: handleFileChange,
     accept: {
