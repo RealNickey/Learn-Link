@@ -25,11 +25,5 @@
 
 .file-name {
   font-weight: bold;
-}
-
-.file-size,
-.file-type,
-.file-date {
-  font-size: 0.9em;
-  color: #666;
+  color: #333;
 }

@@ -73,6 +73,7 @@ export const FileUpload = ({ onChange }) => {
     },
   });
 
+  
   return (
     <div className="w-full" {...getRootProps()}>
       <motion.div
