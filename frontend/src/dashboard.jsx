@@ -84,13 +84,87 @@ const Profile = () => {
           <div className="section div7">
             <Dock>
               <DockIcon>
-                <img src="https://via.placeholder.com/40" alt="Icon 1" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-mic"
+                >
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" x2="12" y1="19" y2="22" />
+                </svg>
               </DockIcon>
               <DockIcon>
-                <img src="https://via.placeholder.com/40" alt="Icon 2" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-graduation-cap"
+                >
+                  <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+                  <path d="M22 10v6" />
+                  <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+                </svg>
               </DockIcon>
               <DockIcon>
-                <img src="https://via.placeholder.com/40" alt="Icon 3" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-book-type"
+                >
+                  <path d="M10 13h4" />
+                  <path d="M12 6v7" />
+                  <path d="M16 8V6H8v2" />
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+                </svg>
+              </DockIcon>
+              <DockIcon>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-brain-circuit"
+                >
+                  <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+                  <path d="M9 13a4.5 4.5 0 0 0 3-4" />
+                  <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
+                  <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
+                  <path d="M6 18a4 4 0 0 1-1.967-.516" />
+                  <path d="M12 13h4" />
+                  <path d="M12 18h6a2 2 0 0 1 2 2v1" />
+                  <path d="M12 8h8" />
+                  <path d="M16 8V5a2 2 0 0 1 2-2" />
+                  <circle cx="16" cy="13" r=".5" />
+                  <circle cx="18" cy="3" r=".5" />
+                  <circle cx="20" cy="21" r=".5" />
+                  <circle cx="20" cy="8" r=".5" />
+                </svg>{" "}
               </DockIcon>
             </Dock>
           </div>
