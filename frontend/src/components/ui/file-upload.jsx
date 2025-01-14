@@ -3,6 +3,7 @@ import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { IconUpload } from "@tabler/icons-react";
 import { useDropzone } from "react-dropzone";
+import { useToast } from "@/hooks/use-toast";
 
 const mainVariant = {
   initial: {
@@ -25,13 +26,21 @@ const secondaryVariant = {
   },
 };
 
-export const FileUpload = ({
-  onChange
-}) => {
+export const FileUpload = ({ onChange }) => {
   const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
+  const { toast } = useToast();
 
   const handleFileChange = (newFiles) => {
+    const invalidFiles = newFiles.filter(file => file.type !== 'application/pdf');
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "Invalid file format",
+        description: "Only PDF files are supported",
+        variant: "destructive",
+      });
+      return;
+    }
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
     onChange && onChange(newFiles);
   };
@@ -44,13 +53,20 @@ export const FileUpload = ({
     multiple: false,
     noClick: true,
     onDrop: handleFileChange,
-    onDropRejected: (error) => {
-      console.log(error);
+    accept: {
+      'application/pdf': ['.pdf']
+    },
+    onDropRejected: (fileRejections) => {
+      toast({
+        title: "File rejected",
+        description: "Only PDF files are supported",
+        variant: "destructive",
+      });
     },
   });
 
   return (
-    (<div className="w-full" {...getRootProps()}>
+    <div className="w-full" {...getRootProps()}>
       <motion.div
         onClick={handleClick}
         whileHover="animate"
@@ -150,7 +166,7 @@ export const FileUpload = ({
           </div>
         </div>
       </motion.div>
-    </div>)
+    </div>
   );
 };
 
@@ -158,20 +174,20 @@ export function GridPattern() {
   const columns = 41;
   const rows = 11;
   return (
-    (<div className="flex bg-neutral-900 flex-shrink-0 flex-wrap justify-center items-center gap-x-px gap-y-px scale-105">
+    <div className="flex bg-neutral-900 flex-shrink-0 flex-wrap justify-center items-center gap-x-px gap-y-px scale-105">
       {Array.from({ length: rows }).map((_, row) =>
         Array.from({ length: columns }).map((_, col) => {
           const index = row * columns + col;
           return (
-            (<div
+            <div
               key={`${col}-${row}`}
               className={`w-10 h-10 flex flex-shrink-0 rounded-[2px] ${
                 index % 2 === 0
                   ? "bg-neutral-950"
                   : "bg-neutral-950 shadow-[0px_0px_1px_3px_rgba(0,0,0,1)_inset]"
-              }`} />)
+              }`} />
           );
         }))}
-    </div>)
+    </div>
   );
 }

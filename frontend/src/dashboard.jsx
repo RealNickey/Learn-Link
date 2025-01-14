@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/dashboard.css";
+import "./styles/list-files.css"; // Import the new styles
 import { FileUpload } from "./components/ui/file-upload";
+import { ListFiles } from "./components/ui/list-files";
 import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-vanish-input";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button"; 
@@ -28,10 +30,15 @@ export const ToastDemo = () => {
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
   const [files, setFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
 
-  const handleFileUpload = (files) => {
-    setFiles(files);
-    console.log(files);
+  const handleFileUpload = (newFiles) => {
+    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    console.log(newFiles);
+  };
+
+  const handleSelectFile = (file) => {
+    setSelectedFile(file);
   };
 
   console.log("isLoading:", isLoading);
@@ -51,7 +58,9 @@ const Profile = () => {
     isAuthenticated && (
       <>
         <div className="dashboard-container">
-          <div className="section div1"></div>
+          <div className="section div1">
+            <ListFiles files={files} onSelect={handleSelectFile} />
+          </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
             <FileUpload onChange={handleFileUpload} />
           </div>
