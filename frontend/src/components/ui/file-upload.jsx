@@ -32,11 +32,11 @@ export const FileUpload = ({ onChange }) => {
   const { toast } = useToast();
 
   const handleFileChange = (newFiles) => {
-    const invalidFiles = newFiles.filter(file => file.type !== 'application/pdf');
+    const invalidFiles = newFiles.filter(file => file.type !== 'application/pdf' || file.size > 5 * 1024 * 1024);
     if (invalidFiles.length > 0) {
       toast({
-        title: "Invalid file format",
-        description: "Only PDF files are supported",
+        title: "Invalid file",
+        description: "Only PDF files under 5 MB are supported",
         variant: "destructive",
       });
       return;
@@ -59,7 +59,7 @@ export const FileUpload = ({ onChange }) => {
     onDropRejected: (fileRejections) => {
       toast({
         title: "File rejected",
-        description: "Only PDF files are supported",
+        description: "Only PDF files under 5 MB are supported",
         variant: "destructive",
       });
     },
@@ -112,20 +112,6 @@ export const FileUpload = ({ onChange }) => {
                       layout
                       className="rounded-lg px-2 py-1 w-fit flex-shrink-0 text-sm bg-neutral-800 text-white shadow-input">
                       {(file.size / (1024 * 1024)).toFixed(2)} MB
-                    </motion.p>
-                  </div>
-
-                  <div className="flex text-sm md:flex-row flex-col items-start md:items-center w-full mt-2 justify-between text-neutral-400">
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      layout
-                      className="px-1 py-0.5 rounded-md bg-neutral-800">
-                      {file.type}
-                    </motion.p>
-                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} layout>
-                      modified{" "}
-                      {new Date(file.lastModified).toLocaleDateString()}
                     </motion.p>
                   </div>
                 </motion.div>
@@ -187,7 +173,7 @@ export function GridPattern() {
                   : "bg-neutral-950 shadow-[0px_0px_1px_3px_rgba(0,0,0,1)_inset]"
               }`} />
           );
-        }))}
+        }))} 
     </div>
   );
 }
