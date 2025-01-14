@@ -88,7 +88,7 @@ const Profile = () => {
           </div>
           <div className="section div7">
             <Dock>
-              <DockIcon onClick={toggleMic}>
+              <DockIcon onClick={toggleMic} title={micOn ? "Mic On" : "Mic Off"}>
                 {micOn ? (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -128,7 +128,7 @@ const Profile = () => {
                   </svg>
                 )}
               </DockIcon>
-              <DockIcon>
+              <DockIcon title="Ai Quiz">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -146,7 +146,7 @@ const Profile = () => {
                   <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
                 </svg>
               </DockIcon>
-              <DockIcon>
+              <DockIcon title="Flash Cards">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -165,7 +165,7 @@ const Profile = () => {
                   <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
                 </svg>
               </DockIcon>
-              <DockIcon>
+              <DockIcon title="Focus Area">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
