@@ -1,8 +1,11 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors"); // Add this line
 const { generateAIContent } = require("./aiService");
 const app = express();
 const port = 3000;
+
+app.use(cors()); // Add this line
 
 // ...existing code...
 

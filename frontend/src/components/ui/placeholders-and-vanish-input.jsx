@@ -164,7 +164,7 @@ export function PlaceholdersAndVanishInput({
   const handleSubmit = (e) => {
     e.preventDefault();
     vanishAndSubmit();
-    onSubmit && onSubmit(e);
+    onSubmit && onSubmit(value); // Pass the input value to onSubmit
   };
   return (
     (<form

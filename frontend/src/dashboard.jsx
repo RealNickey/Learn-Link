@@ -40,6 +40,16 @@ const Profile = () => {
     setMicOn(!micOn);
   };
 
+  const handleInputSubmit = async (inputValue) => {
+    try {
+      const response = await fetch(`http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`);
+      const aiContent = await response.text();
+      console.log("AI Content:", aiContent);
+    } catch (error) {
+      console.error("Error fetching AI content:", error);
+    }
+  };
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -70,7 +80,7 @@ const Profile = () => {
                 "Which are the layers of OSI model",
               ]}
               onChange={(e) => console.log(e.target.value)}
-              onSubmit={(e) => console.log("Submitted:", e)}
+              onSubmit={handleInputSubmit} // Updated to use handleInputSubmit
             />
           </div>
           <div className="section div5">
