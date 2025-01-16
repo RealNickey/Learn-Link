@@ -80,7 +80,15 @@ const Profile = () => {
             </div>
           </div>
           <div className="section div6">
-            <p>{aiContent}</p> {/* Display AI content */}
+            <div style={{
+              maxHeight: '300px',
+              overflowY: 'auto',
+              padding: '1rem',
+              whiteSpace: 'pre-wrap',
+              wordWrap: 'break-word'
+            }}>
+              <p>{aiContent}</p>
+            </div>
           </div>
           <div className="section div7">
             <Dock>
