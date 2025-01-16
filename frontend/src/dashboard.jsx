@@ -8,23 +8,7 @@ import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 
-export const ToastDemo = () => {
-  const { toast } = useToast();
-
-  return (
-    <Button
-      onClick={() => {
-        toast({
-          title: "Scheduled: Catch up",
-          description: "Friday, February 10, 2023 at 5:57 PM",
-          variant: "destructive",
-        });
-      }}
-    >
-      Show Toast
-    </Button>
-  );
-};
+// Removed ToastDemo component
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
@@ -94,7 +78,7 @@ const Profile = () => {
             </div>
           </div>
           <div className="section div6">
-            <ToastDemo />
+            {/* Removed ToastDemo component usage */}
           </div>
           <div className="section div7">
             <Dock>
