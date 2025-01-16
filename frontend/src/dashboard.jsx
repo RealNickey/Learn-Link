@@ -14,6 +14,7 @@ const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
   const [files, setFiles] = useState([]);
   const [micOn, setMicOn] = useState(true); // Added state for mic
+  const [aiContent, setAiContent] = useState(""); // Added state for AI content
 
   const handleFileUpload = (files) => {
     setFiles(files);
@@ -28,6 +29,7 @@ const Profile = () => {
     try {
       const response = await fetch(`http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`);
       const aiContent = await response.text();
+      setAiContent(aiContent); // Set AI content
       console.log("AI Content:", aiContent);
     } catch (error) {
       console.error("Error fetching AI content:", error);
@@ -78,7 +80,7 @@ const Profile = () => {
             </div>
           </div>
           <div className="section div6">
-            {/* Removed ToastDemo component usage */}
+            <p>{aiContent}</p> {/* Display AI content */}
           </div>
           <div className="section div7">
             <Dock>
