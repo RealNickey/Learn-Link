@@ -1,21 +1,24 @@
 .file-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  padding: 16px;
 }
 
 .file-item {
   display: flex;
   align-items: center;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #333;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.2s ease;
+  background: #171717;
 }
 
 .file-item:hover {
-  background-color: #f0f0f0;
+  background: #262626;
+  transform: translateY(-1px);
 }
 
 .file-info {
@@ -25,5 +28,5 @@
 
 .file-name {
   font-weight: bold;
-  color: #333;
+  color: #e5e5e5;
 }
