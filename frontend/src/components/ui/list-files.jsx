@@ -1,8 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
+import { Button } from "./button";
 
-export const ListFiles = ({ files, onSelect }) => {
+export const ListFiles = ({ files, onSelect, onRemove }) => {
   return (
     <div className="file-list w-full max-w-xl mx-auto">
       {files.map((file, idx) => (
@@ -22,6 +23,16 @@ export const ListFiles = ({ files, onSelect }) => {
               className="text-base text-neutral-300 truncate max-w-xs">
               {file.name}
             </motion.p>
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(file);
+              }}
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-red-700 text-lg">
+              &times;
+            </Button>
           </div>
         </motion.div>
       ))}

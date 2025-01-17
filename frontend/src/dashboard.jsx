@@ -41,6 +41,10 @@ const Profile = () => {
     setSelectedFile(file);
   };
 
+  const handleRemoveFile = (fileToRemove) => {
+    setFiles((prevFiles) => prevFiles.filter(file => file !== fileToRemove));
+  };
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -59,7 +63,7 @@ const Profile = () => {
       <>
         <div className="dashboard-container">
           <div className="section div1">
-            <ListFiles files={files} onSelect={handleSelectFile} />
+            <ListFiles files={files} onSelect={handleSelectFile} onRemove={handleRemoveFile} />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
             <FileUpload onChange={handleFileUpload} />
