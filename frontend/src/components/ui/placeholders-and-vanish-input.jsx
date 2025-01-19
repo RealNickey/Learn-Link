@@ -166,6 +166,19 @@ export function PlaceholdersAndVanishInput({
     vanishAndSubmit();
     onSubmit && onSubmit(value); // Pass the input value to onSubmit
   };
+
+  useEffect(() => {
+    const handleSlashPress = (e) => {
+      if (e.key === '/' && document.activeElement !== inputRef.current) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleSlashPress);
+    return () => document.removeEventListener('keydown', handleSlashPress);
+  }, []);
+
   return (
     (<form
       className={cnTwMerge(
