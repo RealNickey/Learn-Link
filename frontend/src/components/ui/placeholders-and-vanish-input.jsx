@@ -164,8 +164,21 @@ export function PlaceholdersAndVanishInput({
   const handleSubmit = (e) => {
     e.preventDefault();
     vanishAndSubmit();
-    onSubmit && onSubmit(e);
+    onSubmit && onSubmit(value); // Pass the input value to onSubmit
   };
+
+  useEffect(() => {
+    const handleSlashPress = (e) => {
+      if (e.key === '/' && document.activeElement !== inputRef.current) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleSlashPress);
+    return () => document.removeEventListener('keydown', handleSlashPress);
+  }, []);
+
   return (
     (<form
       className={cnTwMerge(
@@ -190,6 +203,7 @@ export function PlaceholdersAndVanishInput({
         ref={inputRef}
         value={value}
         type="text"
+        spellCheck="false"
         className={cnTwMerge(
           "w-full relative text-base z-50 border-none text-white bg-transparent h-full rounded-full focus:outline-none focus:ring-0 pl-10 pr-20",
           animating && "text-transparent"
