@@ -31,9 +31,36 @@ const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const { toast } = useToast();
 
   const handleFileUpload = (newFiles) => {
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    const duplicateFiles = newFiles.filter(newFile =>
+      files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    );
+
+    if (duplicateFiles.length > 0) {
+      toast({
+        title: "Error",
+        description: "Duplicate files cannot be uploaded.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const uniqueFiles = newFiles.filter(newFile =>
+      !files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    );
+
+    if (files.length + uniqueFiles.length > 3) {
+      toast({
+        title: "Error",
+        description: "You can only upload up to 3 PDF files.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setFiles((prevFiles) => [...prevFiles, ...uniqueFiles]);
     console.log(newFiles);
   };
 
