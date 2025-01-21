@@ -26,10 +26,12 @@ const secondaryVariant = {
 };
 
 export const FileUpload = ({
-  onChange
+  onChange,
+  onPdfUpload
 }) => {
   const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const handleFileChange = (newFiles) => {
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
@@ -38,6 +40,80 @@ export const FileUpload = ({
 
   const handleClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const files = [...e.dataTransfer.files];
+    handleFileChange(files);
+
+    // Handle PDF files
+    const pdfFiles = files.filter(file => file.type === 'application/pdf');
+    if (pdfFiles.length > 0 && onPdfUpload) {
+      const formData = new FormData();
+      formData.append('pdf', pdfFiles[0]);
+      
+      try {
+        const result = await handleFileUpload(formData);
+        onPdfUpload(result.summary);
+      } catch (error) {
+        console.error('Failed to process PDF:', error);
+        // You might want to show an error message to the user here
+      }
+    }
+  };
+
+  const handleFileUpload = async (formData) => {
+    try {
+      const response = await fetch('http://localhost:3000/upload-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error uploading PDF:', error);
+      throw error;
+    }
+  };
+
+  const handleChange = async (e) => {
+    e.preventDefault();
+    const files = [...e.target.files];
+    handleFileChange(files);
+
+    // Handle PDF files
+    const pdfFiles = files.filter(file => file.type === 'application/pdf');
+    if (pdfFiles.length > 0 && onPdfUpload) {
+      const formData = new FormData();
+      formData.append('pdf', pdfFiles[0]);
+      
+      try {
+        const result = await handleFileUpload(formData);
+        onPdfUpload(result.summary);
+      } catch (error) {
+        console.error('Failed to process PDF:', error);
+        // You might want to show an error message to the user here
+      }
+    }
   };
 
   const { getRootProps, isDragActive } = useDropzone({
@@ -54,13 +130,18 @@ export const FileUpload = ({
       <motion.div
         onClick={handleClick}
         whileHover="animate"
-        className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden">
+        className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}>
         <input
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
-          onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
-          className="hidden" />
+          onChange={handleChange}
+          className="hidden"
+          accept=".pdf" />
         <div
           className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
           <GridPattern />

@@ -15,6 +15,7 @@ const Profile = () => {
   const [files, setFiles] = useState([]);
   const [micOn, setMicOn] = useState(true); // Added state for mic
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
+  const [pdfContent, setPdfContent] = useState("");
 
   const handleFileUpload = (files) => {
     setFiles(files);
@@ -36,6 +37,10 @@ const Profile = () => {
     }
   };
 
+  const handlePdfUpload = (summary) => {
+    setAiContent(summary);
+  };
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -55,7 +60,10 @@ const Profile = () => {
         <div className="dashboard-container">
           <div className="section div1"></div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
-            <FileUpload onChange={handleFileUpload} />
+            <FileUpload 
+              onChange={handleFileUpload} 
+              onPdfUpload={handlePdfUpload}
+            />
           </div>
           <div className="section div3"></div>
           <div className="section div4">
