@@ -8,28 +8,13 @@ import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 
-export const ToastDemo = () => {
-  const { toast } = useToast();
-
-  return (
-    <Button
-      onClick={() => {
-        toast({
-          title: "Scheduled: Catch up",
-          description: "Friday, February 10, 2023 at 5:57 PM",
-          variant: "destructive",
-        });
-      }}
-    >
-      Show Toast
-    </Button>
-  );
-};
+// Removed ToastDemo component
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
   const [files, setFiles] = useState([]);
   const [micOn, setMicOn] = useState(true); // Added state for mic
+  const [aiContent, setAiContent] = useState(""); // Added state for AI content
 
   const handleFileUpload = (files) => {
     setFiles(files);
@@ -38,6 +23,17 @@ const Profile = () => {
 
   const toggleMic = () => {
     setMicOn(!micOn);
+  };
+
+  const handleInputSubmit = async (inputValue) => {
+    try {
+      const response = await fetch(`http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`);
+      const aiContent = await response.text();
+      setAiContent(aiContent); // Set AI content
+      console.log("AI Content:", aiContent);
+    } catch (error) {
+      console.error("Error fetching AI content:", error);
+    }
   };
 
   console.log("isLoading:", isLoading);
@@ -70,7 +66,7 @@ const Profile = () => {
                 "Which are the layers of OSI model",
               ]}
               onChange={(e) => console.log(e.target.value)}
-              onSubmit={(e) => console.log("Submitted:", e)}
+              onSubmit={handleInputSubmit} // Updated to use handleInputSubmit
             />
           </div>
           <div className="section div5">
@@ -84,7 +80,15 @@ const Profile = () => {
             </div>
           </div>
           <div className="section div6">
-            <ToastDemo />
+            <div style={{
+              maxHeight: '300px',
+              overflowY: 'auto',
+              padding: '1rem',
+              whiteSpace: 'pre-wrap',
+              wordWrap: 'break-word'
+            }}>
+              <p>{aiContent}</p>
+            </div>
           </div>
           <div className="section div7">
             <Dock>
