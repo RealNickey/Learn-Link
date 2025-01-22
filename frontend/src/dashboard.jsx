@@ -20,6 +20,7 @@ const Profile = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const { toast } = useToast();
   const [pdfContent, setPdfContent] = useState("");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const handleFileUpload = (newFiles) => {
     const duplicateFiles = newFiles.filter(newFile =>
@@ -53,6 +54,15 @@ const Profile = () => {
   };
 
   const generateSummary = async (file) => {
+    if (isGeneratingSummary) return;
+    
+    setIsGeneratingSummary(true);
+    const toastId = toast({
+      title: "Generating Summary",
+      description: "Please wait while we analyze your document...",
+      duration: 2000, // Auto-close after 2 seconds
+    });
+
     try {
       const formData = new FormData();
       formData.append('pdf', file);
@@ -74,7 +84,10 @@ const Profile = () => {
         title: "Error",
         description: "Failed to generate summary",
         variant: "destructive",
+        duration: 3000,
       });
+    } finally {
+      setIsGeneratingSummary(false);
     }
   };
 
