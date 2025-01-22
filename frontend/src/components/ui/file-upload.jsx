@@ -27,8 +27,7 @@ const secondaryVariant = {
 };
 
 export const FileUpload = ({
-  onChange,
-  onPdfUpload
+  onChange
 }) => {
   const [tempFiles, setTempFiles] = useState([]); // Changed from files to tempFiles
   const fileInputRef = useRef(null);
@@ -68,8 +67,7 @@ export const FileUpload = ({
         formData.append('pdf', file);
         
         try {
-          const result = await handleFileUpload(formData);
-          onPdfUpload(result.summary);
+          await handleFileUpload(formData);
           onChange([file]); // Notify parent of successful upload
           
           // Remove from temp files after successful upload
@@ -114,21 +112,6 @@ export const FileUpload = ({
     
     const files = [...e.dataTransfer.files];
     handleFileChange(files);
-
-    // Handle PDF files
-    const pdfFiles = files.filter(file => file.type === 'application/pdf');
-    if (pdfFiles.length > 0 && onPdfUpload) {
-      const formData = new FormData();
-      formData.append('pdf', pdfFiles[0]);
-      
-      try {
-        const result = await handleFileUpload(formData);
-        onPdfUpload(result.summary);
-      } catch (error) {
-        console.error('Failed to process PDF:', error);
-        // You might want to show an error message to the user here
-      }
-    }
   };
 
   const handleFileUpload = async (formData) => {
@@ -154,21 +137,6 @@ export const FileUpload = ({
     e.preventDefault();
     const files = [...e.target.files];
     handleFileChange(files);
-
-    // Handle PDF files
-    const pdfFiles = files.filter(file => file.type === 'application/pdf');
-    if (pdfFiles.length > 0 && onPdfUpload) {
-      const formData = new FormData();
-      formData.append('pdf', pdfFiles[0]);
-      
-      try {
-        const result = await handleFileUpload(formData);
-        onPdfUpload(result.summary);
-      } catch (error) {
-        console.error('Failed to process PDF:', error);
-        // You might want to show an error message to the user here
-      }
-    }
   };
 
   const { getRootProps, isDragActive } = useDropzone({

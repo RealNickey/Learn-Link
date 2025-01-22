@@ -23,14 +23,27 @@ app.post('/upload-pdf', upload.single('pdf'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No PDF file uploaded' });
     }
+    
+    res.json({ message: 'File uploaded successfully' });
+  } catch (error) {
+    console.error('Error uploading PDF:', error);
+    res.status(500).json({ error: 'Failed to upload PDF' });
+  }
+});
+
+app.post('/generate-summary', upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No PDF file provided' });
+    }
 
     const pdfBuffer = req.file.buffer;
     const summary = await processPdfContent(pdfBuffer);
     
     res.json({ summary });
   } catch (error) {
-    console.error('Error processing PDF:', error);
-    res.status(500).json({ error: 'Failed to process PDF: ' + error.message });
+    console.error('Error generating summary:', error);
+    res.status(500).json({ error: 'Failed to generate summary' });
   }
 });
 

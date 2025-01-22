@@ -52,8 +52,35 @@ const Profile = () => {
     console.log(newFiles);
   };
 
+  const generateSummary = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('pdf', file);
+      
+      const response = await fetch('http://localhost:3000/generate-summary', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate summary');
+      }
+      
+      const { summary } = await response.json();
+      setAiContent(summary);
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate summary",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSelectFile = (file) => {
     setSelectedFile(file);
+    generateSummary(file); // Generate summary only when file is selected
   };
 
   const handleRemoveFile = (fileToRemove) => {
