@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/dashboard.css";
+import "./styles/list-files.css"; // Import the new styles
 import { FileUpload } from "./components/ui/file-upload";
+import { ListFiles } from "./components/ui/list-files";
 import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-vanish-input";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
@@ -15,10 +17,46 @@ const Profile = () => {
   const [files, setFiles] = useState([]);
   const [micOn, setMicOn] = useState(true); // Added state for mic
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
+  const [selectedFile, setSelectedFile] = useState(null);
+  const { toast } = useToast();
 
-  const handleFileUpload = (files) => {
-    setFiles(files);
-    console.log(files);
+  const handleFileUpload = (newFiles) => {
+    const duplicateFiles = newFiles.filter(newFile =>
+      files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    );
+
+    if (duplicateFiles.length > 0) {
+      toast({
+        title: "Error",
+        description: "Duplicate files cannot be uploaded.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const uniqueFiles = newFiles.filter(newFile =>
+      !files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    );
+
+    if (files.length + uniqueFiles.length > 3) {
+      toast({
+        title: "Error",
+        description: "You can only upload up to 3 PDF files.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setFiles((prevFiles) => [...prevFiles, ...uniqueFiles]);
+    console.log(newFiles);
+  };
+
+  const handleSelectFile = (file) => {
+    setSelectedFile(file);
+  };
+
+  const handleRemoveFile = (fileToRemove) => {
+    setFiles((prevFiles) => prevFiles.filter(file => file !== fileToRemove));
   };
 
   const toggleMic = () => {
@@ -53,7 +91,9 @@ const Profile = () => {
     isAuthenticated && (
       <>
         <div className="dashboard-container">
-          <div className="section div1"></div>
+          <div className="section div1">
+            <ListFiles files={files} onSelect={handleSelectFile} onRemove={handleRemoveFile} />
+          </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
             <FileUpload onChange={handleFileUpload} />
           </div>
