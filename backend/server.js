@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const multer = require('multer');
-const { generateAIContent, processPdfContent } = require("./aiService");
+const { generateAIContent, processPdfContent, comparePdfs } = require("./aiService");
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -44,6 +44,27 @@ app.post('/generate-summary', upload.single('pdf'), async (req, res) => {
   } catch (error) {
     console.error('Error generating summary:', error);
     res.status(500).json({ error: 'Failed to generate summary' });
+  }
+});
+
+// Add new endpoint for PDF comparison
+app.post('/compare-pdfs', upload.fields([
+  { name: 'pdf1', maxCount: 1 },
+  { name: 'pdf2', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    if (!req.files['pdf1'] || !req.files['pdf2']) {
+      return res.status(400).json({ error: 'Two PDF files are required' });
+    }
+
+    const pdf1Buffer = req.files['pdf1'][0].buffer;
+    const pdf2Buffer = req.files['pdf2'][0].buffer;
+
+    const comparison = await comparePdfs(pdf1Buffer, pdf2Buffer);
+    res.json({ comparison });
+  } catch (error) {
+    console.error('Error comparing PDFs:', error);
+    res.status(500).json({ error: 'Failed to compare PDFs' });
   }
 });
 

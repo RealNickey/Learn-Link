@@ -21,6 +21,7 @@ const Profile = () => {
   const { toast } = useToast();
   const [pdfContent, setPdfContent] = useState("");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const handleFileUpload = (newFiles) => {
     const duplicateFiles = newFiles.filter(newFile =>
@@ -93,7 +94,8 @@ const Profile = () => {
 
   const handleSelectFile = (file) => {
     setSelectedFile(file);
-    generateSummary(file); // Generate summary only when file is selected
+    // Remove the automatic summary generation
+    // generateSummary(file); 
   };
 
   const handleRemoveFile = (fileToRemove) => {
@@ -119,6 +121,73 @@ const Profile = () => {
     setAiContent(summary);
   };
 
+  const handleFileSelect = (file, checked) => {
+    setSelectedFiles(prev => 
+      checked 
+        ? [...prev, file]
+        : prev.filter(f => f !== file)
+    );
+  };
+
+  const handleFocusArea = async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select at least one file using the checkboxes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingSummary(true);
+    toast({
+      title: "Generating Summary",
+      description: `Analyzing ${selectedFiles.length} document(s)...`,
+      duration: 2000,
+    });
+
+    try {
+      // Clear previous content
+      setAiContent("");
+      
+      // Process each selected file
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append('pdf', file);
+        
+        const response = await fetch('http://localhost:3000/generate-summary', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to generate summary');
+        }
+        
+        const { summary } = await response.json();
+        // Append new summary with file name
+        setAiContent(prev => 
+          `${prev}${prev ? '\n\n---\n\n' : ''}File: ${file.name}\n\n${summary}`
+        );
+      }
+
+      toast({
+        title: "Success",
+        description: "Summary generated successfully",
+      });
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate summary",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -137,7 +206,13 @@ const Profile = () => {
       <>
         <div className="dashboard-container">
           <div className="section div1">
-            <ListFiles files={files} onSelect={handleSelectFile} onRemove={handleRemoveFile} />
+            <ListFiles 
+              files={files} 
+              onSelect={handleSelectFile} 
+              onRemove={handleRemoveFile}
+              selectedFiles={selectedFiles}
+              onFileSelect={handleFileSelect}
+            />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
             <FileUpload 
@@ -257,7 +332,7 @@ const Profile = () => {
                   <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
                 </svg>
               </DockIcon>
-              <DockIcon title="Focus Area">
+              <DockIcon title="Focus Area" onClick={handleFocusArea}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
