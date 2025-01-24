@@ -28,7 +28,8 @@ export const ListFiles = ({ files, onSelect, onRemove, selectedFiles, onFileSele
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 layout
-                className="text-base text-neutral-300 truncate max-w-xs"
+                title={file.name} // Add title for hover tooltip
+                className="text-base text-neutral-300 max-w-[135px] truncate"
                 onClick={() => onSelect(file)}>
                 {file.name}
               </motion.p>
