@@ -69,7 +69,7 @@ async function comparePdfs(pdf1Buffer, pdf2Buffer) {
     const result = await model.generateContent([
       await localPdfToPart(pdf1Buffer, 'PDF 1'),
       await localPdfToPart(pdf2Buffer, 'PDF 2'),
-      'What are some important topics in these documents?,generate a focus area for exams',
+      'What are some important topics in these documents?,generate a focus area for exams as points',
     ]);
     return result.response.text();
   } catch (error) {
