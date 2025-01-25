@@ -57,6 +57,9 @@ const Profile = () => {
 
   const handleRemoveFile = (fileToRemove) => {
     setFiles((prevFiles) => prevFiles.filter(file => file !== fileToRemove));
+    if (selectedFile === fileToRemove) {
+      setSelectedFile(null);
+    }
   };
 
   const toggleMic = () => {
@@ -72,6 +75,10 @@ const Profile = () => {
     } catch (error) {
       console.error("Error fetching AI content:", error);
     }
+  };
+
+  const handleClosePreview = () => {
+    setSelectedFile(null);
   };
 
   console.log("isLoading:", isLoading);
@@ -97,7 +104,26 @@ const Profile = () => {
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
             <FileUpload onChange={handleFileUpload} />
           </div>
-          <div className="section div3"></div>
+          <div className="section div3 relative">
+            {selectedFile ? (
+              <>
+                <button
+                  onClick={handleClosePreview}
+                  className="absolute top-0 right-0 text-white text-4xl p-4 hover:text-red-700"
+                  style={{ transform: 'translate(25%, -25%)' }}
+                >
+                  &times;
+                </button>
+                <iframe
+                  src={URL.createObjectURL(selectedFile)}
+                  title="File Preview"
+                  className="w-full h-full"
+                />
+              </>
+            ) : (
+              <p>No file selected</p>
+            )}
+          </div>
           <div className="section div4">
             <PlaceholdersAndVanishInput
               placeholders={[

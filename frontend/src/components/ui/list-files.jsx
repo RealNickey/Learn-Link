@@ -30,7 +30,7 @@ export const ListFiles = ({ files, onSelect, onRemove }) => {
               }}
               variant="ghost"
               size="icon"
-              className="text-white hover:text-red-700 text-lg">
+              className="text-white hover:text-red-700 text-2xl">
               &times;
             </Button>
           </div>
