@@ -244,7 +244,7 @@ const Profile = () => {
           </div>
           <div className="section div6">
             <div style={{
-              maxHeight: '300px',
+              height: '100%', // Adjusted to take up the entire space
               overflowY: 'auto',
               padding: '1rem',
               whiteSpace: 'pre-wrap',
