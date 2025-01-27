@@ -22,6 +22,9 @@ const Profile = () => {
   const [pdfContent, setPdfContent] = useState("");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
+
+  const userImage = user.picture; // Store user image in a variable
 
   const handleFileUpload = (newFiles) => {
     const duplicateFiles = newFiles.filter(newFile =>
@@ -107,10 +110,12 @@ const Profile = () => {
   };
 
   const handleInputSubmit = async (inputValue) => {
+    setChatHistory((prev) => [...prev, { type: 'user', content: inputValue, image: userImage }]); // Add user input to chat history
     try {
       const response = await fetch(`http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`);
       const aiContent = await response.text();
-      setAiContent(aiContent); // Set AI content
+      setAiContent(aiContent);
+      setChatHistory((prev) => [...prev, { type: 'ai', content: aiContent }]); // Add AI response to chat history
       console.log("AI Content:", aiContent);
     } catch (error) {
       console.error("Error fetching AI content:", error);
@@ -236,7 +241,7 @@ const Profile = () => {
             <div className="user-info">
               <img
                 className="profile-image"
-                src={user.picture}
+                src={userImage}
                 alt={user.name}
               />
               <h2 className="user-name">{user.name}</h2>
@@ -244,13 +249,21 @@ const Profile = () => {
           </div>
           <div className="section div6">
             <div style={{
-              height: '100%', // Adjusted to take up the entire space
+              height: '100%',
               overflowY: 'auto',
               padding: '1rem',
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word'
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
             }}>
-              <p>{aiContent}</p>
+              {chatHistory.map((chat, index) => (
+                <div key={index} className={`chat-message`}>
+                  <div className={`chat-bubble ${chat.type}`}>
+                    {chat.type === 'user' && <img src={chat.image} alt="User" className="chat-image" />}
+                    <p className="text-sm">{chat.content}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           <div className="section div7">
