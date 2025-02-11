@@ -27,8 +27,12 @@ const Profile = () => {
   const userImage = user.picture; // Store user image in a variable
 
   const handleFileUpload = (newFiles) => {
-    const duplicateFiles = newFiles.filter(newFile =>
-      files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    const duplicateFiles = newFiles.filter((newFile) =>
+      files.some(
+        (existingFile) =>
+          existingFile.name === newFile.name &&
+          existingFile.lastModified === newFile.lastModified
+      )
     );
 
     if (duplicateFiles.length > 0) {
@@ -40,8 +44,13 @@ const Profile = () => {
       return;
     }
 
-    const uniqueFiles = newFiles.filter(newFile =>
-      !files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    const uniqueFiles = newFiles.filter(
+      (newFile) =>
+        !files.some(
+          (existingFile) =>
+            existingFile.name === newFile.name &&
+            existingFile.lastModified === newFile.lastModified
+        )
     );
 
     if (files.length + uniqueFiles.length > 3) {
@@ -59,7 +68,7 @@ const Profile = () => {
 
   const generateSummary = async (file) => {
     if (isGeneratingSummary) return;
-    
+
     setIsGeneratingSummary(true);
     const toastId = toast({
       title: "Generating Summary",
@@ -69,21 +78,21 @@ const Profile = () => {
 
     try {
       const formData = new FormData();
-      formData.append('pdf', file);
-      
-      const response = await fetch('http://localhost:3000/generate-summary', {
-        method: 'POST',
+      formData.append("pdf", file);
+
+      const response = await fetch("http://localhost:3000/generate-summary", {
+        method: "POST",
         body: formData,
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to generate summary');
+        throw new Error("Failed to generate summary");
       }
-      
+
       const { summary } = await response.json();
       setAiContent(summary);
     } catch (error) {
-      console.error('Error generating summary:', error);
+      console.error("Error generating summary:", error);
       toast({
         title: "Error",
         description: "Failed to generate summary",
@@ -98,11 +107,11 @@ const Profile = () => {
   const handleSelectFile = (file) => {
     setSelectedFile(file);
     // Remove the automatic summary generation
-    // generateSummary(file); 
+    // generateSummary(file);
   };
 
   const handleRemoveFile = (fileToRemove) => {
-    setFiles((prevFiles) => prevFiles.filter(file => file !== fileToRemove));
+    setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
   };
 
   const toggleMic = () => {
@@ -110,12 +119,19 @@ const Profile = () => {
   };
 
   const handleInputSubmit = async (inputValue) => {
-    setChatHistory((prev) => [...prev, { type: 'user', content: inputValue, image: userImage }]); // Add user input to chat history
+    setChatHistory((prev) => [
+      ...prev,
+      { type: "user", content: inputValue, image: userImage },
+    ]); // Add user input to chat history
     try {
-      const response = await fetch(`http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`);
+      const response = await fetch(
+        `http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(
+          inputValue
+        )}`
+      );
       const aiContent = await response.text();
       setAiContent(aiContent);
-      setChatHistory((prev) => [...prev, { type: 'ai', content: aiContent }]); // Add AI response to chat history
+      setChatHistory((prev) => [...prev, { type: "ai", content: aiContent }]); // Add AI response to chat history
       console.log("AI Content:", aiContent);
     } catch (error) {
       console.error("Error fetching AI content:", error);
@@ -127,10 +143,8 @@ const Profile = () => {
   };
 
   const handleFileSelect = (file, checked) => {
-    setSelectedFiles(prev => 
-      checked 
-        ? [...prev, file]
-        : prev.filter(f => f !== file)
+    setSelectedFiles((prev) =>
+      checked ? [...prev, file] : prev.filter((f) => f !== file)
     );
   };
 
@@ -154,25 +168,28 @@ const Profile = () => {
     try {
       // Clear previous content
       setAiContent("");
-      
+
       // Process each selected file
       for (const file of selectedFiles) {
         const formData = new FormData();
-        formData.append('pdf', file);
-        
-        const response = await fetch('http://localhost:3000/generate-summary', {
-          method: 'POST',
+        formData.append("pdf", file);
+
+        const response = await fetch("http://localhost:3000/generate-summary", {
+          method: "POST",
           body: formData,
         });
-        
+
         if (!response.ok) {
-          throw new Error('Failed to generate summary');
+          throw new Error("Failed to generate summary");
         }
-        
+
         const { summary } = await response.json();
         // Append new summary with file name
-        setAiContent(prev => 
-          `${prev}${prev ? '\n\n---\n\n' : ''}File: ${file.name}\n\n${summary}`
+        setAiContent(
+          (prev) =>
+            `${prev}${prev ? "\n\n---\n\n" : ""}File: ${
+              file.name
+            }\n\n${summary}`
         );
       }
 
@@ -181,7 +198,7 @@ const Profile = () => {
         description: "Summary generated successfully",
       });
     } catch (error) {
-      console.error('Error generating summary:', error);
+      console.error("Error generating summary:", error);
       toast({
         title: "Error",
         description: "Failed to generate summary",
@@ -211,17 +228,17 @@ const Profile = () => {
       <>
         <div className="dashboard-container">
           <div className="section div1">
-            <ListFiles 
-              files={files} 
-              onSelect={handleSelectFile} 
+            <ListFiles
+              files={files}
+              onSelect={handleSelectFile}
               onRemove={handleRemoveFile}
               selectedFiles={selectedFiles}
               onFileSelect={handleFileSelect}
             />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
-            <FileUpload 
-              onChange={handleFileUpload} 
+            <FileUpload
+              onChange={handleFileUpload}
               onPdfUpload={handlePdfUpload}
             />
           </div>
@@ -239,28 +256,54 @@ const Profile = () => {
           </div>
           <div className="section div5">
             <div className="user-info">
-              <img
-                className="profile-image"
-                src={userImage}
-                alt={user.name}
-              />
+              <img className="profile-image" src={userImage} alt={user.name} />
               <h2 className="user-name">{user.name}</h2>
             </div>
           </div>
           <div className="section div6">
-            <div style={{
-              height: '100%',
-              overflowY: 'auto',
-              padding: '1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
+            <div
+              style={{
+                height: "100%",
+                overflowY: "auto",
+                padding: "1rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
               {chatHistory.map((chat, index) => (
-                <div key={index} className={`chat-message`}>
+                <div key={index} className={`chat-message ${chat.type}`}>
                   <div className={`chat-bubble ${chat.type}`}>
-                    {chat.type === 'user' && <img src={chat.image} alt="User" className="chat-image" />}
-                    <p className="text-sm">{chat.content}</p>
+                    {chat.type === "user" ? (
+                      <img src={chat.image} alt="User" className="chat-image" />
+                    ) : (
+                      <div className="ai-icon-wrapper">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="lucide lucide-bot"
+                        >
+                          <path d="M12 8V4H8" />
+                          <rect width="16" height="12" x="4" y="8" rx="2" />
+                          <path d="M2 14h2" />
+                          <path d="M20 14h2" />
+                          <path d="M15 13v2" />
+                          <path d="M9 13v2" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="chat-content">
+                      {typeof chat.content === "object" && chat.content.content
+                        ? chat.content.content
+                        : chat.content}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -268,7 +311,10 @@ const Profile = () => {
           </div>
           <div className="section div7">
             <Dock>
-              <DockIcon onClick={toggleMic} title={micOn ? "Mic On" : "Mic Off"}>
+              <DockIcon
+                onClick={toggleMic}
+                title={micOn ? "Mic On" : "Mic Off"}
+              >
                 {micOn ? (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
