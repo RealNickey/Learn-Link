@@ -9,8 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
-import { Tldraw } from 'tldraw';
-import 'tldraw/tldraw.css';
+import { Tldraw } from "tldraw";
+import "tldraw/tldraw.css";
 
 // Removed ToastDemo component
 
@@ -245,8 +245,14 @@ const Profile = () => {
             />
           </div>
           <div className="section div3">
-            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-              <Tldraw />
+            <div
+              style={{ position: "relative", width: "100%", height: "100%" }}
+            >
+              <Tldraw
+                onMount={(editor) => {
+                  editor.user.updateUserPreferences({ colorScheme: "dark" });
+                }}
+              />
             </div>
           </div>
           <div className="section div4">
