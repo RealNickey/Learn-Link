@@ -41,8 +41,12 @@ async function processPdfContent(pdfBuffer, prompt = 'Summarize this document') 
 
 async function localPdfToPart(buffer, displayName) {
   const tempPath = `/tmp/${displayName}-${Date.now()}.pdf`;
-  await fs.writeFile(tempPath, buffer);
-
+  try {
+    await fs.writeFile(tempPath, buffer);
+  } catch (error) {
+    console.error('Error writing temporary PDF file:', error);
+    throw error;
+  }
   try {
     const uploadResult = await fileManager.uploadFile(
       tempPath,
