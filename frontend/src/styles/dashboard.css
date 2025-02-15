@@ -32,7 +32,6 @@
 
 .section {
   background: #090909;
-  padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -40,6 +39,17 @@
   align-items: center;
   text-align: center;
   border: 2px solid #3c3c3c;
+  padding: 0; /* Remove default padding */
+}
+
+/* Add padding only to sections that need it */
+.div1,
+.div2,
+.div4,
+.div5,
+.div6,
+.div7 {
+  padding: 20px;
 }
 
 .div1 {

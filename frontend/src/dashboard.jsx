@@ -244,10 +244,8 @@ const Profile = () => {
               onPdfUpload={handlePdfUpload}
             />
           </div>
-          <div className="section div3">
-            <div
-              style={{ position: "relative", width: "100%", height: "100%" }}
-            >
+          <div className="section div3" style={{ padding: 0 }}>
+            <div style={{ width: "100%", height: "100%" }}>
               <Tldraw
                 onMount={(editor) => {
                   editor.user.updateUserPreferences({ colorScheme: "dark" });
