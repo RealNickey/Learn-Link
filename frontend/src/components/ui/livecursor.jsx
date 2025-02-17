@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import AblySpaces from '@ably/spaces';
 import * as Ably from 'ably';
 
-const LiveCursor = ({ containerId = 'dashboard-container' }) => {
+const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous' }) => {
   const [cursors, setCursors] = useState({});
   const clientRef = useRef(null);
   const spaceRef = useRef(null);
@@ -64,7 +64,8 @@ const LiveCursor = ({ containerId = 'dashboard-container' }) => {
               position: { x, y },
               data: { 
                 color: '#FF5733',
-                containerId 
+                containerId,
+                username // Add username to cursor data
               }
             }).catch(console.error);
           }, 0);
@@ -92,7 +93,7 @@ const LiveCursor = ({ containerId = 'dashboard-container' }) => {
         clientRef.current.close();
       }
     };
-  }, [containerId]);
+  }, [containerId, username]); // Add username to dependency array
 
   return (
     <>
@@ -104,16 +105,42 @@ const LiveCursor = ({ containerId = 'dashboard-container' }) => {
               position: 'fixed',
               left: cursor.position.x,
               top: cursor.position.y,
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              backgroundColor: cursor.data?.color || '#FF5733',
               transform: 'translate(-50%, -50%)',
               pointerEvents: 'none',
               transition: 'all 0.1s ease',
               zIndex: 1000
             }}
-          />
+          >
+            <svg
+              width="24"
+              height="36"
+              viewBox="0 0 24 36"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19209e-06L11.7841 12.3673H5.65376Z"
+                fill={cursor.data?.color || '#FF5733'}
+                stroke="white"
+                strokeWidth="1"
+              />
+            </svg>
+            <div
+              style={{
+                position: 'absolute',
+                top: '20px',
+                left: '10px',
+                background: cursor.data?.color || '#FF5733',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                color: 'white',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {cursor.data?.username || 'Anonymous'}
+            </div>
+          </div>
         )
       ))}
     </>

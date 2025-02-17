@@ -58,13 +58,16 @@ const Profile = () => {
     isAuthenticated && (
       <>
         <div id="dashboard-container" className="dashboard-container">
-          <LiveCursor containerId="dashboard-container" />
+          <LiveCursor 
+            containerId="dashboard-container" 
+            username={user?.name || user?.email} 
+          />
           <div className="section div1"></div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
             <FileUpload onChange={handleFileUpload} />
           </div>
           <div className="section div3">
-            <LiveCursor />
+
           </div>
           <div className="section div4">
             <PlaceholdersAndVanishInput
