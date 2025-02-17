@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
+import { Tldraw } from "tldraw";
+import "tldraw/tldraw.css";
 
 // Removed ToastDemo component
 
@@ -19,10 +21,20 @@ const Profile = () => {
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
   const [selectedFile, setSelectedFile] = useState(null);
   const { toast } = useToast();
+  const [pdfContent, setPdfContent] = useState("");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
+
+  const userImage = user.picture; // Store user image in a variable
 
   const handleFileUpload = (newFiles) => {
-    const duplicateFiles = newFiles.filter(newFile =>
-      files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    const duplicateFiles = newFiles.filter((newFile) =>
+      files.some(
+        (existingFile) =>
+          existingFile.name === newFile.name &&
+          existingFile.lastModified === newFile.lastModified
+      )
     );
 
     if (duplicateFiles.length > 0) {
@@ -34,8 +46,13 @@ const Profile = () => {
       return;
     }
 
-    const uniqueFiles = newFiles.filter(newFile =>
-      !files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    const uniqueFiles = newFiles.filter(
+      (newFile) =>
+        !files.some(
+          (existingFile) =>
+            existingFile.name === newFile.name &&
+            existingFile.lastModified === newFile.lastModified
+        )
     );
 
     if (files.length + uniqueFiles.length > 3) {
@@ -51,12 +68,52 @@ const Profile = () => {
     console.log(newFiles);
   };
 
+  const generateSummary = async (file) => {
+    if (isGeneratingSummary) return;
+
+    setIsGeneratingSummary(true);
+    const toastId = toast({
+      title: "Generating Summary",
+      description: "Please wait while we analyze your document...",
+      duration: 2000, // Auto-close after 2 seconds
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("pdf", file);
+
+      const response = await fetch("http://localhost:3000/generate-summary", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate summary");
+      }
+
+      const { summary } = await response.json();
+      setAiContent(summary);
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate summary",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
   const handleSelectFile = (file) => {
     setSelectedFile(file);
+    // Remove the automatic summary generation
+    // generateSummary(file);
   };
 
   const handleRemoveFile = (fileToRemove) => {
-    setFiles((prevFiles) => prevFiles.filter(file => file !== fileToRemove));
+    setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
   };
 
   const toggleMic = () => {
@@ -64,13 +121,94 @@ const Profile = () => {
   };
 
   const handleInputSubmit = async (inputValue) => {
+    setChatHistory((prev) => [
+      ...prev,
+      { type: "user", content: inputValue, image: userImage },
+    ]); // Add user input to chat history
     try {
-      const response = await fetch(`http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`);
+      const response = await fetch(
+        `http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(
+          inputValue
+        )}`
+      );
       const aiContent = await response.text();
-      setAiContent(aiContent); // Set AI content
+      setAiContent(aiContent);
+      setChatHistory((prev) => [...prev, { type: "ai", content: aiContent }]); // Add AI response to chat history
       console.log("AI Content:", aiContent);
     } catch (error) {
       console.error("Error fetching AI content:", error);
+    }
+  };
+
+  const handlePdfUpload = (summary) => {
+    setAiContent(summary);
+  };
+
+  const handleFileSelect = (file, checked) => {
+    setSelectedFiles((prev) =>
+      checked ? [...prev, file] : prev.filter((f) => f !== file)
+    );
+  };
+
+  const handleFocusArea = async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select at least one file using the checkboxes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingSummary(true);
+    toast({
+      title: "Generating Summary",
+      description: `Analyzing ${selectedFiles.length} document(s)...`,
+      duration: 2000,
+    });
+
+    try {
+      // Clear previous content
+      setAiContent("");
+
+      // Process each selected file
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append("pdf", file);
+
+        const response = await fetch("http://localhost:3000/generate-summary", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to generate summary");
+        }
+
+        const { summary } = await response.json();
+        // Append new summary with file name
+        setAiContent(
+          (prev) =>
+            `${prev}${prev ? "\n\n---\n\n" : ""}File: ${
+              file.name
+            }\n\n${summary}`
+        );
+      }
+
+      toast({
+        title: "Success",
+        description: "Summary generated successfully",
+      });
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate summary",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsGeneratingSummary(false);
     }
   };
 
@@ -92,12 +230,29 @@ const Profile = () => {
       <>
         <div className="dashboard-container">
           <div className="section div1">
-            <ListFiles files={files} onSelect={handleSelectFile} onRemove={handleRemoveFile} />
+            <ListFiles
+              files={files}
+              onSelect={handleSelectFile}
+              onRemove={handleRemoveFile}
+              selectedFiles={selectedFiles}
+              onFileSelect={handleFileSelect}
+            />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
-            <FileUpload onChange={handleFileUpload} />
+            <FileUpload
+              onChange={handleFileUpload}
+              onPdfUpload={handlePdfUpload}
+            />
           </div>
-          <div className="section div3"></div>
+          <div className="section div3" style={{ padding: 0 }}>
+            <div style={{ width: "100%", height: "100%" }}>
+              <Tldraw
+                onMount={(editor) => {
+                  editor.user.updateUserPreferences({ colorScheme: "dark" });
+                }}
+              />
+            </div>
+          </div>
           <div className="section div4">
             <PlaceholdersAndVanishInput
               placeholders={[
@@ -111,28 +266,65 @@ const Profile = () => {
           </div>
           <div className="section div5">
             <div className="user-info">
-              <img
-                className="profile-image"
-                src={user.picture}
-                alt={user.name}
-              />
+              <img className="profile-image" src={userImage} alt={user.name} />
               <h2 className="user-name">{user.name}</h2>
             </div>
           </div>
           <div className="section div6">
-            <div style={{
-              maxHeight: '300px',
-              overflowY: 'auto',
-              padding: '1rem',
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word'
-            }}>
-              <p>{aiContent}</p>
+            <div
+              style={{
+                height: "100%",
+                overflowY: "auto",
+                padding: "1rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
+              {chatHistory.map((chat, index) => (
+                <div key={index} className={`chat-message ${chat.type}`}>
+                  <div className={`chat-bubble ${chat.type}`}>
+                    {chat.type === "user" ? (
+                      <img src={chat.image} alt="User" className="chat-image" />
+                    ) : (
+                      <div className="ai-icon-wrapper">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="lucide lucide-bot"
+                        >
+                          <path d="M12 8V4H8" />
+                          <rect width="16" height="12" x="4" y="8" rx="2" />
+                          <path d="M2 14h2" />
+                          <path d="M20 14h2" />
+                          <path d="M15 13v2" />
+                          <path d="M9 13v2" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="chat-content">
+                      {typeof chat.content === "object" && chat.content.content
+                        ? chat.content.content
+                        : chat.content}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           <div className="section div7">
             <Dock>
-              <DockIcon onClick={toggleMic} title={micOn ? "Mic On" : "Mic Off"}>
+              <DockIcon
+                onClick={toggleMic}
+                title={micOn ? "Mic On" : "Mic Off"}
+              >
                 {micOn ? (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -209,7 +401,7 @@ const Profile = () => {
                   <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
                 </svg>
               </DockIcon>
-              <DockIcon title="Focus Area">
+              <DockIcon title="Focus Area" onClick={handleFocusArea}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"

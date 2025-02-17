@@ -26,8 +26,10 @@ const secondaryVariant = {
   },
 };
 
-export const FileUpload = ({ onChange }) => {
-  const [files, setFiles] = useState([]);
+export const FileUpload = ({
+  onChange
+}) => {
+  const [tempFiles, setTempFiles] = useState([]); // Changed from files to tempFiles
   const fileInputRef = useRef(null);
   const { toast } = useToast();
 
@@ -52,17 +54,89 @@ export const FileUpload = ({ onChange }) => {
     
     return true;
   };
+  const [dragActive, setDragActive] = useState(false);
 
-  const handleFileChange = (newFiles) => {
+  const handleFileChange = async (newFiles) => {
     const validFiles = newFiles.filter(validateFile);
     if (validFiles.length) {
-      setFiles((prevFiles) => [...prevFiles, ...validFiles]);
-      onChange && onChange(validFiles);
+      setTempFiles((prevFiles) => [...prevFiles, ...validFiles]);
+      
+      // Process each file
+      for (const file of validFiles) {
+        const formData = new FormData();
+        formData.append('pdf', file);
+        
+        try {
+          await handleFileUpload(formData);
+          onChange([file]); // Notify parent of successful upload
+          
+          // Remove from temp files after successful upload
+          setTempFiles(prev => prev.filter(f => f !== file));
+          
+          toast({
+            title: "Success",
+            description: "File uploaded successfully",
+          });
+        } catch (error) {
+          console.error('Failed to upload file:', error);
+          toast({
+            title: "Error",
+            description: "Failed to upload file",
+            variant: "destructive",
+          });
+          // Remove failed file from temp files
+          setTempFiles(prev => prev.filter(f => f !== file));
+        }
+      }
     }
   };
 
   const handleClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const files = [...e.dataTransfer.files];
+    handleFileChange(files);
+  };
+
+  const handleFileUpload = async (formData) => {
+    try {
+      const response = await fetch('http://localhost:3000/upload-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error uploading PDF:', error);
+      throw error;
+    }
+  };
+
+  const handleChange = async (e) => {
+    e.preventDefault();
+    const files = [...e.target.files];
+    handleFileChange(files);
   };
 
   const { getRootProps, isDragActive } = useDropzone({
@@ -97,7 +171,10 @@ export const FileUpload = ({ onChange }) => {
         onClick={handleClick}
         whileHover="animate"
         className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
-      >
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}>
         <input
           ref={fileInputRef}
           id="file-upload-handle"
@@ -117,8 +194,8 @@ export const FileUpload = ({ onChange }) => {
             Drag or drop your files here or click to upload
           </p>
           <div className="relative w-full mt-10 max-w-xl mx-auto">
-            {files.length > 0 &&
-              files.map((file, idx) => (
+            {tempFiles.length > 0 &&
+              tempFiles.map((file, idx) => (
                 <motion.div
                   key={file.name + file.lastModified}
                   layoutId={idx === 0 ? "file-upload" : "file-upload-" + idx}
@@ -164,9 +241,12 @@ export const FileUpload = ({ onChange }) => {
                       {new Date(file.lastModified).toLocaleDateString()}
                     </motion.p>
                   </div>
+                  <div className="mt-2 w-full bg-neutral-800 rounded-full h-2">
+                    <div className="animate-pulse bg-neutral-400 h-2 rounded-full" style={{width: '100%'}}></div>
+                  </div>
                 </motion.div>
               ))}
-            {!files.length && (
+            {!tempFiles.length && (
               <motion.div
                 layoutId="file-upload"
                 variants={mainVariant}
@@ -195,7 +275,7 @@ export const FileUpload = ({ onChange }) => {
               </motion.div>
             )}
 
-            {!files.length && (
+            {!tempFiles.length && (
               <motion.div
                 variants={secondaryVariant}
                 className="absolute opacity-0 border border-dashed border-sky-400 inset-0 z-30 bg-transparent flex items-center justify-center h-32 mt-4 w-full max-w-[8rem] mx-auto rounded-md"
