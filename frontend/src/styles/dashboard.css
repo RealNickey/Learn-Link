@@ -34,7 +34,6 @@
 
 .section {
   background: #090909;
-  padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -42,6 +41,17 @@
   align-items: center;
   text-align: center;
   border: 2px solid #3c3c3c;
+  padding: 0; /* Remove default padding */
+}
+
+/* Add padding only to sections that need it */
+.div1,
+.div2,
+.div4,
+.div5,
+.div6,
+.div7 {
+  padding: 20px;
 }
 
 .div1 {
@@ -110,6 +120,63 @@
   font-size: 14px;
   color: #cccccc;
 }
+
+/* Chat interface styles */
+.chat-message {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.chat-bubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  max-width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.chat-bubble.user {
+  margin-left: 0; /* Align to left */
+  background-color: #1e1e1e; /* Darker background */
+  border: 1px solid #333; /* Subtle border */
+}
+
+.chat-bubble.ai {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.chat-image {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ai-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.chat-content {
+  flex: 1;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  max-width: calc(100% - 48px);
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+}
+
+.chat-bubble p {
+  margin: 0;
+  line-height: 1.5;
 
 .cursors-container {
   position: relative;
