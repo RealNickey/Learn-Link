@@ -2,18 +2,54 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const multer = require('multer');
-const { generateAIContent, processPdfContent, comparePdfs } = require("./aiService");
+const { generateAIContent, processPdfContent, comparePdfs, generateQuiz } = require("./aiService");
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // Add your frontend URL
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Configure multer for memory storage
 const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
+
+// Add OPTIONS handling for preflight requests
+app.options('/generate-quiz', cors());
+
+// Move quiz route to the top of routes
+app.post('/generate-quiz', upload.single('pdf'), async (req, res) => {
+  console.log('[Quiz Route] Request received');
+  
+  // Add CORS headers explicitly
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  try {
+    if (!req.file) {
+      console.log('[Quiz Route] No file provided');
+      return res.status(400).json({ error: 'No PDF file provided' });
+    }
+
+    console.log('[Quiz Route] Processing file:', req.file.originalname);
+    const quiz = await generateQuiz(req.file.buffer);
+    
+    console.log('[Quiz Route] Quiz generated:', JSON.stringify(quiz));
+    return res.status(200).json({ quiz });
+    
+  } catch (error) {
+    console.error('[Quiz Route] Error:', error);
+    return res.status(500).json({ 
+      error: error.message || 'Failed to generate quiz'
+    });
   }
 });
 
@@ -85,10 +121,15 @@ app.get("/generate-ai-content", async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Global error handler:', err.stack);
   res.status(500).json({ error: 'Something broke!' });
 });
 
+// Start the server with confirmation
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
+  console.log('Available routes:');
+  console.log('- POST /generate-quiz');
+  console.log('- POST /generate-summary');
+  // ... list other routes
 });

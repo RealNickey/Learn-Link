@@ -212,6 +212,57 @@ const Profile = () => {
     }
   };
 
+  const handleGenerateQuiz = async () => {
+    if (files.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please upload a PDF file first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Generating Quiz",
+      description: "Please wait while we create your questions...",
+      duration: 2000,
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append('pdf', files[0]);
+
+      console.log('Sending request to generate quiz...');
+      const response = await fetch('http://localhost:3000/generate-quiz', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Generated Quiz:', data.quiz);
+      toast({
+        title: "Success",
+        description: "Quiz generated! Check the console.",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: `Failed to generate quiz: ${error.message}`,
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  };
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -364,7 +415,7 @@ const Profile = () => {
                   </svg>
                 )}
               </DockIcon>
-              <DockIcon title="Ai Quiz">
+              <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
