@@ -11,6 +11,7 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+import LiveCursor from "./components/ui/livecursor";
 
 // Removed ToastDemo component
 
@@ -234,7 +235,11 @@ const Profile = () => {
   return (
     isAuthenticated && (
       <>
-        <div className="dashboard-container">
+        <div className="dashboard-container" id="dashboard-container">
+          <LiveCursor
+            containerId="dashboard-container"
+            username={user?.name || user?.email}
+          />
           <div className="section div1">
             <ListFiles
               files={files}
