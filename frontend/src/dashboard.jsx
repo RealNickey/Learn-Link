@@ -52,7 +52,7 @@ const Profile = () => {
   };
 
   const handleSelectFile = (file) => {
-    setSelectedFile(file);
+    setSelectedFile((prevSelectedFile) => (prevSelectedFile === file ? null : file));
   };
 
   const handleRemoveFile = (fileToRemove) => {
@@ -77,10 +77,6 @@ const Profile = () => {
     }
   };
 
-  const handleClosePreview = () => {
-    setSelectedFile(null);
-  };
-
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -99,27 +95,19 @@ const Profile = () => {
       <>
         <div className="dashboard-container">
           <div className="section div1">
-            <ListFiles files={files} onSelect={handleSelectFile} onRemove={handleRemoveFile} />
+            <ListFiles files={files} onSelect={handleSelectFile} onRemove={handleRemoveFile} selectedFile={selectedFile} />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
             <FileUpload onChange={handleFileUpload} />
           </div>
           <div className="section div3 relative">
             {selectedFile ? (
-              <>
-                <button
-                  onClick={handleClosePreview}
-                  className="absolute top-0 right-0 text-white text-4xl p-4 hover:text-red-700"
-                  style={{ transform: 'translate(25%, -25%)' }}
-                >
-                  &times;
-                </button>
-                <iframe
-                  src={URL.createObjectURL(selectedFile)}
-                  title="File Preview"
-                  className="w-full h-full"
-                />
-              </>
+              <iframe
+                src={URL.createObjectURL(selectedFile)}
+                title="File Preview"
+                className="w-full h-full absolute inset-0" // Ensure the iframe fills its section
+                style={{ border: "none" }} // Remove default border
+              />
             ) : (
               <p>No file selected</p>
             )}

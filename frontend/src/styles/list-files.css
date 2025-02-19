@@ -21,6 +21,13 @@
   transform: translateY(-1px);
 }
 
+.file-item.selected {
+  padding: 10px;
+  border: 2px solid #4a90e2; /* Highlight border color */
+  background: #171717; /* Keep the background color consistent */
+  color: #fff; /* Change text color for better contrast */
+}
+
 .file-info {
   display: flex;
   flex-direction: column;
