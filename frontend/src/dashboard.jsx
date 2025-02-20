@@ -21,8 +21,12 @@ const Profile = () => {
   const { toast } = useToast();
 
   const handleFileUpload = (newFiles) => {
-    const duplicateFiles = newFiles.filter(newFile =>
-      files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    const duplicateFiles = newFiles.filter((newFile) =>
+      files.some(
+        (existingFile) =>
+          existingFile.name === newFile.name &&
+          existingFile.lastModified === newFile.lastModified
+      )
     );
 
     if (duplicateFiles.length > 0) {
@@ -34,8 +38,13 @@ const Profile = () => {
       return;
     }
 
-    const uniqueFiles = newFiles.filter(newFile =>
-      !files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
+    const uniqueFiles = newFiles.filter(
+      (newFile) =>
+        !files.some(
+          (existingFile) =>
+            existingFile.name === newFile.name &&
+            existingFile.lastModified === newFile.lastModified
+        )
     );
 
     if (files.length + uniqueFiles.length > 3) {
@@ -53,14 +62,14 @@ const Profile = () => {
 
   const handleSelectFile = (file) => {
     if (selectedFile === file) {
-      setSelectedFile(null);  // If clicking the same file, close the preview
+      setSelectedFile(null); // If clicking the same file, close the preview
     } else {
-      setSelectedFile(file);  // If clicking a different file, show its preview
+      setSelectedFile(file); // If clicking a different file, show its preview
     }
   };
 
   const handleRemoveFile = (fileToRemove) => {
-    setFiles((prevFiles) => prevFiles.filter(file => file !== fileToRemove));
+    setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
     if (selectedFile === fileToRemove) {
       setSelectedFile(null);
     }
@@ -72,7 +81,11 @@ const Profile = () => {
 
   const handleInputSubmit = async (inputValue) => {
     try {
-      const response = await fetch(`http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`);
+      const response = await fetch(
+        `http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(
+          inputValue
+        )}`
+      );
       const aiContent = await response.text();
       setAiContent(aiContent); // Set AI content
       console.log("AI Content:", aiContent);
@@ -101,12 +114,38 @@ const Profile = () => {
   return (
     isAuthenticated && (
       <>
+        <svg style={{ position: "absolute", width: 0, height: 0 }}>
+          <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq">
+            <feColorMatrix
+              values="1 0 0 0 0 
+                    0 1 0 0 0 
+                    0 0 1 0 0 
+                    0 0 0 9 0"
+            ></feColorMatrix>
+          </filter>
+          <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq2">
+            <feColorMatrix
+              values="1 0 0 0 0 
+                    0 1 0 0 0 
+                    0 0 1 0 0 
+                    0 0 0 3 0"
+            ></feColorMatrix>
+          </filter>
+          <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq3">
+            <feColorMatrix
+              values="1 0 0 0.2 0 
+                    0 1 0 0.2 0 
+                    0 0 1 0.2 0 
+                    0 0 0 2 0"
+            ></feColorMatrix>
+          </filter>
+        </svg>
         <div className="dashboard-container">
           <div className="section div1">
-            <ListFiles 
-              files={files} 
-              onSelect={handleSelectFile} 
-              onRemove={handleRemoveFile} 
+            <ListFiles
+              files={files}
+              onSelect={handleSelectFile}
+              onRemove={handleRemoveFile}
               selectedFile={selectedFile}
             />
           </div>
@@ -146,19 +185,24 @@ const Profile = () => {
             </div>
           </div>
           <div className="section div6">
-            <div style={{
-              maxHeight: '300px',
-              overflowY: 'auto',
-              padding: '1rem',
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word'
-            }}>
+            <div
+              style={{
+                maxHeight: "300px",
+                overflowY: "auto",
+                padding: "1rem",
+                whiteSpace: "pre-wrap",
+                wordWrap: "break-word",
+              }}
+            >
               <p>{aiContent}</p>
             </div>
           </div>
           <div className="section div7">
             <Dock>
-              <DockIcon onClick={toggleMic} title={micOn ? "Mic On" : "Mic Off"}>
+              <DockIcon
+                onClick={toggleMic}
+                title={micOn ? "Mic On" : "Mic Off"}
+              >
                 {micOn ? (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

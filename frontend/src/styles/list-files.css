@@ -6,27 +6,160 @@
 }
 
 .file-item {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 10px;
-  border: 1px solid #333;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #171717;
+  background: #111215;
 }
 
-.file-item:hover {
-  background: #262626;
-  transform: translateY(-1px);
+.file-container {
+  position: relative;
+  margin: 0.5em 0;
+  width: 100%;
+  height: 48px;
 }
 
-.file-info {
+.file-border {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #111215;
+}
+
+.file-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #60a5fa 0%, #2563eb 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.file-container:hover .file-border::before {
+  opacity: 0.2;
+}
+
+.file-content {
+  position: absolute;
+  inset: 2px;
+  background: #111215;
+  border-radius: 6px;
+  z-index: 2;
+  padding: 0 16px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.file-name {
-  font-weight: bold;
-  color: #e5e5e5;
+.file-content::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #60a5fa 0%, #2563eb 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.file-container:hover .file-content::before {
+  opacity: 1;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #0000 0,
+    #0000 20%,
+    #111111aa 50%
+  );
+  background-size: 3px 3px;
+  z-index: -1;
+}
+
+.spin {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.file-container:hover .spin {
+  opacity: 0.1;
+}
+
+.spin-blur {
+  filter: blur(8px);
+}
+
+.spin-intense {
+  filter: blur(2px);
+}
+
+.spin-inside {
+  filter: blur(1px);
+}
+
+.spin::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(
+    90deg,
+    #60a5fa 0%,
+    transparent 45%,
+    transparent 55%,
+    #2563eb 100%
+  );
+  animation: speen 3s linear infinite;
+  animation-play-state: paused;
+  border-radius: inherit;
+}
+
+.file-container:hover .spin::before {
+  animation-play-state: running;
+}
+
+.spin-blur::before {
+  background: linear-gradient(90deg, #60a5fa 30%, #0000 50%, #2563eb 70%);
+}
+
+.spin-intense::before {
+  background: linear-gradient(90deg, #93c5fd 20%, #0000 45% 55%, #1d4ed8 80%);
+}
+
+.spin-inside::before {
+  background: linear-gradient(90deg, #93c5fd 30%, #0000 45% 55%, #3b82f6 70%);
+}
+
+@keyframes speen {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes woah {
+  0%,
+  to {
+    scale: 1;
+  }
+  50% {
+    scale: 0.95;
+  }
 }
