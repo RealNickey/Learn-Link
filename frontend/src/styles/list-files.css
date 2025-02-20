@@ -36,18 +36,36 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #60a5fa 0%, #2563eb 100%);
+  background: linear-gradient(90deg, 
+    #60a5fa 0%, 
+    #ff6b81 40%, 
+    #f472b6 60%, 
+    #2563eb 100%
+  );
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.4s ease;
 }
 
 .file-container:hover .file-border::before {
+  opacity: 0.4;
+}
+
+/* Add selected state styles */
+.file-border[data-selected="true"]::before {
   opacity: 0.2;
+}
+
+.file-border[data-selected="true"] .file-content {
+  background: #181818;
+}
+
+.file-container:hover .file-border[data-selected="true"]::before {
+  opacity: 0.45;
 }
 
 .file-content {
   position: absolute;
-  inset: 2px;
+  inset: 3px;
   background: #111215;
   border-radius: 6px;
   z-index: 2;
@@ -55,6 +73,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transition: background-color 0.3s ease;
+}
+
+.file-content:hover {
+  background: #161616;
 }
 
 .file-content::before {
@@ -101,7 +124,7 @@
 }
 
 .file-container:hover .spin {
-  opacity: 0.1;
+  opacity: 0.15;
 }
 
 .spin-blur {
@@ -120,14 +143,13 @@
   content: "";
   position: absolute;
   inset: -50%;
-  background: linear-gradient(
-    90deg,
-    #60a5fa 0%,
-    transparent 45%,
-    transparent 55%,
-    #2563eb 100%
+  background: linear-gradient(90deg, 
+    #60a5fa 15%,
+    #ff6b81 40%,
+    #f472b6 60%,
+    #2563eb 85%
   );
-  animation: speen 3s linear infinite;
+  animation: speen 8s linear infinite;
   animation-play-state: paused;
   border-radius: inherit;
 }
@@ -137,20 +159,25 @@
 }
 
 .spin-blur::before {
-  background: linear-gradient(90deg, #60a5fa 30%, #0000 50%, #2563eb 70%);
+  background: linear-gradient(90deg, 
+    #60a5fa20 15%, 
+    #ff6b8130 40%, 
+    #f472b630 60%, 
+    #2563eb20 85%
+  );
 }
 
 .spin-intense::before {
-  background: linear-gradient(90deg, #93c5fd 20%, #0000 45% 55%, #1d4ed8 80%);
+  filter: brightness(1.1);
 }
 
 .spin-inside::before {
-  background: linear-gradient(90deg, #93c5fd 30%, #0000 45% 55%, #3b82f6 70%);
+  filter: brightness(1.05);
 }
 
 @keyframes speen {
   to {
-    transform: rotate(360deg);
+    transform: rotate(360deg) scale(1.03);
   }
 }
 

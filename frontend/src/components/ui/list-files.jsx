@@ -12,7 +12,10 @@ export const ListFiles = ({ files, onSelect, onRemove, selectedFile }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           layout>
-          <div className="file-border" onClick={() => onSelect(file)}>
+          <div 
+            className="file-border" 
+            onClick={() => onSelect(file)}
+            data-selected={selectedFile === file}>
             <div className="spin spin-blur"></div>
             <div className="spin spin-intense"></div>
             <div className="spin spin-inside"></div>
