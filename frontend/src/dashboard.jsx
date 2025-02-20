@@ -52,7 +52,11 @@ const Profile = () => {
   };
 
   const handleSelectFile = (file) => {
-    setSelectedFile(file);
+    if (selectedFile === file) {
+      setSelectedFile(null);  // If clicking the same file, close the preview
+    } else {
+      setSelectedFile(file);  // If clicking a different file, show its preview
+    }
   };
 
   const handleRemoveFile = (fileToRemove) => {
@@ -99,27 +103,23 @@ const Profile = () => {
       <>
         <div className="dashboard-container">
           <div className="section div1">
-            <ListFiles files={files} onSelect={handleSelectFile} onRemove={handleRemoveFile} />
+            <ListFiles 
+              files={files} 
+              onSelect={handleSelectFile} 
+              onRemove={handleRemoveFile} 
+              selectedFile={selectedFile}
+            />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
             <FileUpload onChange={handleFileUpload} />
           </div>
           <div className="section div3 relative">
             {selectedFile ? (
-              <>
-                <button
-                  onClick={handleClosePreview}
-                  className="absolute top-0 right-0 text-white text-4xl p-4 hover:text-red-700"
-                  style={{ transform: 'translate(25%, -25%)' }}
-                >
-                  &times;
-                </button>
-                <iframe
-                  src={URL.createObjectURL(selectedFile)}
-                  title="File Preview"
-                  className="w-full h-full"
-                />
-              </>
+              <iframe
+                src={URL.createObjectURL(selectedFile)}
+                title="File Preview"
+                className="w-full h-full"
+              />
             ) : (
               <p>No file selected</p>
             )}

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
 
-export const ListFiles = ({ files, onSelect, onRemove }) => {
+export const ListFiles = ({ files, onSelect, onRemove, selectedFile }) => {
   return (
     <div className="file-list w-full max-w-xl mx-auto">
       {files.map((file, idx) => (
@@ -13,14 +13,17 @@ export const ListFiles = ({ files, onSelect, onRemove }) => {
           onClick={() => onSelect(file)}
           className={cn(
             "relative overflow-hidden z-40 bg-neutral-900 flex flex-col items-start justify-start h-16 p-4 mt-4 w-full mx-auto rounded-md",
-            "shadow-sm hover:bg-neutral-800 cursor-pointer"
-          )}>
+            "shadow-sm hover:bg-neutral-800 cursor-pointer",
+            selectedFile === file && "bg-blue-900 hover:bg-blue-800"
+          )}
+        >
           <div className="flex justify-between w-full items-center gap-4">
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               layout
-              className="text-base text-neutral-300 truncate max-w-xs">
+              className="text-base text-neutral-300 truncate max-w-xs"
+            >
               {file.name}
             </motion.p>
             <Button
@@ -30,7 +33,8 @@ export const ListFiles = ({ files, onSelect, onRemove }) => {
               }}
               variant="ghost"
               size="icon"
-              className="text-white hover:text-red-700 text-2xl">
+              className="text-white hover:text-red-700 text-2xl"
+            >
               &times;
             </Button>
           </div>
