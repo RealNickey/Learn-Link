@@ -11,6 +11,7 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+import QuizPanel from './components/ui/quiz-panel';
 
 // Removed ToastDemo component
 
@@ -25,6 +26,8 @@ const Profile = () => {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [currentQuiz, setCurrentQuiz] = useState(null);
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -232,31 +235,31 @@ const Profile = () => {
       const formData = new FormData();
       formData.append('pdf', files[0]);
 
-      console.log('Sending request to generate quiz...');
       const response = await fetch('http://localhost:3000/generate-quiz', {
         method: 'POST',
         body: formData,
-        credentials: 'include',
         headers: {
           'Accept': 'application/json'
         }
       });
 
       if (!response.ok) {
-        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        throw new Error(`Server error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Generated Quiz:', data.quiz);
+      setCurrentQuiz(data.quiz);
+      setIsQuizOpen(true);
+      
       toast({
         title: "Success",
-        description: "Quiz generated! Check the console.",
+        description: "Quiz generated!",
       });
     } catch (error) {
       console.error('Error:', error);
       toast({
         title: "Error",
-        description: `Failed to generate quiz: ${error.message}`,
+        description: error.message,
         variant: "destructive",
         duration: 5000,
       });
@@ -483,6 +486,11 @@ const Profile = () => {
             </Dock>
           </div>
         </div>
+        <QuizPanel 
+          quiz={currentQuiz} 
+          isOpen={isQuizOpen} 
+          onClose={() => setIsQuizOpen(false)} 
+        />
         <Toaster />
       </>
     )
