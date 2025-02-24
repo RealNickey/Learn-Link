@@ -109,7 +109,8 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
               )}
             </div>
             <div className="navigation-buttons">
-              {!isSubmitted && (
+              {!isSubmitted ? (
+                // Show navigation and submit buttons before submission
                 <>
                   <Button 
                     onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
@@ -132,6 +133,15 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
                     Next
                   </Button>
                 </>
+              ) : (
+                // Show only close button after submission
+                <Button 
+                  variant="secondary"
+                  onClick={onClose}
+                  className="close-quiz-button"
+                >
+                  Close Quiz
+                </Button>
               )}
             </div>
           </>

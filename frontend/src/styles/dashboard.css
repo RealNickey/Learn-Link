@@ -261,6 +261,10 @@
   z-index: 2;
 }
 
+.close-quiz-button {
+  min-width: 120px;
+}
+
 .quiz-result {
   background: rgba(0, 0, 0, 0.2);
   padding: 1rem;
