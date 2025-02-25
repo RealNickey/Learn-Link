@@ -12,8 +12,7 @@ export const ListFiles = ({ files, onSelect, onRemove, selectedFile }) => {
           layoutId={`file-list-${idx}`}
           onClick={() => onSelect(file)}
           className={cn(
-            "relative overflow-hidden z-40 bg-neutral-900 flex flex-col items-start justify-start h-16 p-4 mt-4 w-full mx-auto rounded-md",
-            "shadow-sm hover:bg-neutral-800 cursor-pointer",
+            "file-item relative overflow-hidden z-40 flex flex-col items-start justify-start h-16 p-4 mt-4 w-full mx-auto rounded-md",
             selectedFile === file ? "selected" : ""
           )}>
           <div className="flex justify-between w-full items-center gap-4">

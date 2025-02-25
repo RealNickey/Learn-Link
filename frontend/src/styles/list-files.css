@@ -23,10 +23,10 @@
 
 .file-item.selected {
   padding: 10px;
-  border: 2px solid #4a90e2; /* Highlight border color */
-  background: #171717; /* Keep the background color consistent */
-  color: #fff; /* Change text color for better contrast */
-  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8); /* White highlight */
+  border: 2px solid hsl(var(--primary)); /* Using theme primary color */
+  background: #171717;
+  color: hsl(var(--primary)); /* Text color matching border */
+  box-shadow: 0 0 10px 2px hsla(var(--primary), 0.2); /* Softer glow using primary color */
 }
 
 .file-info {
