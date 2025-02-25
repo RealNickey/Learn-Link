@@ -165,11 +165,14 @@
 .chat-content {
   flex: 1;
   word-wrap: break-word;
-  white-space: pre-wrap;
+  white-space: pre-wrap; /* Preserve whitespace and line breaks */
   overflow-wrap: break-word;
   max-width: calc(100% - 48px);
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.5;
+  word-break: break-word; /* Ensure words do not break awkwardly */
+  text-align: left; /* Ensure text alignment is left */
+  display: block; /* Ensure text is displayed as block */
 }
 
 .chat-bubble p {
