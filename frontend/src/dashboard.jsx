@@ -11,7 +11,11 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+
+import QuizPanel from './components/ui/quiz-panel';
+
 import LiveCursor from "./components/ui/livecursor";
+
 
 // Removed ToastDemo component
 
@@ -26,6 +30,8 @@ const Profile = () => {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [currentQuiz, setCurrentQuiz] = useState(null);
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -232,6 +238,59 @@ const Profile = () => {
     }
   };
 
+  const handleGenerateQuiz = async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select a PDF file using the checkbox",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    toast({
+      title: "Generating Quiz",
+      description: "Please wait while we create your questions...",
+      duration: 2000,
+    });
+  
+    try {
+      const formData = new FormData();
+      formData.append('pdf', selectedFiles[0]); // Use first selected file
+  
+      const response = await fetch('http://localhost:3000/generate-quiz', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'include',
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      setCurrentQuiz(data.quiz);
+      setIsQuizOpen(true);
+      
+      toast({
+        title: "Success",
+        description: "Quiz generated!",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  };
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -415,7 +474,7 @@ const Profile = () => {
                   </svg>
                 )}
               </DockIcon>
-              <DockIcon title="Ai Quiz">
+              <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -483,6 +542,11 @@ const Profile = () => {
             </Dock>
           </div>
         </div>
+        <QuizPanel 
+          quiz={currentQuiz} 
+          isOpen={isQuizOpen} 
+          onClose={() => setIsQuizOpen(false)} 
+        />
         <Toaster />
       </>
     )
