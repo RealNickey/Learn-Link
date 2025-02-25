@@ -39,13 +39,36 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
 
   const getAnswerStatus = (questionIndex, optionIndex) => {
     if (!isSubmitted) return '';
-    if (quiz.questions[questionIndex].correctAnswer === optionIndex) {
-      return 'correct';
-    }
-    if (userAnswers[questionIndex] === optionIndex) {
-      return 'incorrect';
-    }
+    
+    const isCorrectAnswer = quiz.questions[questionIndex].correctAnswer === optionIndex;
+    const isUserAnswer = userAnswers[questionIndex] === optionIndex;
+
+    if (isCorrectAnswer) return 'correct';
+    if (isUserAnswer) return 'incorrect';
     return '';
+  };
+
+  const getButtonStyle = (questionIndex, optionIndex) => {
+    if (!isSubmitted) return {};
+
+    const isCorrectAnswer = quiz.questions[questionIndex].correctAnswer === optionIndex;
+    const isUserAnswer = userAnswers[questionIndex] === optionIndex;
+
+    if (isCorrectAnswer) {
+      return {
+        backgroundColor: 'rgba(74, 222, 128, 0.2)',
+        borderColor: '#4ade80',
+        color: '#4ade80'
+      };
+    }
+    if (isUserAnswer) {
+      return {
+        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+        borderColor: '#ef4444',
+        color: '#ef4444'
+      };
+    }
+    return {};
   };
 
   return (
@@ -75,18 +98,30 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
                       {question.options.map((option, index) => (
                         <Button
                           key={index}
-                          variant={getAnswerStatus(qIndex, index)}
+                          variant="outline"
                           disabled
+                          style={getButtonStyle(qIndex, index)}
                         >
                           {option}
+                          {isSubmitted && (
+                            <span className="answer-indicator">
+                              {quiz.questions[qIndex].correctAnswer === index && ' ✓'}
+                              {userAnswers[qIndex] === index && 
+                              quiz.questions[qIndex].correctAnswer !== index && ' ✗'}
+                            </span>
+                          )}
                         </Button>
                       ))}
                     </div>
-                    <div className="answer-explanation">
-                      <p className="explanation-text">
-                        Correct Answer: {question.options[question.correctAnswer]}
-                      </p>
-                    </div>
+                    {userAnswers[qIndex] !== question.correctAnswer && (
+                      <div className="answer-explanation incorrect">
+                        <p className="explanation-text">
+                          Your answer: {question.options[userAnswers[qIndex]]}
+                          <br />
+                          Correct answer: {question.options[question.correctAnswer]}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (
