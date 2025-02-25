@@ -82,10 +82,9 @@ async function comparePdfs(pdf1Buffer, pdf2Buffer) {
   }
 }
 
-async function generateQuiz(pdfBuffer) {
+async function generateQuiz(pdfBuffers) {
   try {
-    const prompt = `Generate 5 multiple choice questions based on the document content. 
-    Return ONLY valid JSON with no additional text, formatted exactly like this example:
+    const prompt = `Based on the content of all provided documents, generate 5 multiple choice questions. Return in this JSON format:
     {
       "questions": [
         {
@@ -96,36 +95,34 @@ async function generateQuiz(pdfBuffer) {
       ]
     }`;
 
-    const result = await model.generateContent([
-      {
+    // Use Promise.all to process all PDFs in parallel
+    const pdfParts = await Promise.all(
+      pdfBuffers.map(async (buffer, index) => ({
         inlineData: {
-          data: pdfBuffer.toString('base64'),
-          mimeType: "application/pdf",
+          data: buffer.toString('base64'),
+          mimeType: "application/pdf"
         }
-      },
-      prompt
-    ]);
-
-    const response = result.response.text();
-    
-    // Clean the response string - remove any non-JSON content
-    const jsonStr = response.substring(
-      response.indexOf('{'),
-      response.lastIndexOf('}') + 1
+      }))
     );
 
-    try {
-      const parsed = JSON.parse(jsonStr);
-      if (!parsed.questions || !Array.isArray(parsed.questions)) {
-        throw new Error('Invalid quiz format');
-      }
-      return parsed;
-    } catch (error) {
-      console.error('Raw response:', response);
-      throw new Error('Failed to parse quiz response');
+    // Log for debugging
+    console.log(`Processing ${pdfParts.length} PDFs`);
+
+    const result = await model.generateContent([...pdfParts, prompt]);
+    const response = result.response.text();
+    
+    // Clean and parse the response
+    const jsonStr = response.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(jsonStr);
+
+    if (!parsed.questions || !Array.isArray(parsed.questions)) {
+      throw new Error('Invalid quiz format returned from AI');
     }
+
+    console.log('Quiz generated successfully:', parsed);
+    return parsed;
   } catch (error) {
-    console.error('Error generating quiz:', error);
+    console.error('Error in generateQuiz:', error);
     throw error;
   }
 }

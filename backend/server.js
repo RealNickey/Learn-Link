@@ -15,10 +15,13 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Configure multer for memory storage
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
 const upload = multer({
+  storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit per file
+    files: 3 // Maximum 3 files
   }
 });
 
@@ -26,31 +29,34 @@ const upload = multer({
 app.options('/generate-quiz', cors());
 
 // Move quiz route to the top of routes
-app.post('/generate-quiz', upload.single('pdf'), async (req, res) => {
-  console.log('[Quiz Route] Request received');
-  
-  // Add CORS headers explicitly
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  try {
-    if (!req.file) {
-      console.log('[Quiz Route] No file provided');
-      return res.status(400).json({ error: 'No PDF file provided' });
+app.post('/generate-quiz', (req, res) => {
+  upload.array('pdfs', 3)(req, res, async function(err) {
+    if (err) {
+      console.error('[Quiz Route] Upload error:', err);
+      return res.status(400).json({ error: err.message });
     }
 
-    console.log('[Quiz Route] Processing file:', req.file.originalname);
-    const quiz = await generateQuiz(req.file.buffer);
-    
-    console.log('[Quiz Route] Quiz generated:', JSON.stringify(quiz));
-    return res.status(200).json({ quiz });
-    
-  } catch (error) {
-    console.error('[Quiz Route] Error:', error);
-    return res.status(500).json({ 
-      error: error.message || 'Failed to generate quiz'
-    });
-  }
+    try {
+      if (!req.files || req.files.length === 0) {
+        throw new Error('No PDF files provided');
+      }
+
+      console.log(`[Quiz Route] Processing ${req.files.length} files:`, 
+        req.files.map(f => f.originalname));
+
+      const pdfBuffers = req.files.map(file => file.buffer);
+      const quiz = await generateQuiz(pdfBuffers);
+      
+      console.log('[Quiz Route] Quiz generated successfully');
+      return res.status(200).json({ quiz });
+      
+    } catch (error) {
+      console.error('[Quiz Route] Error:', error);
+      return res.status(500).json({ 
+        error: error.message || 'Failed to generate quiz'
+      });
+    }
+  });
 });
 
 // Routes

@@ -219,7 +219,7 @@ const Profile = () => {
     if (selectedFiles.length === 0) {
       toast({
         title: "No files selected",
-        description: "Please select a PDF file using the checkbox",
+        description: "Please select PDF files using the checkboxes",
         variant: "destructive",
       });
       return;
@@ -227,38 +227,46 @@ const Profile = () => {
   
     toast({
       title: "Generating Quiz",
-      description: "Please wait while we create your questions...",
+      description: `Creating questions from ${selectedFiles.length} document(s)...`,
       duration: 2000,
     });
   
     try {
       const formData = new FormData();
-      formData.append('pdf', selectedFiles[0]); // Use first selected file
+      // Append each selected file with the same field name
+      selectedFiles.forEach(file => {
+        formData.append('pdfs', file);
+      });
+  
+      console.log('Sending files:', selectedFiles.map(f => f.name));
   
       const response = await fetch('http://localhost:3000/generate-quiz', {
         method: 'POST',
         body: formData,
-        headers: {
-          'Accept': 'application/json'
-        },
-        mode: 'cors',
         credentials: 'include',
       });
   
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Server error: ${response.status}`);
       }
   
       const data = await response.json();
+      console.log('Quiz data received:', data);
+  
+      if (!data.quiz || !data.quiz.questions) {
+        throw new Error('Invalid quiz data received');
+      }
+  
       setCurrentQuiz(data.quiz);
       setIsQuizOpen(true);
       
       toast({
         title: "Success",
-        description: "Quiz generated!",
+        description: `Quiz generated from ${selectedFiles.length} documents!`,
       });
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Quiz generation error:', error);
       toast({
         title: "Error",
         description: error.message,
