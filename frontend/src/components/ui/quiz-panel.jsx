@@ -111,28 +111,15 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
                         >
                           {option}
                           {isSubmitted && (
-                            <span className="answer-indicator">
-                              {quiz.questions[qIndex].correctAnswer === index &&
-                                " ✓"}
-                              {userAnswers[qIndex] === index &&
-                                quiz.questions[qIndex].correctAnswer !==
-                                  index &&
-                                " ✗"}
+                            <span className={`answer-indicator ${quiz.questions[qIndex].correctAnswer === index ? 'correct' : userAnswers[qIndex] === index ? 'incorrect' : ''}`}>
+                              {quiz.questions[qIndex].correctAnswer === index && ' ✓'}
+                              {userAnswers[qIndex] === index && 
+                              quiz.questions[qIndex].correctAnswer !== index && ' ✗'}
                             </span>
                           )}
                         </Button>
                       ))}
                     </div>
-                    {userAnswers[qIndex] !== question.correctAnswer && (
-                      <div className="answer-explanation incorrect">
-                        <p className="explanation-text">
-                          Your answer: {question.options[userAnswers[qIndex]]}
-                          <br />
-                          Correct answer:{" "}
-                          {question.options[question.correctAnswer]}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 ))
               ) : (

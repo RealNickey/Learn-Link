@@ -184,15 +184,16 @@
   right: 0;
   background: #1e1e1e;
   border-top: 2px solid #333;
-  transform: translateY(100%);
-  transition: transform 0.3s ease-in-out;
+  transform: translateY(100%) scale(0.98);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  height: 60vh;
+  height: 80vh;
   padding: 20px;
+  transform-origin: bottom;
 }
 
 .quiz-panel.open {
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .quiz-content {
@@ -322,6 +323,15 @@
 .answer-indicator {
   margin-left: 8px;
   font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.answer-indicator.correct {
+  color: #4ade80;
+}
+
+.answer-indicator.incorrect {
+  color: #ef4444;
 }
 
 .options-grid button:disabled {
