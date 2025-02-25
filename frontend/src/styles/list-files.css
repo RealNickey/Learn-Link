@@ -26,6 +26,7 @@
   border: 2px solid #4a90e2; /* Highlight border color */
   background: #171717; /* Keep the background color consistent */
   color: #fff; /* Change text color for better contrast */
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8); /* White highlight */
 }
 
 .file-info {
