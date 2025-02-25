@@ -6,68 +6,188 @@
 }
 
 .file-item {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 10px;
-  border: 1px solid #333;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #171717;
+  background: #111215;
 }
 
-.file-item:hover {
-  background: #262626;
-  transform: translateY(-1px);
+.file-container {
+  position: relative;
+  margin: 0.5em 0;
+  width: 100%;
+  height: 48px;
 }
 
-/* Make checkbox always visible */
-.file-item .checkbox-container {
+.file-border {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #111215;
+}
+
+.file-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, 
+    #60a5fa 0%, 
+    #ff6b81 40%, 
+    #f472b6 60%, 
+    #2563eb 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.file-container:hover .file-border::before {
+  opacity: 0.4;
+}
+
+/* Add selected state styles */
+.file-border[data-selected="true"]::before {
+  opacity: 0.2;
+}
+
+.file-border[data-selected="true"] .file-content {
+  background: #181818;
+}
+
+.file-container:hover .file-border[data-selected="true"]::before {
+  opacity: 0.45;
+}
+
+.file-content {
+  position: absolute;
+  inset: 3px;
+  background: #111215;
+  border-radius: 6px;
+  z-index: 2;
+  padding: 0 16px;
   display: flex;
   align-items: center;
-  opacity: 1; /* Always visible */
+  justify-content: space-between;
+  transition: background-color 0.3s ease;
+}
+
+.file-content:hover {
+  background: #161616;
+}
+
+.file-content::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #60a5fa 0%, #2563eb 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
   transition: opacity 0.2s ease;
-}
-
-/* Custom checkbox styles */
-.file-item .custom-checkbox {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  transition: all 0.2s ease;
-}
-
-.file-item .custom-checkbox:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-
-/* Remove hover effect since we're using opacity in component */
-.file-item:hover .custom-checkbox {
-  opacity: 1;
-}
-
-/* Style the checkbox wrapper */
-[data-state] {
-  background-color: #262626;
-  border: 1px solid #404040;
-}
-
-/* Style the checked state */
-[data-state="checked"] {
-  background-color: #2563eb;
-  border-color: #3b82f6;
-}
-
-/* Adjust spacing for checkbox and text */
-.file-info {
-  display: flex;
-  flex-direction: column;
   margin-left: 8px;
 }
 
-.file-name {
-  font-weight: bold;
-  color: #e5e5e5;
+.file-container:hover .file-content::before {
+  opacity: 1;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #0000 0,
+    #0000 20%,
+    #111111aa 50%
+  );
+  background-size: 3px 3px;
+  z-index: -1;
+}
+
+.spin {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.file-container:hover .spin {
+  opacity: 0.15;
+}
+
+.spin-blur {
+  filter: blur(8px);
+}
+
+.spin-intense {
+  filter: blur(2px);
+}
+
+.spin-inside {
+  filter: blur(1px);
+}
+
+.spin::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(90deg, 
+    #60a5fa 15%,
+    #ff6b81 40%,
+    #f472b6 60%,
+    #2563eb 85%
+  );
+  animation: speen 8s linear infinite;
+  animation-play-state: paused;
+  border-radius: inherit;
+}
+
+.file-container:hover .spin::before {
+  animation-play-state: running;
+}
+
+.spin-blur::before {
+  background: linear-gradient(90deg, 
+    #60a5fa20 15%, 
+    #ff6b8130 40%, 
+    #f472b630 60%, 
+    #2563eb20 85%
+  );
+}
+
+.spin-intense::before {
+  filter: brightness(1.1);
+}
+
+.spin-inside::before {
+  filter: brightness(1.05);
+}
+
+@keyframes speen {
+  to {
+    transform: rotate(360deg) scale(1.03);
+  }
+}
+
+@keyframes woah {
+  0%,
+  to {
+    scale: 1;
+  }
+  50% {
+    scale: 0.95;
+  }
 }

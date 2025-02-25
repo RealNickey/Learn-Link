@@ -1,14 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import { Button } from "./button";
 import { CustomCheckbox } from "./custom-checkbox";
 
-export const ListFiles = ({ files, onSelect, onRemove, selectedFiles, onFileSelect }) => {
+export const ListFiles = ({ files, onSelect, onRemove, selectedFile, selectedFiles, onFileSelect }) => {
   return (
     <div className="file-list w-full max-w-xl mx-auto">
       {files.map((file, idx) => (
-        <motion.div
+        <motion.div 
+          className="file-container" 
           key={file.name + file.lastModified}
           layoutId={`file-list-${idx}`}
           className={cn(
