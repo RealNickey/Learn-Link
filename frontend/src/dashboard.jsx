@@ -216,37 +216,39 @@ const Profile = () => {
   };
 
   const handleGenerateQuiz = async () => {
-    if (files.length === 0) {
+    if (selectedFiles.length === 0) {
       toast({
         title: "No files selected",
-        description: "Please upload a PDF file first",
+        description: "Please select a PDF file using the checkbox",
         variant: "destructive",
       });
       return;
     }
-
+  
     toast({
       title: "Generating Quiz",
       description: "Please wait while we create your questions...",
       duration: 2000,
     });
-
+  
     try {
       const formData = new FormData();
-      formData.append('pdf', files[0]);
-
+      formData.append('pdf', selectedFiles[0]); // Use first selected file
+  
       const response = await fetch('http://localhost:3000/generate-quiz', {
         method: 'POST',
         body: formData,
         headers: {
           'Accept': 'application/json'
-        }
+        },
+        mode: 'cors',
+        credentials: 'include',
       });
-
+  
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
-
+  
       const data = await response.json();
       setCurrentQuiz(data.quiz);
       setIsQuizOpen(true);
