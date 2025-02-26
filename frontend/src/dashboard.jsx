@@ -233,22 +233,21 @@ const Profile = () => {
   
     try {
       const formData = new FormData();
-      // Append each selected file with the same field name
       selectedFiles.forEach(file => {
+        console.log('Adding file:', file.name);
         formData.append('pdfs', file);
       });
-  
-      console.log('Sending files:', selectedFiles.map(f => f.name));
   
       const response = await fetch('http://localhost:3000/generate-quiz', {
         method: 'POST',
         body: formData,
-        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+        }
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Server error: ${response.status}`);
+        throw new Error(response.status === 404 ? 'Quiz service unavailable' : `Server error: ${response.status}`);
       }
   
       const data = await response.json();
@@ -269,7 +268,7 @@ const Profile = () => {
       console.error('Quiz generation error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || 'Failed to generate quiz',
         variant: "destructive",
         duration: 5000,
       });
