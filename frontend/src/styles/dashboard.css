@@ -9,8 +9,6 @@
   gap: 8px;
   height: 100vh;
   background-color: #1e1e1e;
-  position: relative;
-  overflow: hidden;
 }
 
 .sidebar {
@@ -176,16 +174,180 @@
 
 .chat-bubble p {
   margin: 0;
-  line-height: 1.5;}
+  line-height: 1.5;
+}
 
-.cursors-container {
-  position: relative;
-  width: 100%;
+.quiz-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1e1e1e;
+  border-top: 2px solid #333;
+  transform: translateY(100%) scale(0.98);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  height: 80vh;
+  padding: 20px;
+  transform-origin: bottom;
+}
+
+.quiz-panel.open {
+  transform: translateY(0) scale(1);
+}
+
+.quiz-content {
+  max-width: 800px;
+  margin: 0 auto;
   height: 100%;
-  min-height: 300px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.question-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding: 20px 0;
+  margin-bottom: 80px; /* Space for navigation buttons */
+  scroll-behavior: smooth;
+}
+
+.question-container.submitted {
+  overflow-y: auto;
+  padding-bottom: 2rem;
+}
+
+.question {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.question.hidden {
+  display: none;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.navigation-buttons {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: #1e1e1e;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  z-index: 2;
+}
+
+.close-quiz-button {
+  min-width: 120px;
+}
+
+.quiz-result {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  background: #1e1e1e;
+  z-index: 2;
+  padding: 1rem;
+  margin: 0 -20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.score {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4ade80;
+  margin-top: 0.5rem;
+}
+
+.answer-explanation {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.answer-explanation.incorrect {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+.answer-explanation.incorrect .explanation-text {
+  color: #ef4444;
+}
+
+.explanation-text {
+  color: #4ade80;
+  font-size: 0.9rem;
+}
+
+.options-grid button.correct {
+  background-color: rgba(74, 222, 128, 0.2);
+  border-color: #4ade80;
+}
+
+.options-grid button.incorrect {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+.answer-indicator {
+  margin-left: 8px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.answer-indicator.correct {
+  color: #4ade80;
+}
+
+.answer-indicator.incorrect {
+  color: #ef4444;
+}
+
+.options-grid button:disabled {
+  opacity: 1;
+}
+
+.options-grid button[data-state="correct"] {
+  background-color: rgba(74, 222, 128, 0.2);
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+.options-grid button[data-state="incorrect"] {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
 }
 
 @layer base {
