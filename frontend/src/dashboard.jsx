@@ -12,6 +12,7 @@ import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
 import LiveCursor from "./components/ui/livecursor";
+import { ChatBubble, ChatBubbleMessage, ChatBubbleAvatar } from "./components/ui/chat-bubble";
 
 // Removed ToastDemo component
 
@@ -27,6 +28,8 @@ const Profile = () => {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
+  const [isAiResponding, setIsAiResponding] = useState(false);
+  const [isAiError, setIsAiError] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -137,22 +140,40 @@ const Profile = () => {
   };
 
   const handleInputSubmit = async (inputValue) => {
+    // Add user message immediately
     setChatHistory((prev) => [
       ...prev,
       { type: "user", content: inputValue, image: userImage },
-    ]); // Add user input to chat history
+    ]);
+    
+    setIsAiResponding(true);
+    setIsAiError(false);
+    
     try {
       const response = await fetch(
-        `${
-          import.meta.env.VITE_API_URL
-        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
+        `${import.meta.env.VITE_API_URL}/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
       );
+      
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+      
       const aiContent = await response.text();
-      setAiContent(aiContent);
-      setChatHistory((prev) => [...prev, { type: "ai", content: aiContent }]); // Add AI response to chat history
-      console.log("AI Content:", aiContent);
+      setChatHistory((prev) => [...prev, { 
+        type: "ai", 
+        content: aiContent,
+        status: "success"
+      }]);
     } catch (error) {
       console.error("Error fetching AI content:", error);
+      setIsAiError(true);
+      setChatHistory((prev) => [...prev, { 
+        type: "ai", 
+        content: "I apologize, but I encountered an error processing your request. Please try again.",
+        status: "error"
+      }]);
+    } finally {
+      setIsAiResponding(false);
     }
   };
 
@@ -326,52 +347,76 @@ const Profile = () => {
             </div>
           </div>
           <div className="section div6">
-            <div
-              style={{
-                height: "100%",
-                overflowY: "auto",
-                padding: "1rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-              }}
-            >
+            <div className="h-full overflow-y-auto p-4 flex flex-col gap-4">
               {chatHistory.map((chat, index) => (
-                <div key={index} className={`chat-message ${chat.type}`}>
-                  <div className={`chat-bubble ${chat.type}`}>
-                    {chat.type === "user" ? (
-                      <img src={chat.image} alt="User" className="chat-image" />
-                    ) : (
-                      <div className="ai-icon-wrapper">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-bot"
-                        >
-                          <path d="M12 8V4H8" />
-                          <rect width="16" height="12" x="4" y="8" rx="2" />
-                          <path d="M2 14h2" />
-                          <path d="M20 14h2" />
-                          <path d="M15 13v2" />
-                          <path d="M9 13v2" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="chat-content">
-                      {typeof chat.content === "object" && chat.content.content
-                        ? chat.content.content
-                        : chat.content}
+                <ChatBubble
+                  key={index}
+                  variant={chat.type === "user" ? "sent" : "received"}
+                >
+                  {chat.type === "user" ? (
+                    <ChatBubbleAvatar
+                      src={userImage}
+                      fallback={user?.name?.charAt(0)}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800">
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="20" 
+                        height="20" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className={cn("text-blue-500", chat.status === "error" && "text-red-500")}
+                      >
+                        <path d="M12 8V4H8"/>
+                        <rect width="16" height="12" x="4" y="8" rx="2"/>
+                        <path d="M2 14h2"/>
+                        <path d="M20 14h2"/>
+                        <path d="M15 13v2"/>
+                        <path d="M9 13v2"/>
+                      </svg>
                     </div>
-                  </div>
-                </div>
+                  )}
+                  <ChatBubbleMessage
+                    variant={chat.type === "user" ? "sent" : "received"}
+                    isLoading={chat.type === "ai" && isAiResponding && index === chatHistory.length - 1}
+                  >
+                    {chat.content}
+                  </ChatBubbleMessage>
+                </ChatBubble>
               ))}
+              {isAiResponding && !chatHistory.length && (
+                <ChatBubble variant="received">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="text-blue-500"
+                    >
+                      <path d="M12 8V4H8"/>
+                      <rect width="16" height="12" x="4" y="8" rx="2"/>
+                      <path d="M2 14h2"/>
+                      <path d="M20 14h2"/>
+                      <path d="M15 13v2"/>
+                      <path d="M9 13v2"/>
+                    </svg>
+                  </div>
+                  <ChatBubbleMessage variant="received" isLoading={true}>
+                    Processing your request...
+                  </ChatBubbleMessage>
+                </ChatBubble>
+              )}
             </div>
           </div>
           <div className="section div7">
