@@ -1,9 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import { CustomCheckbox } from "./custom-checkbox";
+import { Button } from "./button";
 
-export const ListFiles = ({ files, onSelect, onRemove, selectedFile, selectedFiles, onFileSelect }) => {
+export const ListFiles = ({ files, onSelect, onRemove, selectedFile }) => {
   return (
     <div className="file-list w-full max-w-xl mx-auto">
       {files.map((file, idx) => (
