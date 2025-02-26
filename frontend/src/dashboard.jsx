@@ -11,7 +11,7 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
-import QuizPanel from './components/ui/quiz-panel';
+import LiveCursor from "./components/ui/livecursor";
 
 // Removed ToastDemo component
 
@@ -26,8 +26,6 @@ const Profile = () => {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const [currentQuiz, setCurrentQuiz] = useState(null);
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -85,10 +83,13 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("pdf", file);
 
-      const response = await fetch("http://localhost:3000/generate-summary", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/generate-summary`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to generate summary");
@@ -130,9 +131,9 @@ const Profile = () => {
     ]); // Add user input to chat history
     try {
       const response = await fetch(
-        `http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(
-          inputValue
-        )}`
+        `${
+          import.meta.env.VITE_API_URL
+        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
       );
       const aiContent = await response.text();
       setAiContent(aiContent);
@@ -179,10 +180,13 @@ const Profile = () => {
         const formData = new FormData();
         formData.append("pdf", file);
 
-        const response = await fetch("http://localhost:3000/generate-summary", {
-          method: "POST",
-          body: formData,
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/generate-summary`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to generate summary");
@@ -215,67 +219,6 @@ const Profile = () => {
     }
   };
 
-  const handleGenerateQuiz = async () => {
-    if (selectedFiles.length === 0) {
-      toast({
-        title: "No files selected",
-        description: "Please select PDF files using the checkboxes",
-        variant: "destructive",
-      });
-      return;
-    }
-  
-    toast({
-      title: "Generating Quiz",
-      description: `Creating questions from ${selectedFiles.length} document(s)...`,
-      duration: 2000,
-    });
-  
-    try {
-      const formData = new FormData();
-      // Append each selected file with the same field name
-      selectedFiles.forEach(file => {
-        formData.append('pdfs', file);
-      });
-  
-      console.log('Sending files:', selectedFiles.map(f => f.name));
-  
-      const response = await fetch('http://localhost:3000/generate-quiz', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      console.log('Quiz data received:', data);
-  
-      if (!data.quiz || !data.quiz.questions) {
-        throw new Error('Invalid quiz data received');
-      }
-  
-      setCurrentQuiz(data.quiz);
-      setIsQuizOpen(true);
-      
-      toast({
-        title: "Success",
-        description: `Quiz generated from ${selectedFiles.length} documents!`,
-      });
-    } catch (error) {
-      console.error('Quiz generation error:', error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-        duration: 5000,
-      });
-    }
-  };
-
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -292,7 +235,11 @@ const Profile = () => {
   return (
     isAuthenticated && (
       <>
-        <div className="dashboard-container">
+        <div className="dashboard-container" id="dashboard-container">
+          <LiveCursor
+            containerId="dashboard-container"
+            username={user?.name || user?.email}
+          />
           <div className="section div1">
             <ListFiles
               files={files}
@@ -428,7 +375,7 @@ const Profile = () => {
                   </svg>
                 )}
               </DockIcon>
-              <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
+              <DockIcon title="Ai Quiz">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -496,11 +443,6 @@ const Profile = () => {
             </Dock>
           </div>
         </div>
-        <QuizPanel 
-          quiz={currentQuiz} 
-          isOpen={isQuizOpen} 
-          onClose={() => setIsQuizOpen(false)} 
-        />
         <Toaster />
       </>
     )
