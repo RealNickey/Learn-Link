@@ -111,17 +111,12 @@ app.post('/compare-pdfs', upload.fields([
 });
 
 app.get("/generate-ai-content", async (req, res) => {
-  const prompt = req.query.prompt;
-  if (!prompt) {
-    return res.status(400).json({ error: 'Prompt is required' });
-  }
-  
+  const prompt = req.query.prompt || "Explain how AI works";
   try {
     const content = await generateAIContent(prompt);
-    res.json({ content });
+    res.send(content);
   } catch (error) {
-    console.error('Error generating content:', error);
-    res.status(500).json({ error: 'Failed to generate content: ' + error.message });
+    res.status(500).send(error.message);
   }
 });
 

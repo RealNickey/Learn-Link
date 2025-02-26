@@ -13,7 +13,8 @@ const dockVariants = cva(
   "supports-backdrop-blur:bg-white/10 supports-backdrop-blur:dark:bg-black/10 mx-auto mt-8 flex h-[58px] w-max items-center justify-center gap-2 rounded-2xl border p-2 backdrop-blur-md"
 );
 
-const Dock = React.forwardRef(({
+const Dock = React.forwardRef((
+  {
     className,
     children,
     iconSize = DEFAULT_SIZE,
@@ -66,7 +67,6 @@ const DockIcon = ({
   mouseX,
   className,
   children,
-  onClick,
   ...props
 }) => {
   const ref = useRef(null);
@@ -94,7 +94,6 @@ const DockIcon = ({
         "flex aspect-square cursor-pointer items-center justify-center rounded-full",
         className
       )}
-      onClick={onClick}
       {...props}>
       {children}
     </motion.div>)

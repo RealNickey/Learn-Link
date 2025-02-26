@@ -11,7 +11,7 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
-import QuizPanel from './components/ui/quiz-panel';
+import LiveCursor from "./components/ui/livecursor";
 
 // Removed ToastDemo component
 
@@ -26,17 +26,19 @@ const Profile = () => {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const [currentQuiz, setCurrentQuiz] = useState(null);
 
   const userImage = user.picture; // Store user image in a variable
 
   const handleFileUpload = (newFiles) => {
-    const duplicateFiles = newFiles.filter((newFile) =>
+    const duplicateFiles = newFiles.filter(((newFile)) =>
       files.some(
-        (existingFile) =>
+        (
+        (existingFile)) =>
+         
           existingFile.name === newFile.name &&
+         
           existingFile.lastModified === newFile.lastModified
+      
       )
     );
 
@@ -49,13 +51,8 @@ const Profile = () => {
       return;
     }
 
-    const uniqueFiles = newFiles.filter(
-      (newFile) =>
-        !files.some(
-          (existingFile) =>
-            existingFile.name === newFile.name &&
-            existingFile.lastModified === newFile.lastModified
-        )
+    const uniqueFiles = newFiles.filter(newFile =>
+      !files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
     );
 
     if (files.length + uniqueFiles.length > 3) {
@@ -85,10 +82,13 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("pdf", file);
 
-      const response = await fetch("http://localhost:3000/generate-summary", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/generate-summary`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to generate summary");
@@ -110,12 +110,21 @@ const Profile = () => {
   };
 
   const handleSelectFile = (file) => {
+    if (selectedFile === file) {
+      setSelectedFile(null); // If clicking the same file, close the preview
+    } else {
+      setSelectedFile(file); // If clicking a different file, show its preview
+    }
     setSelectedFile(file);
     // Remove the automatic summary generation
     // generateSummary(file);
   };
 
   const handleRemoveFile = (fileToRemove) => {
+    setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+    if (selectedFile === fileToRemove) {
+      setSelectedFile(null);
+    }
     setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
   };
 
@@ -124,19 +133,14 @@ const Profile = () => {
   };
 
   const handleInputSubmit = async (inputValue) => {
-    setChatHistory((prev) => [
-      ...prev,
-      { type: "user", content: inputValue, image: userImage },
-    ]); // Add user input to chat history
     try {
       const response = await fetch(
-        `http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(
-          inputValue
-        )}`
+        `${
+          import.meta.env.VITE_API_URL
+        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
       );
       const aiContent = await response.text();
-      setAiContent(aiContent);
-      setChatHistory((prev) => [...prev, { type: "ai", content: aiContent }]); // Add AI response to chat history
+      setAiContent(aiContent); // Set AI content
       console.log("AI Content:", aiContent);
     } catch (error) {
       console.error("Error fetching AI content:", error);
@@ -179,10 +183,13 @@ const Profile = () => {
         const formData = new FormData();
         formData.append("pdf", file);
 
-        const response = await fetch("http://localhost:3000/generate-summary", {
-          method: "POST",
-          body: formData,
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/generate-summary`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to generate summary");
@@ -215,67 +222,6 @@ const Profile = () => {
     }
   };
 
-  const handleGenerateQuiz = async () => {
-    if (selectedFiles.length === 0) {
-      toast({
-        title: "No files selected",
-        description: "Please select PDF files using the checkboxes",
-        variant: "destructive",
-      });
-      return;
-    }
-  
-    toast({
-      title: "Generating Quiz",
-      description: `Creating questions from ${selectedFiles.length} document(s)...`,
-      duration: 2000,
-    });
-  
-    try {
-      const formData = new FormData();
-      // Append each selected file with the same field name
-      selectedFiles.forEach(file => {
-        formData.append('pdfs', file);
-      });
-  
-      console.log('Sending files:', selectedFiles.map(f => f.name));
-  
-      const response = await fetch('http://localhost:3000/generate-quiz', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      console.log('Quiz data received:', data);
-  
-      if (!data.quiz || !data.quiz.questions) {
-        throw new Error('Invalid quiz data received');
-      }
-  
-      setCurrentQuiz(data.quiz);
-      setIsQuizOpen(true);
-      
-      toast({
-        title: "Success",
-        description: `Quiz generated from ${selectedFiles.length} documents!`,
-      });
-    } catch (error) {
-      console.error('Quiz generation error:', error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-        duration: 5000,
-      });
-    }
-  };
-
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -294,28 +240,22 @@ const Profile = () => {
       <>
         <div className="dashboard-container">
           <div className="section div1">
-            <ListFiles
-              files={files}
-              onSelect={handleSelectFile}
-              onRemove={handleRemoveFile}
-              selectedFiles={selectedFiles}
-              onFileSelect={handleFileSelect}
-            />
+            <ListFiles files={files} onSelect={handleSelectFile} onRemove={handleRemoveFile} selectedFile={selectedFile} />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
-            <FileUpload
-              onChange={handleFileUpload}
-              onPdfUpload={handlePdfUpload}
-            />
+            <FileUpload onChange={handleFileUpload} />
           </div>
-          <div className="section div3" style={{ padding: 0 }}>
-            <div style={{ width: "100%", height: "100%" }}>
-              <Tldraw
-                onMount={(editor) => {
-                  editor.user.updateUserPreferences({ colorScheme: "dark" });
-                }}
+          <div className="section div3 relative">
+            {selectedFile ? (
+              <iframe
+                src={URL.createObjectURL(selectedFile)}
+                title="File Preview"
+                className="w-full h-full absolute inset-0" // Ensure the iframe fills its section
+                style={{ border: "none" }} // Remove default border
               />
-            </div>
+            ) : (
+              <p>No file selected</p>
+            )}
           </div>
           <div className="section div4">
             <PlaceholdersAndVanishInput
@@ -330,65 +270,28 @@ const Profile = () => {
           </div>
           <div className="section div5">
             <div className="user-info">
-              <img className="profile-image" src={userImage} alt={user.name} />
+              <img
+                className="profile-image"
+                src={user.picture}
+                alt={user.name}
+              />
               <h2 className="user-name">{user.name}</h2>
             </div>
           </div>
           <div className="section div6">
-            <div
-              style={{
-                height: "100%",
-                overflowY: "auto",
-                padding: "1rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-              }}
-            >
-              {chatHistory.map((chat, index) => (
-                <div key={index} className={`chat-message ${chat.type}`}>
-                  <div className={`chat-bubble ${chat.type}`}>
-                    {chat.type === "user" ? (
-                      <img src={chat.image} alt="User" className="chat-image" />
-                    ) : (
-                      <div className="ai-icon-wrapper">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-bot"
-                        >
-                          <path d="M12 8V4H8" />
-                          <rect width="16" height="12" x="4" y="8" rx="2" />
-                          <path d="M2 14h2" />
-                          <path d="M20 14h2" />
-                          <path d="M15 13v2" />
-                          <path d="M9 13v2" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="chat-content">
-                      {typeof chat.content === "object" && chat.content.content
-                        ? chat.content.content
-                        : chat.content}
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div style={{
+              maxHeight: '300px',
+              overflowY: 'auto',
+              padding: '1rem',
+              whiteSpace: 'pre-wrap',
+              wordWrap: 'break-word'
+            }}>
+              <p>{aiContent}</p>
             </div>
           </div>
           <div className="section div7">
             <Dock>
-              <DockIcon
-                onClick={toggleMic}
-                title={micOn ? "Mic On" : "Mic Off"}
-              >
+              <DockIcon onClick={toggleMic} title={micOn ? "Mic On" : "Mic Off"}>
                 {micOn ? (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -465,7 +368,7 @@ const Profile = () => {
                   <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
                 </svg>
               </DockIcon>
-              <DockIcon title="Focus Area" onClick={handleFocusArea}>
+              <DockIcon title="Focus Area">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"

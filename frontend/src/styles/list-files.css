@@ -11,8 +11,11 @@
   padding: 10px;
   border: 1px solid #333;
   border-radius: 5px;
+  border: 1px solid #333;
+  border-radius: 5px;
   cursor: pointer;
   transition: all 0.2s ease;
+  background: #171717;
   background: #171717;
 }
 
