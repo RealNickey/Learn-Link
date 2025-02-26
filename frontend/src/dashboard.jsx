@@ -21,6 +21,7 @@ const Profile = () => {
   const [micOn, setMicOn] = useState(true); // Added state for mic
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showPdfPreview, setShowPdfPreview] = useState(false); // New state for PDF preview visibility
   const { toast } = useToast();
   const [pdfContent, setPdfContent] = useState("");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -111,13 +112,24 @@ const Profile = () => {
   };
 
   const handleSelectFile = (file) => {
-    setSelectedFile(file);
-    // Remove the automatic summary generation
-    // generateSummary(file);
+    if (selectedFile === file) {
+      setShowPdfPreview(!showPdfPreview);
+      if (showPdfPreview) {
+        setSelectedFile(null); // Clear selection when closing preview
+      }
+    } else {
+      setSelectedFile(file);
+      setShowPdfPreview(true);
+    }
   };
 
   const handleRemoveFile = (fileToRemove) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+    // If removing the currently selected file, hide preview
+    if (selectedFile === fileToRemove) {
+      setSelectedFile(null);
+      setShowPdfPreview(false);
+    }
   };
 
   const toggleMic = () => {
@@ -219,6 +231,12 @@ const Profile = () => {
     }
   };
 
+  // Function to create a data URL for PDF preview
+  const getPdfDataUrl = (file) => {
+    if (!file) return null;
+    return URL.createObjectURL(file);
+  };
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -247,6 +265,7 @@ const Profile = () => {
               onRemove={handleRemoveFile}
               selectedFiles={selectedFiles}
               onFileSelect={handleFileSelect}
+              activeFile={showPdfPreview ? selectedFile : null} // Only show active file when preview is open
             />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
@@ -256,12 +275,40 @@ const Profile = () => {
             />
           </div>
           <div className="section div3" style={{ padding: 0 }}>
-            <div style={{ width: "100%", height: "100%" }}>
-              <Tldraw
-                onMount={(editor) => {
-                  editor.user.updateUserPreferences({ colorScheme: "dark" });
-                }}
-              />
+            <div style={{ width: "100%", height: "100%", position: "relative" }}>
+              {showPdfPreview && selectedFile ? (
+                <div className="pdf-preview" style={{ width: "100%", height: "100%", position: "absolute", zIndex: 10, background: "rgba(0,0,0,0.8)" }}>
+                  <div className="flex flex-col h-full">
+                    <div className="flex justify-between items-center p-2 bg-neutral-900">
+                      <h3 className="text-white truncate flex-1">{selectedFile.name}</h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-white" 
+                        onClick={() => {
+                          setShowPdfPreview(false);
+                          setSelectedFile(null); // Clear selection when closing via button
+                        }}
+                      >
+                        Close
+                      </Button>
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <iframe
+                        src={getPdfDataUrl(selectedFile)}
+                        title="PDF Preview"
+                        style={{ width: "100%", height: "100%", border: "none" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Tldraw
+                  onMount={(editor) => {
+                    editor.user.updateUserPreferences({ colorScheme: "dark" });
+                  }}
+                />
+              )}
             </div>
           </div>
           <div className="section div4">
