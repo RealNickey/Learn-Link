@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/dashboard.css";
 import "./styles/list-files.css"; // Import the new styles
@@ -272,6 +272,15 @@ const Profile = () => {
     return URL.createObjectURL(file);
   };
 
+  const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -361,7 +370,10 @@ const Profile = () => {
             </div>
           </div>
           <div className="section div6">
-            <div className="h-full overflow-y-auto p-4 flex flex-col space-y-4">
+            <div
+              className="h-full overflow-y-auto p-4 flex flex-col space-y-4"
+              ref={chatContainerRef}
+            >
               {chatHistory.map((chat, index) => (
                 <ChatBubble
                   key={index}
