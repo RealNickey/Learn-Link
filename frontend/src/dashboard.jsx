@@ -275,16 +275,29 @@ const Profile = () => {
             />
           </div>
           <div className="section div3" style={{ padding: 0 }}>
-            <div style={{ width: "100%", height: "100%", position: "relative" }}>
+            <div
+              style={{ width: "100%", height: "100%", position: "relative" }}
+            >
               {showPdfPreview && selectedFile ? (
-                <div className="pdf-preview" style={{ width: "100%", height: "100%", position: "absolute", zIndex: 10, background: "rgba(0,0,0,0.8)" }}>
+                <div
+                  className="pdf-preview"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "absolute",
+                    zIndex: 10,
+                    background: "rgba(0,0,0,0.8)",
+                  }}
+                >
                   <div className="flex flex-col h-full">
                     <div className="flex justify-between items-center p-2 bg-neutral-900">
-                      <h3 className="text-white truncate flex-1">{selectedFile.name}</h3>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-white" 
+                      <h3 className="text-white truncate flex-1">
+                        {selectedFile.name}
+                      </h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white"
                         onClick={() => {
                           setShowPdfPreview(false);
                           setSelectedFile(null); // Clear selection when closing via button
@@ -297,7 +310,11 @@ const Profile = () => {
                       <iframe
                         src={getPdfDataUrl(selectedFile)}
                         title="PDF Preview"
-                        style={{ width: "100%", height: "100%", border: "none" }}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          border: "none",
+                        }}
                       />
                     </div>
                   </div>

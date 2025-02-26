@@ -4,7 +4,14 @@ import { cn } from "../../lib/utils";
 import { Button } from "./button";
 import { CustomCheckbox } from "./custom-checkbox";
 
-export const ListFiles = ({ files, onSelect, onRemove, selectedFiles, onFileSelect, activeFile }) => {
+export const ListFiles = ({
+  files,
+  onSelect,
+  onRemove,
+  selectedFiles,
+  onFileSelect,
+  activeFile,
+}) => {
   return (
     <div className="file-list w-full max-w-xl mx-auto">
       {files.map((file, idx) => (
@@ -15,13 +22,17 @@ export const ListFiles = ({ files, onSelect, onRemove, selectedFiles, onFileSele
           className={cn(
             "relative overflow-hidden z-40 bg-neutral-900 flex flex-col items-start justify-start h-16 p-4 mt-4 w-full mx-auto rounded-md",
             "shadow-sm hover:bg-neutral-800 cursor-pointer group",
-            activeFile === file ? "border-2 border-blue-500" : "border border-transparent"
-          )}>
+            activeFile === file
+              ? "border-2 border-blue-500"
+              : "border border-transparent"
+          )}
+        >
           <div className="flex justify-between w-full items-center gap-4">
             <div className="flex items-center gap-3 flex-1">
-              <div 
+              <div
                 className="opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => e.stopPropagation()}>
+                onClick={(e) => e.stopPropagation()}
+              >
                 <CustomCheckbox
                   checked={selectedFiles?.includes(file)}
                   onChange={(checked) => onFileSelect(file, checked)}
@@ -33,7 +44,8 @@ export const ListFiles = ({ files, onSelect, onRemove, selectedFiles, onFileSele
                 animate={{ opacity: 1 }}
                 layout
                 title={file.name}
-                className="text-base text-neutral-300 max-w-[135px] truncate">
+                className="text-base text-neutral-300 max-w-[135px] truncate"
+              >
                 {file.name}
               </motion.p>
             </div>
@@ -44,7 +56,8 @@ export const ListFiles = ({ files, onSelect, onRemove, selectedFiles, onFileSele
               }}
               variant="ghost"
               size="icon"
-              className="text-white hover:text-red-700 text-lg">
+              className="text-white hover:text-red-700 text-lg"
+            >
               &times;
             </Button>
           </div>
