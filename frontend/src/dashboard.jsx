@@ -36,15 +36,11 @@ const Profile = () => {
   const userImage = user.picture; // Store user image in a variable
 
   const handleFileUpload = (newFiles) => {
-    const duplicateFiles = newFiles.filter(((newFile)) =>
+    const duplicateFiles = newFiles.filter((newFile) =>
       files.some(
-        (
-        (existingFile)) =>
-         
+        (existingFile) =>
           existingFile.name === newFile.name &&
-         
           existingFile.lastModified === newFile.lastModified
-      
       )
     );
 
@@ -121,21 +117,12 @@ const Profile = () => {
   };
 
   const handleSelectFile = (file) => {
-    if (selectedFile === file) {
-      setSelectedFile(null); // If clicking the same file, close the preview
-    } else {
-      setSelectedFile(file); // If clicking a different file, show its preview
-    }
     setSelectedFile(file);
     // Remove the automatic summary generation
     // generateSummary(file);
   };
 
   const handleRemoveFile = (fileToRemove) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
-    if (selectedFile === fileToRemove) {
-      setSelectedFile(null);
-    }
     setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
   };
 
@@ -307,33 +294,6 @@ const Profile = () => {
   return (
     isAuthenticated && (
       <>
-        <svg style={{ position: "absolute", width: 0, height: 0 }}>
-          <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq">
-            <feColorMatrix
-              values="1 0 0 0 0 
-                    0 1 0 0 0 
-                    0 0 1 0 0 
-                    0 0 0 9 0"
-            ></feColorMatrix>
-          </filter>
-          <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq2">
-            <feColorMatrix
-              values="1 0 0 0 0 
-                    0 1 0 0 0 
-                    0 0 1 0 0 
-                    0 0 0 3 0"
-            ></feColorMatrix>
-          </filter>
-          <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq3">
-            <feColorMatrix
-              values="1 0 0 0.2 0 
-                    0 1 0 0.2 0 
-                    0 0 1 0.2 0 
-                    0 0 0 2 0"
-            ></feColorMatrix>
-          </filter>
-        </svg>
-        <div className="dashboard-container">
         <div className="dashboard-container" id="dashboard-container">
           <LiveCursor
             containerId="dashboard-container"
