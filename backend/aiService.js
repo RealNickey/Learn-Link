@@ -82,54 +82,8 @@ async function comparePdfs(pdf1Buffer, pdf2Buffer) {
   }
 }
 
-async function generateQuiz(pdfBuffers) {
-  try {
-    const prompt = `Based on the content of all provided documents, generate 5 multiple choice questions. Return in this JSON format:
-    {
-      "questions": [
-        {
-          "question": "What is...",
-          "options": ["A", "B", "C", "D"],
-          "correctAnswer": 0
-        }
-      ]
-    }`;
-
-    // Use Promise.all to process all PDFs in parallel
-    const pdfParts = await Promise.all(
-      pdfBuffers.map(async (buffer, index) => ({
-        inlineData: {
-          data: buffer.toString('base64'),
-          mimeType: "application/pdf"
-        }
-      }))
-    );
-
-    // Log for debugging
-    console.log(`Processing ${pdfParts.length} PDFs`);
-
-    const result = await model.generateContent([...pdfParts, prompt]);
-    const response = result.response.text();
-    
-    // Clean and parse the response
-    const jsonStr = response.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(jsonStr);
-
-    if (!parsed.questions || !Array.isArray(parsed.questions)) {
-      throw new Error('Invalid quiz format returned from AI');
-    }
-
-    console.log('Quiz generated successfully:', parsed);
-    return parsed;
-  } catch (error) {
-    console.error('Error in generateQuiz:', error);
-    throw error;
-  }
-}
-
 module.exports = {
   generateAIContent,
   processPdfContent,
-  comparePdfs,
-  generateQuiz
+  comparePdfs
 };
