@@ -12,6 +12,7 @@ import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
 import QuizPanel from './components/ui/quiz-panel';
+import Toolbar from "./components/ui/toolbar";
 
 // Removed ToastDemo component
 
@@ -328,11 +329,8 @@ const Profile = () => {
               onSubmit={handleInputSubmit} // Updated to use handleInputSubmit
             />
           </div>
-          <div className="section div5">
-            <div className="user-info">
-              <img className="profile-image" src={userImage} alt={user.name} />
-              <h2 className="user-name">{user.name}</h2>
-            </div>
+          <div className="section div5 flex items-center justify-center p-3">
+            <Toolbar userName={user.name} userImage={userImage} />
           </div>
           <div className="section div6">
             <div
