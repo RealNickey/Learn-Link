@@ -66,6 +66,7 @@ const Profile = () => {
     }
 
     setFiles((prevFiles) => [...prevFiles, ...uniqueFiles]);
+    setSelectedFiles([]); // Reset selected files
     console.log(newFiles);
   };
 
@@ -115,6 +116,7 @@ const Profile = () => {
 
   const handleRemoveFile = (fileToRemove) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+    setSelectedFiles([]); // Reset selected files
   };
 
   const toggleMic = () => {
