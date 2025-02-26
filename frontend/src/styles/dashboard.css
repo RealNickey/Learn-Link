@@ -90,6 +90,7 @@
   grid-row: span 6 / span 6;
   grid-column-start: 8;
   grid-row-start: 2;
+  background: #0a0a0a;
 }
 
 .div7 {
@@ -135,6 +136,7 @@
   padding: 0.75rem;
   border-radius: 0.5rem;
   background-color: rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease;
 }
 
 .chat-bubble.user {
@@ -172,11 +174,13 @@
   max-width: calc(100% - 48px);
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.5;
+  min-height: 24px;
 }
 
 .chat-bubble p {
   margin: 0;
-  line-height: 1.5;}
+  line-height: 1.5;
+}
 
 .cursors-container {
   position: relative;
@@ -186,6 +190,48 @@
   background: rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   overflow: hidden;
+}
+
+/* Loading animation styles */
+.loading-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.loading-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #fff;
+  animation: pulse 1.4s infinite ease-in-out both;
+}
+
+@keyframes pulse {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+.ai-avatar-loading::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #3b82f6;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @layer base {
@@ -226,8 +272,6 @@
     @apply bg-background text-foreground;
   }
 }
-
-
 
 @layer base {
   * {

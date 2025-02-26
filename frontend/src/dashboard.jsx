@@ -12,7 +12,12 @@ import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
 import LiveCursor from "./components/ui/livecursor";
-import { ChatBubble, ChatBubbleMessage, ChatBubbleAvatar } from "./components/ui/chat-bubble";
+import {
+  ChatBubble,
+  ChatBubbleMessage,
+  ChatBubbleAvatar,
+} from "./components/ui/chat-bubble";
+import { cn } from "./lib/utils";
 
 // Removed ToastDemo component
 
@@ -145,33 +150,42 @@ const Profile = () => {
       ...prev,
       { type: "user", content: inputValue, image: userImage },
     ]);
-    
+
     setIsAiResponding(true);
     setIsAiError(false);
-    
+
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
+        `${
+          import.meta.env.VITE_API_URL
+        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
       );
-      
+
       if (!response.ok) {
-        throw new Error('Failed to get AI response');
+        throw new Error("Failed to get AI response");
       }
-      
+
       const aiContent = await response.text();
-      setChatHistory((prev) => [...prev, { 
-        type: "ai", 
-        content: aiContent,
-        status: "success"
-      }]);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          type: "ai",
+          content: aiContent,
+          status: "success",
+        },
+      ]);
     } catch (error) {
       console.error("Error fetching AI content:", error);
       setIsAiError(true);
-      setChatHistory((prev) => [...prev, { 
-        type: "ai", 
-        content: "I apologize, but I encountered an error processing your request. Please try again.",
-        status: "error"
-      }]);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          type: "ai",
+          content:
+            "I apologize, but I encountered an error processing your request. Please try again.",
+          status: "error",
+        },
+      ]);
     } finally {
       setIsAiResponding(false);
     }
@@ -347,7 +361,7 @@ const Profile = () => {
             </div>
           </div>
           <div className="section div6">
-            <div className="h-full overflow-y-auto p-4 flex flex-col gap-4">
+            <div className="h-full overflow-y-auto p-4 flex flex-col space-y-4">
               {chatHistory.map((chat, index) => (
                 <ChatBubble
                   key={index}
@@ -359,62 +373,72 @@ const Profile = () => {
                       fallback={user?.name?.charAt(0)}
                     />
                   ) : (
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800">
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="20" 
-                        height="20" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        className={cn("text-blue-500", chat.status === "error" && "text-red-500")}
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 relative",
+                        isAiResponding &&
+                          index === chatHistory.length - 1 &&
+                          "ai-avatar-loading"
+                      )}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={cn(
+                          "text-white transition-colors duration-200",
+                          chat.status === "error" && "text-red-500"
+                        )}
                       >
-                        <path d="M12 8V4H8"/>
-                        <rect width="16" height="12" x="4" y="8" rx="2"/>
-                        <path d="M2 14h2"/>
-                        <path d="M20 14h2"/>
-                        <path d="M15 13v2"/>
-                        <path d="M9 13v2"/>
+                        <path d="M12 8V4H8" />
+                        <rect width="16" height="12" x="4" y="8" rx="2" />
+                        <path d="M2 14h2" />
+                        <path d="M20 14h2" />
+                        <path d="M15 13v2" />
+                        <path d="M9 13v2" />
                       </svg>
                     </div>
                   )}
-                  <ChatBubbleMessage
-                    variant={chat.type === "user" ? "sent" : "received"}
-                    isLoading={chat.type === "ai" && isAiResponding && index === chatHistory.length - 1}
-                  >
-                    {chat.content}
-                  </ChatBubbleMessage>
+                  {(!isAiResponding ||
+                    index !== chatHistory.length - 1 ||
+                    chat.type === "user") && (
+                    <ChatBubbleMessage
+                      variant={chat.type === "user" ? "sent" : "received"}
+                    >
+                      {chat.content}
+                    </ChatBubbleMessage>
+                  )}
                 </ChatBubble>
               ))}
               {isAiResponding && !chatHistory.length && (
                 <ChatBubble variant="received">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800">
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="20" 
-                      height="20" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      className="text-blue-500"
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 ai-avatar-loading">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-white"
                     >
-                      <path d="M12 8V4H8"/>
-                      <rect width="16" height="12" x="4" y="8" rx="2"/>
-                      <path d="M2 14h2"/>
-                      <path d="M20 14h2"/>
-                      <path d="M15 13v2"/>
-                      <path d="M9 13v2"/>
+                      <path d="M12 8V4H8" />
+                      <rect width="16" height="12" x="4" y="8" rx="2" />
+                      <path d="M2 14h2" />
+                      <path d="M20 14h2" />
+                      <path d="M15 13v2" />
+                      <path d="M9 13v2" />
                     </svg>
                   </div>
-                  <ChatBubbleMessage variant="received" isLoading={true}>
-                    Processing your request...
-                  </ChatBubbleMessage>
                 </ChatBubble>
               )}
             </div>

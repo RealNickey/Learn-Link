@@ -1,87 +1,70 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { MessageLoading } from "@/components/ui/message-loading";
 
-export function ChatBubble({
-  variant = "received",
-  layout = "default",
-  className,
-  children
-}) {
+export function ChatBubble({ children, variant = "sent" }) {
   return (
-    (<div
+    <div
       className={cn(
-        "flex items-start gap-2 mb-4",
-        variant === "sent" && "flex-row-reverse",
-        className
-      )}>
+        "flex items-start gap-3 rounded-lg p-3",
+        variant === "sent" && "bg-neutral-800",
+        variant === "received" && "bg-neutral-900"
+      )}
+    >
       {children}
-    </div>)
+    </div>
   );
 }
 
 export function ChatBubbleMessage({
-  variant = "received",
-  isLoading,
-  className,
-  children
+  children,
+  variant = "sent",
+  isLoading = false,
 }) {
   return (
-    (<div
+    <div
       className={cn(
-        "rounded-lg p-3",
-        variant === "sent" ? "bg-primary text-primary-foreground" : "bg-muted",
-        className
-      )}>
-      {isLoading ? (
-        <div className="flex items-center space-x-2">
-          <MessageLoading />
-        </div>
-      ) : (
-        children
+        "flex-1 text-sm leading-relaxed break-words min-h-[24px] flex items-center py-1",
+        variant === "received" && "text-white",
+        isLoading ? "opacity-100" : "opacity-90"
       )}
-    </div>)
+    >
+      {children}
+    </div>
   );
 }
 
-export function ChatBubbleAvatar({
-  src,
-  fallback = "AI",
-  className
-}) {
+export function ChatBubbleAvatar({ src, fallback }) {
   return (
-    (<Avatar className={cn("h-8 w-8", className)}>
-      {src && <AvatarImage src={src} />}
-      <AvatarFallback>{fallback}</AvatarFallback>
-    </Avatar>)
+    <div className="w-8 h-8 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center">
+      {src ? (
+        <img src={src} alt="Avatar" className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-sm font-medium text-neutral-400">{fallback}</span>
+      )}
+    </div>
   );
 }
 
-export function ChatBubbleAction({
-  icon,
-  onClick,
-  className
-}) {
+export function ChatBubbleAction({ icon, onClick, className }) {
   return (
-    (<Button
+    <Button
       variant="ghost"
       size="icon"
       className={cn("h-6 w-6", className)}
-      onClick={onClick}>
+      onClick={onClick}
+    >
       {icon}
-    </Button>)
+    </Button>
   );
 }
 
-export function ChatBubbleActionWrapper({
-  className,
-  children
-}) {
+export function ChatBubbleActionWrapper({ className, children }) {
   return (
-    (<div className={cn("flex items-center gap-1 mt-2", className)}>
+    <div className={cn("flex items-center gap-1 mt-2", className)}>
       {children}
-    </div>)
+    </div>
   );
 }
