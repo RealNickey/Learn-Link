@@ -11,8 +11,11 @@
   padding: 10px;
   border: 1px solid #333;
   border-radius: 5px;
+  border: 1px solid #333;
+  border-radius: 5px;
   cursor: pointer;
   transition: all 0.2s ease;
+  background: #171717;
   background: #171717;
 }
 
@@ -21,17 +24,50 @@
   transform: translateY(-1px);
 }
 
-.file-item.selected {
-  padding: 10px;
-  border: 2px solid hsl(var(--primary)); /* Using theme primary color */
-  background: #171717;
-  color: hsl(var(--primary)); /* Text color matching border */
-  box-shadow: 0 0 10px 2px hsla(var(--primary), 0.2); /* Softer glow using primary color */
+/* Make checkbox always visible */
+.file-item .checkbox-container {
+  display: flex;
+  align-items: center;
+  opacity: 1; /* Always visible */
+  transition: opacity 0.2s ease;
 }
 
+/* Custom checkbox styles */
+.file-item .custom-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: all 0.2s ease;
+}
+
+.file-item .custom-checkbox:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Remove hover effect since we're using opacity in component */
+.file-item:hover .custom-checkbox {
+  opacity: 1;
+}
+
+/* Style the checkbox wrapper */
+[data-state] {
+  background-color: #262626;
+  border: 1px solid #404040;
+}
+
+/* Style the checked state */
+[data-state="checked"] {
+  background-color: #2563eb;
+  border-color: #3b82f6;
+}
+
+/* Adjust spacing for checkbox and text */
 .file-info {
   display: flex;
   flex-direction: column;
+  margin-left: 8px;
 }
 
 .file-name {
