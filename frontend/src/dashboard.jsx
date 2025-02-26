@@ -9,9 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
-import { Tldraw } from "tldraw";
-import "tldraw/tldraw.css";
-import LiveCursor from "./components/ui/livecursor";
 
 // Removed ToastDemo component
 
@@ -22,24 +19,10 @@ const Profile = () => {
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
   const [selectedFile, setSelectedFile] = useState(null);
   const { toast } = useToast();
-  const [pdfContent, setPdfContent] = useState("");
-  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
-
-  const userImage = user.picture; // Store user image in a variable
 
   const handleFileUpload = (newFiles) => {
-    const duplicateFiles = newFiles.filter(((newFile)) =>
-      files.some(
-        (
-        (existingFile)) =>
-         
-          existingFile.name === newFile.name &&
-         
-          existingFile.lastModified === newFile.lastModified
-      
-      )
+    const duplicateFiles = newFiles.filter(newFile =>
+      files.some(existingFile => existingFile.name === newFile.name && existingFile.lastModified === newFile.lastModified)
     );
 
     if (duplicateFiles.length > 0) {
@@ -68,64 +51,15 @@ const Profile = () => {
     console.log(newFiles);
   };
 
-  const generateSummary = async (file) => {
-    if (isGeneratingSummary) return;
-
-    setIsGeneratingSummary(true);
-    const toastId = toast({
-      title: "Generating Summary",
-      description: "Please wait while we analyze your document...",
-      duration: 2000, // Auto-close after 2 seconds
-    });
-
-    try {
-      const formData = new FormData();
-      formData.append("pdf", file);
-
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/generate-summary`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to generate summary");
-      }
-
-      const { summary } = await response.json();
-      setAiContent(summary);
-    } catch (error) {
-      console.error("Error generating summary:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate summary",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } finally {
-      setIsGeneratingSummary(false);
-    }
-  };
-
   const handleSelectFile = (file) => {
-    if (selectedFile === file) {
-      setSelectedFile(null); // If clicking the same file, close the preview
-    } else {
-      setSelectedFile(file); // If clicking a different file, show its preview
-    }
-    setSelectedFile(file);
-    // Remove the automatic summary generation
-    // generateSummary(file);
+    setSelectedFile((prevSelectedFile) => (prevSelectedFile === file ? null : file));
   };
 
   const handleRemoveFile = (fileToRemove) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+    setFiles((prevFiles) => prevFiles.filter(file => file !== fileToRemove));
     if (selectedFile === fileToRemove) {
       setSelectedFile(null);
     }
-    setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
   };
 
   const toggleMic = () => {
@@ -134,91 +68,12 @@ const Profile = () => {
 
   const handleInputSubmit = async (inputValue) => {
     try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_URL
-        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
-      );
+      const response = await fetch(`http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`);
       const aiContent = await response.text();
       setAiContent(aiContent); // Set AI content
       console.log("AI Content:", aiContent);
     } catch (error) {
       console.error("Error fetching AI content:", error);
-    }
-  };
-
-  const handlePdfUpload = (summary) => {
-    setAiContent(summary);
-  };
-
-  const handleFileSelect = (file, checked) => {
-    setSelectedFiles((prev) =>
-      checked ? [...prev, file] : prev.filter((f) => f !== file)
-    );
-  };
-
-  const handleFocusArea = async () => {
-    if (selectedFiles.length === 0) {
-      toast({
-        title: "No files selected",
-        description: "Please select at least one file using the checkboxes",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGeneratingSummary(true);
-    toast({
-      title: "Generating Summary",
-      description: `Analyzing ${selectedFiles.length} document(s)...`,
-      duration: 2000,
-    });
-
-    try {
-      // Clear previous content
-      setAiContent("");
-
-      // Process each selected file
-      for (const file of selectedFiles) {
-        const formData = new FormData();
-        formData.append("pdf", file);
-
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/generate-summary`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to generate summary");
-        }
-
-        const { summary } = await response.json();
-        // Append new summary with file name
-        setAiContent(
-          (prev) =>
-            `${prev}${prev ? "\n\n---\n\n" : ""}File: ${
-              file.name
-            }\n\n${summary}`
-        );
-      }
-
-      toast({
-        title: "Success",
-        description: "Summary generated successfully",
-      });
-    } catch (error) {
-      console.error("Error generating summary:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate summary",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } finally {
-      setIsGeneratingSummary(false);
     }
   };
 
@@ -331,7 +186,7 @@ const Profile = () => {
                   </svg>
                 )}
               </DockIcon>
-              <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
+              <DockIcon title="Ai Quiz">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -399,11 +254,6 @@ const Profile = () => {
             </Dock>
           </div>
         </div>
-        <QuizPanel 
-          quiz={currentQuiz} 
-          isOpen={isQuizOpen} 
-          onClose={() => setIsQuizOpen(false)} 
-        />
         <Toaster />
       </>
     )
