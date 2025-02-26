@@ -289,35 +289,15 @@ const Profile = () => {
                     background: "rgba(0,0,0,0.8)",
                   }}
                 >
-                  <div className="flex flex-col h-full">
-                    <div className="flex justify-between items-center p-2 bg-neutral-900">
-                      <h3 className="text-white truncate flex-1">
-                        {selectedFile.name}
-                      </h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white"
-                        onClick={() => {
-                          setShowPdfPreview(false);
-                          setSelectedFile(null); // Clear selection when closing via button
-                        }}
-                      >
-                        Close
-                      </Button>
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <iframe
-                        src={getPdfDataUrl(selectedFile)}
-                        title="PDF Preview"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          border: "none",
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <iframe
+                    src={getPdfDataUrl(selectedFile)}
+                    title="PDF Preview"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                    }}
+                  />
                 </div>
               ) : (
                 <Tldraw
