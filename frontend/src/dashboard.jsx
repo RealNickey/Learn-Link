@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/dashboard.css";
 import "./styles/list-files.css"; // Import the new styles
@@ -12,6 +12,12 @@ import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
 import LiveCursor from "./components/ui/livecursor";
+import {
+  ChatBubble,
+  ChatBubbleMessage,
+  ChatBubbleAvatar,
+} from "./components/ui/chat-bubble";
+import { cn } from "./lib/utils";
 
 // Removed ToastDemo component
 
@@ -21,11 +27,14 @@ const Profile = () => {
   const [micOn, setMicOn] = useState(true); // Added state for mic
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showPdfPreview, setShowPdfPreview] = useState(false); // New state for PDF preview visibility
   const { toast } = useToast();
   const [pdfContent, setPdfContent] = useState("");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
+  const [isAiResponding, setIsAiResponding] = useState(false);
+  const [isAiError, setIsAiError] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -111,13 +120,24 @@ const Profile = () => {
   };
 
   const handleSelectFile = (file) => {
-    setSelectedFile(file);
-    // Remove the automatic summary generation
-    // generateSummary(file);
+    if (selectedFile === file) {
+      setShowPdfPreview(!showPdfPreview);
+      if (showPdfPreview) {
+        setSelectedFile(null); // Clear selection when closing preview
+      }
+    } else {
+      setSelectedFile(file);
+      setShowPdfPreview(true);
+    }
   };
 
   const handleRemoveFile = (fileToRemove) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+    // If removing the currently selected file, hide preview
+    if (selectedFile === fileToRemove) {
+      setSelectedFile(null);
+      setShowPdfPreview(false);
+    }
   };
 
   const toggleMic = () => {
@@ -125,22 +145,49 @@ const Profile = () => {
   };
 
   const handleInputSubmit = async (inputValue) => {
+    // Add user message immediately
     setChatHistory((prev) => [
       ...prev,
       { type: "user", content: inputValue, image: userImage },
-    ]); // Add user input to chat history
+    ]);
+
+    setIsAiResponding(true);
+    setIsAiError(false);
+
     try {
       const response = await fetch(
         `${
           import.meta.env.VITE_API_URL
         }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
       );
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI response");
+      }
+
       const aiContent = await response.text();
-      setAiContent(aiContent);
-      setChatHistory((prev) => [...prev, { type: "ai", content: aiContent }]); // Add AI response to chat history
-      console.log("AI Content:", aiContent);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          type: "ai",
+          content: aiContent,
+          status: "success",
+        },
+      ]);
     } catch (error) {
       console.error("Error fetching AI content:", error);
+      setIsAiError(true);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          type: "ai",
+          content:
+            "I apologize, but I encountered an error processing your request. Please try again.",
+          status: "error",
+        },
+      ]);
+    } finally {
+      setIsAiResponding(false);
     }
   };
 
@@ -219,6 +266,21 @@ const Profile = () => {
     }
   };
 
+  // Function to create a data URL for PDF preview
+  const getPdfDataUrl = (file) => {
+    if (!file) return null;
+    return URL.createObjectURL(file);
+  };
+
+  const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -247,6 +309,7 @@ const Profile = () => {
               onRemove={handleRemoveFile}
               selectedFiles={selectedFiles}
               onFileSelect={handleFileSelect}
+              activeFile={showPdfPreview ? selectedFile : null} // Only show active file when preview is open
             />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
@@ -256,12 +319,37 @@ const Profile = () => {
             />
           </div>
           <div className="section div3" style={{ padding: 0 }}>
-            <div style={{ width: "100%", height: "100%" }}>
-              <Tldraw
-                onMount={(editor) => {
-                  editor.user.updateUserPreferences({ colorScheme: "dark" });
-                }}
-              />
+            <div
+              style={{ width: "100%", height: "100%", position: "relative" }}
+            >
+              {showPdfPreview && selectedFile ? (
+                <div
+                  className="pdf-preview"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "absolute",
+                    zIndex: 10,
+                    background: "rgba(0,0,0,0.8)",
+                  }}
+                >
+                  <iframe
+                    src={getPdfDataUrl(selectedFile)}
+                    title="PDF Preview"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                    }}
+                  />
+                </div>
+              ) : (
+                <Tldraw
+                  onMount={(editor) => {
+                    editor.user.updateUserPreferences({ colorScheme: "dark" });
+                  }}
+                />
+              )}
             </div>
           </div>
           <div className="section div4">
@@ -283,51 +371,88 @@ const Profile = () => {
           </div>
           <div className="section div6">
             <div
-              style={{
-                height: "100%",
-                overflowY: "auto",
-                padding: "1rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-              }}
+              className="h-full overflow-y-auto p-4 flex flex-col space-y-4"
+              ref={chatContainerRef}
             >
               {chatHistory.map((chat, index) => (
-                <div key={index} className={`chat-message ${chat.type}`}>
-                  <div className={`chat-bubble ${chat.type}`}>
-                    {chat.type === "user" ? (
-                      <img src={chat.image} alt="User" className="chat-image" />
-                    ) : (
-                      <div className="ai-icon-wrapper">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-bot"
-                        >
-                          <path d="M12 8V4H8" />
-                          <rect width="16" height="12" x="4" y="8" rx="2" />
-                          <path d="M2 14h2" />
-                          <path d="M20 14h2" />
-                          <path d="M15 13v2" />
-                          <path d="M9 13v2" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="chat-content">
-                      {typeof chat.content === "object" && chat.content.content
-                        ? chat.content.content
-                        : chat.content}
+                <ChatBubble
+                  key={index}
+                  variant={chat.type === "user" ? "sent" : "received"}
+                >
+                  {chat.type === "user" ? (
+                    <ChatBubbleAvatar
+                      src={userImage}
+                      fallback={user?.name?.charAt(0)}
+                    />
+                  ) : (
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 relative",
+                        isAiResponding &&
+                          index === chatHistory.length - 1 &&
+                          "ai-avatar-loading"
+                      )}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={cn(
+                          "text-white transition-colors duration-200",
+                          chat.status === "error" && "text-red-500"
+                        )}
+                      >
+                        <path d="M12 8V4H8" />
+                        <rect width="16" height="12" x="4" y="8" rx="2" />
+                        <path d="M2 14h2" />
+                        <path d="M20 14h2" />
+                        <path d="M15 13v2" />
+                        <path d="M9 13v2" />
+                      </svg>
                     </div>
-                  </div>
-                </div>
+                  )}
+                  {(!isAiResponding ||
+                    index !== chatHistory.length - 1 ||
+                    chat.type === "user") && (
+                    <ChatBubbleMessage
+                      variant={chat.type === "user" ? "sent" : "received"}
+                    >
+                      {chat.content}
+                    </ChatBubbleMessage>
+                  )}
+                </ChatBubble>
               ))}
+              {isAiResponding && !chatHistory.length && (
+                <ChatBubble variant="received">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 ai-avatar-loading">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-white"
+                    >
+                      <path d="M12 8V4H8" />
+                      <rect width="16" height="12" x="4" y="8" rx="2" />
+                      <path d="M2 14h2" />
+                      <path d="M20 14h2" />
+                      <path d="M15 13v2" />
+                      <path d="M9 13v2" />
+                    </svg>
+                  </div>
+                </ChatBubble>
+              )}
             </div>
           </div>
           <div className="section div7">
