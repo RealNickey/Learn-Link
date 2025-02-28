@@ -34,6 +34,8 @@ const Profile = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
   const [isLoadingAiResponse, setIsLoadingAiResponse] = useState(false); // Added state for loading AI response
+  const [isAiResponding, setIsAiResponding] = useState(false);
+  const [isAiError, setIsAiError] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -456,8 +458,8 @@ const Profile = () => {
                       <path d="M9 13v2" />
                     </svg>
                   </div>
-                </div>
-              ))}
+                </ChatBubble>
+              )}
               {isLoadingAiResponse && (
                 <div className="chat-message ai">
                   <div className="chat-bubble ai">
