@@ -2,11 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const multer = require('multer');
-const { generateAIContent, processPdfContent, comparePdfs, generateQuiz } = require("./aiService");
+const { generateAIContent, processPdfContent, comparePdfs } = require("./aiService");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Middleware
+app.use(cors());
 // Configure middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,7 +29,11 @@ app.use((req, res, next) => {
 
 // Configure multer
 const storage = multer.memoryStorage();
+// Configure multer for memory storage
 const upload = multer({
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }
 });
