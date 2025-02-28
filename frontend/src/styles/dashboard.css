@@ -88,6 +88,44 @@
   grid-row: span 6 / span 6;
   grid-column-start: 8;
   grid-row-start: 2;
+  background: #0a0a0a;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Style for the chat container */
+.div6 > div {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.div6 > div::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure chat messages have proper spacing without affecting container */
+.div6 .chat-bubble {
+  margin: 0.75rem 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.div6 .chat-bubble:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.div6 .chat-bubble:first-child {
+  margin-top: 0.5rem;
+}
+
+.div6 .chat-bubble:last-child {
+  margin-bottom: 0.5rem;
 }
 
 .div7 {
@@ -133,6 +171,7 @@
   padding: 0.75rem;
   border-radius: 0.5rem;
   background-color: rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease;
 }
 
 .chat-bubble.user {
@@ -173,11 +212,55 @@
   word-break: break-word; /* Ensure words do not break awkwardly */
   text-align: left; /* Ensure text alignment is left */
   display: inline-block; /* Ensure text is displayed inline */
+  min-height: 24px;
 }
 
 .chat-bubble p {
   margin: 0;
   line-height: 1.5;
+
+}
+
+/* Loading animation styles */
+.loading-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.loading-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #fff;
+  animation: pulse 1.4s infinite ease-in-out both;
+}
+
+@keyframes pulse {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+.ai-avatar-loading::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #3b82f6;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @layer base {
@@ -213,6 +296,15 @@
 @layer base {
   * {
     @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
