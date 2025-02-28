@@ -11,6 +11,7 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon } from "./components/ui/dock"; // Added import
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+import LiveCursor from "./components/ui/livecursor";
 
 // Removed ToastDemo component
 
@@ -84,10 +85,13 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("pdf", file);
 
-      const response = await fetch("http://localhost:3000/generate-summary", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/generate-summary`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to generate summary");
@@ -130,9 +134,9 @@ const Profile = () => {
     ]); // Add user input to chat history
     try {
       const response = await fetch(
-        `http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(
-          inputValue
-        )}`
+        `${
+          import.meta.env.VITE_API_URL
+        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
       );
       const aiContent = await response.text();
       setAiContent(aiContent);
@@ -180,10 +184,13 @@ const Profile = () => {
         const formData = new FormData();
         formData.append("pdf", file);
 
-        const response = await fetch("http://localhost:3000/generate-summary", {
-          method: "POST",
-          body: formData,
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/generate-summary`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to generate summary");
@@ -192,7 +199,9 @@ const Profile = () => {
         const { summary } = await response.json();
         // Append new summary with file name
         const focusAreaText = `File: ${file.name}\n\n${summary}`;
-        setAiContent((prev) => `${prev}${prev ? "\n\n---\n\n" : ""}${focusAreaText}`);
+        setAiContent(
+          (prev) => `${prev}${prev ? "\n\n---\n\n" : ""}${focusAreaText}`
+        );
         setChatHistory((prev) => [
           ...prev,
           { type: "ai", content: focusAreaText },
@@ -234,7 +243,11 @@ const Profile = () => {
   return (
     isAuthenticated && (
       <>
-        <div className="dashboard-container">
+        <div className="dashboard-container" id="dashboard-container">
+          <LiveCursor
+            containerId="dashboard-container"
+            username={user?.name || user?.email}
+          />
           <div className="section div1">
             <ListFiles
               files={files}
