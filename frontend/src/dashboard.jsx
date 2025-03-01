@@ -18,6 +18,7 @@ import {
   ChatBubbleAvatar,
 } from "./components/ui/chat-bubble";
 import { cn } from "./lib/utils";
+import QuizPanel from "./components/ui/quiz-panel";
 
 // Removed ToastDemo component
 
@@ -36,6 +37,8 @@ const Profile = () => {
   const [isLoadingAiResponse, setIsLoadingAiResponse] = useState(false); // Added state for loading AI response
   const [isAiResponding, setIsAiResponding] = useState(false);
   const [isAiError, setIsAiError] = useState(false);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [currentQuiz, setCurrentQuiz] = useState(null);
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -270,6 +273,74 @@ const Profile = () => {
     } finally {
       setIsGeneratingSummary(false);
       setIsLoadingAiResponse(false); // Stop loading animation
+    }
+  };
+
+  const handleGenerateQuiz = async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select PDF files using the checkboxes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Generating Quiz",
+      description: `Creating questions from ${selectedFiles.length} document(s)...`,
+      duration: 2000,
+    });
+
+    try {
+      const formData = new FormData();
+      selectedFiles.forEach((file) => {
+        console.log("Adding file:", file.name);
+        formData.append("pdfs", file);
+      });
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/generate-quiz`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 404
+            ? "Quiz service unavailable"
+            : `Server error: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
+      console.log("Quiz data received:", data);
+
+      if (!data.quiz || !data.quiz.questions) {
+        throw new Error("Invalid quiz data received");
+      }
+
+      setCurrentQuiz(data.quiz);
+      setIsQuizOpen(true);
+
+      toast({
+        title: "Success",
+        description: `Quiz generated from ${selectedFiles.length} documents!`,
+      });
+    } catch (error) {
+      console.error("Quiz generation error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate quiz",
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   };
 
@@ -537,7 +608,7 @@ const Profile = () => {
                   </svg>
                 )}
               </DockIcon>
-              <DockIcon title="Ai Quiz">
+              <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -605,6 +676,11 @@ const Profile = () => {
             </Dock>
           </div>
         </div>
+        <QuizPanel
+          quiz={currentQuiz}
+          isOpen={isQuizOpen}
+          onClose={() => setIsQuizOpen(false)}
+        />
         <Toaster />
       </>
     )
