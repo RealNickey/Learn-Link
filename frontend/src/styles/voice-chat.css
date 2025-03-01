@@ -41,6 +41,79 @@
   gap: 5px;
 }
 
+/* User profile section */
+.user-profile {
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.username-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.username-display:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.display-name {
+  font-weight: 500;
+}
+
+.edit-icon {
+  opacity: 0.5;
+  font-size: 12px;
+}
+
+.username-edit {
+  display: flex;
+  gap: 5px;
+}
+
+.username-edit input {
+  flex-grow: 1;
+  padding: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.username-edit button {
+  padding: 8px 12px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.connection-status {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.status-connected {
+  color: #34d399;
+}
+
+.status-error {
+  color: #ef4444;
+}
+
+.status-disconnected {
+  color: #9ca3af;
+}
+
+/* Controls section */
 .voice-controls {
   display: flex;
   justify-content: space-between;
@@ -68,9 +141,10 @@
   color: #fff;
 }
 
+/* Users list section */
 .users-list {
-  padding: 10px 15px;
-  max-height: 300px;
+  padding: 15px;
+  max-height: 180px;
   overflow-y: auto;
 }
 
@@ -107,8 +181,46 @@
   opacity: 0.5;
 }
 
-.mic-icon, .mute-icon {
+.users-list li.current-user {
+  background-color: rgba(59, 130, 246, 0.2);
+  border-left: 3px solid #3b82f6;
+}
+
+.status-icons {
+  display: flex;
+  gap: 5px;
+}
+
+.mic-icon, .mute-icon, .you-indicator {
   margin-left: 5px;
+}
+
+.no-users {
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Footer with instructions */
+.voice-chat-footer {
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.connection-instructions h5 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.connection-instructions ol {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
 }
 
 /* Hide scrollbar but allow scrolling */

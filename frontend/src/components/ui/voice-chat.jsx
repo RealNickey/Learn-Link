@@ -9,24 +9,53 @@ const VoiceChat = ({ user }) => {
   const [muted, setMuted] = useState(false);
   const [users, setUsers] = useState({});
   const [expanded, setExpanded] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const [customUsername, setCustomUsername] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  
   const socketRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
 
+  // Default username from Auth0 user or generate random one
+  const defaultUsername = user?.name || user?.email || `user#${Math.floor(Math.random() * 999999)}`;
+  
   const userStatus = useRef({
     microphone: false,
     mute: false,
-    username: user?.name || user?.email || `user#${Math.floor(Math.random() * 999999)}`,
+    username: defaultUsername,
     online: false,
   });
 
-  // Initialize socket connection and audio processing
+  // Initialize socket connection
   useEffect(() => {
-    // Connect to socket server
-    socketRef.current = io("ws://localhost:3000");
+    // Create socket connection
+    socketRef.current = io("ws://localhost:3000", {
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      autoConnect: false, // Don't connect automatically
+    });
 
-    // Send initial user information
-    socketRef.current.emit("userInformation", userStatus.current);
+    // Socket connection events
+    socketRef.current.on("connect", () => {
+      setConnectionStatus('connected');
+      console.log("Connected to voice chat server!");
+      
+      // Send user information upon connection
+      socketRef.current.emit("userInformation", userStatus.current);
+    });
+
+    socketRef.current.on("connect_error", (err) => {
+      console.error("Connection error:", err);
+      setConnectionStatus('error');
+      setConnected(false);
+    });
+
+    socketRef.current.on("disconnect", () => {
+      console.log("Disconnected from voice chat server");
+      setConnectionStatus('disconnected');
+      setConnected(false);
+    });
 
     // Listen for user updates
     socketRef.current.on("usersUpdate", (data) => {
@@ -35,8 +64,10 @@ const VoiceChat = ({ user }) => {
 
     // Listen for incoming audio
     socketRef.current.on("send", (data) => {
-      const audio = new Audio(data);
-      audio.play();
+      if (!userStatus.current.mute) {
+        const audio = new Audio(data);
+        audio.play();
+      }
     });
 
     // Clean up on unmount
@@ -48,19 +79,35 @@ const VoiceChat = ({ user }) => {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, [user?.name, user?.email]);
+  }, []);
+
+  // Update username when user prop changes
+  useEffect(() => {
+    if (!editingName) {
+      const newUsername = user?.name || user?.email || defaultUsername;
+      userStatus.current.username = newUsername;
+      setCustomUsername(newUsername);
+      
+      // If already connected, update username
+      if (socketRef.current && socketRef.current.connected) {
+        socketRef.current.emit("userInformation", userStatus.current);
+      }
+    }
+  }, [user?.name, user?.email, defaultUsername, editingName]);
 
   // Setup audio recording
   useEffect(() => {
     if (micEnabled && connected) {
       setupAudioRecording();
+    } else if (!micEnabled && mediaRecorderRef.current) {
+      stopAudioRecording();
     }
   }, [micEnabled, connected]);
 
   // Setup audio recording and transmission
   const setupAudioRecording = async () => {
     try {
-      // Get user media
+      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
@@ -128,16 +175,20 @@ const VoiceChat = ({ user }) => {
 
   // Toggle connection
   const toggleConnection = () => {
-    const newConnected = !connected;
-    setConnected(newConnected);
-    
-    userStatus.current.online = newConnected;
-    socketRef.current.emit("userInformation", userStatus.current);
-    
-    if (!newConnected) {
+    if (connected) {
+      // Disconnect
+      socketRef.current.disconnect();
+      setConnected(false);
+      userStatus.current.online = false;
       setMicEnabled(false);
-      stopAudioRecording();
       userStatus.current.microphone = false;
+      stopAudioRecording();
+    } else {
+      // Connect
+      socketRef.current.connect();
+      setConnected(true);
+      userStatus.current.online = true;
+      socketRef.current.emit("userInformation", userStatus.current);
     }
   };
 
@@ -150,10 +201,6 @@ const VoiceChat = ({ user }) => {
     
     userStatus.current.microphone = newMicEnabled;
     socketRef.current.emit("userInformation", userStatus.current);
-    
-    if (!newMicEnabled) {
-      stopAudioRecording();
-    }
   };
 
   // Toggle mute
@@ -166,14 +213,40 @@ const VoiceChat = ({ user }) => {
     userStatus.current.mute = newMuted;
     socketRef.current.emit("userInformation", userStatus.current);
   };
+  
+  // Handle username change
+  const handleUsernameChange = (e) => {
+    setCustomUsername(e.target.value);
+  };
+
+  // Save username
+  const saveUsername = () => {
+    if (customUsername.trim()) {
+      userStatus.current.username = customUsername.trim();
+      if (connected) {
+        socketRef.current.emit("userInformation", userStatus.current);
+      }
+      setEditingName(false);
+    }
+  };
 
   // Count online users
   const onlineUsersCount = Object.values(users).filter(user => user.online).length;
+  
+  // Check if current user is in the participants list
+  const isUserListed = Object.values(users).some(u => 
+    u.username === userStatus.current.username);
+  
+  // Find current user's socket ID
+  const currentUserSocketId = Object.keys(users).find(key => 
+    users[key].username === userStatus.current.username);
 
   return (
     <div className={`voice-chat-container ${expanded ? 'expanded' : 'collapsed'}`}>
       <div className="voice-chat-header" onClick={() => setExpanded(!expanded)}>
-        <h3>Voice Chat {connected ? '🟢' : '🔴'}</h3>
+        <h3>
+          Voice Chat {connected ? '🟢' : '🔴'}
+        </h3>
         <div className="online-indicator">
           {onlineUsersCount} online {expanded ? '▼' : '▲'}
         </div>
@@ -181,6 +254,33 @@ const VoiceChat = ({ user }) => {
       
       {expanded && (
         <>
+          <div className="user-profile">
+            {editingName ? (
+              <div className="username-edit">
+                <input
+                  type="text"
+                  value={customUsername}
+                  onChange={handleUsernameChange}
+                  placeholder="Enter your display name"
+                />
+                <button onClick={saveUsername}>Save</button>
+              </div>
+            ) : (
+              <div className="username-display" onClick={() => setEditingName(true)}>
+                <span className="display-name">
+                  {userStatus.current.username} {connected && '(You)'}
+                </span>
+                <span className="edit-icon">✏️</span>
+              </div>
+            )}
+            <div className="connection-status">
+              Status: <span className={`status-${connectionStatus}`}>
+                {connectionStatus === 'connected' ? 'Connected' : 
+                 connectionStatus === 'error' ? 'Connection Error' : 'Disconnected'}
+              </span>
+            </div>
+          </div>
+          
           <div className="voice-controls">
             <Button 
               variant={connected ? "default" : "outline"}
@@ -211,15 +311,45 @@ const VoiceChat = ({ user }) => {
           
           <div className="users-list">
             <h4>Participants</h4>
-            <ul>
-              {Object.values(users).map((user, index) => (
-                <li key={index} className={user.online ? 'online' : 'offline'}>
-                  {user.username} 
-                  {user.microphone && user.online && <span className="mic-icon">🎤</span>}
-                  {user.mute && user.online && <span className="mute-icon">🔇</span>}
-                </li>
-              ))}
-            </ul>
+            {Object.keys(users).length > 0 ? (
+              <ul>
+                {Object.entries(users).map(([socketId, userData]) => (
+                  <li 
+                    key={socketId} 
+                    className={`${userData.online ? 'online' : 'offline'} ${
+                      socketId === currentUserSocketId ? 'current-user' : ''
+                    }`}
+                  >
+                    <span className="username">{userData.username}</span>
+                    <span className="status-icons">
+                      {userData.microphone && userData.online && 
+                        <span className="mic-icon" title="Microphone On">🎤</span>
+                      }
+                      {userData.mute && userData.online && 
+                        <span className="mute-icon" title="Audio Muted">🔇</span>
+                      }
+                      {socketId === currentUserSocketId && 
+                        <span className="you-indicator" title="You">👤</span>
+                      }
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="no-users">No participants yet</p>
+            )}
+          </div>
+          
+          <div className="voice-chat-footer">
+            <div className="connection-instructions">
+              <h5>How to join:</h5>
+              <ol>
+                <li>Edit your display name (optional)</li>
+                <li>Click "Connect" to join the voice chat</li>
+                <li>Allow microphone access when prompted</li>
+                <li>Click "Mic On" to start speaking</li>
+              </ol>
+            </div>
           </div>
         </>
       )}
