@@ -8,7 +8,7 @@ import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-van
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
-import { Dock, DockIcon } from "./components/ui/dock"; // Added import
+import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
 import LiveCursor from "./components/ui/livecursor";
@@ -602,6 +602,7 @@ const Profile = () => {
                   <circle cx="20" cy="8" r=".5" />
                 </svg>{" "}
               </DockIcon>
+              <MusicPlayer /> {/* Added MusicPlayer component */}
             </Dock>
           </div>
         </div>

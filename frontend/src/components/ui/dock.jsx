@@ -1,7 +1,8 @@
 "use client";;
 import { cva } from "class-variance-authority";
 import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+import { Music } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -103,4 +104,38 @@ const DockIcon = ({
 
 DockIcon.displayName = "DockIcon";
 
-export { Dock, DockIcon, dockVariants };
+const MusicPlayer = ({ className }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+  
+  const toggleMusic = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio('https://stream.zeno.fm/0r0xa792kwzuv');
+      audioRef.current.volume = 0.3;
+    }
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    
+    setIsPlaying(!isPlaying);
+  };
+
+  return (
+    <DockIcon 
+      onClick={toggleMusic} 
+      className={cn("bg-purple-500/10 hover:bg-purple-500/20", className)}
+    >
+      <Music 
+        className={cn("text-purple-500", isPlaying ? "animate-pulse" : "")} 
+        size={24} 
+      />
+    </DockIcon>
+  );
+};
+
+MusicPlayer.displayName = "MusicPlayer";
+
+export { Dock, DockIcon, dockVariants, MusicPlayer };
