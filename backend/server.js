@@ -2,19 +2,69 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const multer = require('multer');
-const { generateAIContent, processPdfContent, comparePdfs } = require("./aiService");
+const { generateAIContent, processPdfContent, comparePdfs, generateQuiz } = require("./aiService");
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // Add your frontend URL
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept'],
+  credentials: true
+}));
 app.use(express.json());
 
-// Configure multer for memory storage
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
 const upload = multer({
+  storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit per file
+    files: 3 // Maximum 3 files
   }
+});
+
+// Add OPTIONS handling for preflight requests
+app.options('/generate-quiz', cors());
+
+// Move quiz route to the top of routes
+app.post('/generate-quiz', (req, res) => {
+  upload.array('pdfs', 3)(req, res, async function(err) {
+    if (err) {
+      console.error('[Quiz Route] Upload error:', err);
+      return res.status(400).json({ error: err.message });
+    }
+
+    try {
+      if (!req.files || req.files.length === 0) {
+        throw new Error('No PDF files provided');
+      }
+
+      console.log('[Quiz Route] Received files:', req.files.map(f => f.originalname).join(', '));
+
+      // Create structured PDF data objects with buffer and filename
+      const pdfData = req.files.map(file => ({
+        buffer: file.buffer,
+        filename: file.originalname
+      }));
+      
+      console.log('[Quiz Route] Created PDF data objects:', pdfData.map(p => p.filename).join(', '));
+      
+      // Generate quiz with proper file data
+      const quiz = await generateQuiz(pdfData);
+      
+      console.log('[Quiz Route] Quiz generated successfully with', 
+        quiz.questions.length, 'questions');
+      
+      return res.status(200).json({ quiz });
+    } catch (error) {
+      console.error('[Quiz Route] Error:', error);
+      return res.status(500).json({ 
+        error: error.message || 'Failed to generate quiz'
+      });
+    }
+  });
 });
 
 // Routes
@@ -85,10 +135,15 @@ app.get("/generate-ai-content", async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Global error handler:', err.stack);
   res.status(500).json({ error: 'Something broke!' });
 });
 
+// Start the server with confirmation
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
+  console.log('Available routes:');
+  console.log('- POST /generate-quiz');
+  console.log('- POST /generate-summary');
+  // ... list other routes
 });
