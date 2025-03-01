@@ -13,6 +13,7 @@ import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
 import QuizPanel from './components/ui/quiz-panel';
 import Toolbar from "./components/ui/toolbar";
+import VoiceChat from "./components/ui/voice-chat"; // Add this import
 
 // Removed ToastDemo component
 
@@ -499,6 +500,7 @@ const Profile = () => {
           isOpen={isQuizOpen} 
           onClose={() => setIsQuizOpen(false)} 
         />
+        <VoiceChat user={user} /> {/* Add this component */}
         <Toaster />
       </>
     )

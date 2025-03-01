@@ -1,10 +1,17 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const http = require("http");
 const multer = require('multer');
 const { generateAIContent, processPdfContent, comparePdfs, generateQuiz } = require("./aiService");
+const setupVoiceChat = require('./voiceChat');
+
 const app = express();
+const server = http.createServer(app);
 const port = process.env.PORT || 3000;
+
+// Initialize voice chat
+const io = setupVoiceChat(server);
 
 // Middleware
 app.use(cors({
@@ -132,8 +139,9 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server with confirmation
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
+  console.log('Voice chat enabled');
   console.log('Available routes:');
   console.log('- POST /generate-quiz');
   console.log('- POST /generate-summary');
