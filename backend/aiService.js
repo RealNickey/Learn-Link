@@ -82,47 +82,160 @@ async function comparePdfs(pdf1Buffer, pdf2Buffer) {
   }
 }
 
-async function generateQuiz(pdfBuffers) {
+/**
+ * Generates quiz questions based on PDF content
+ * @param {Array} pdfFiles - Array of PDF objects with buffer and filename
+ * @returns {Object} Quiz object with questions array
+ */
+async function generateQuiz(pdfFiles) {
   try {
-    const prompt = `Based on the content of all provided documents, generate 5 multiple choice questions. Return in this JSON format:
-    {
-      "questions": [
-        {
-          "question": "What is...",
-          "options": ["A", "B", "C", "D"],
-          "correctAnswer": 0
-        }
-      ]
-    }`;
-
-    // Use Promise.all to process all PDFs in parallel
-    const pdfParts = await Promise.all(
-      pdfBuffers.map(async (buffer, index) => ({
-        inlineData: {
-          data: buffer.toString('base64'),
-          mimeType: "application/pdf"
-        }
-      }))
-    );
-
-    // Log for debugging
-    console.log(`Processing ${pdfParts.length} PDFs`);
-
-    const result = await model.generateContent([...pdfParts, prompt]);
-    const response = result.response.text();
+    console.log(`[generateQuiz] Processing ${pdfFiles.length} PDF files`);
     
-    // Clean and parse the response
-    const jsonStr = response.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(jsonStr);
-
-    if (!parsed.questions || !Array.isArray(parsed.questions)) {
-      throw new Error('Invalid quiz format returned from AI');
+    // Generate questions for each PDF
+    const allQuestions = [];
+    
+    for (let i = 0; i < pdfFiles.length; i++) {
+      // Check if we're receiving a proper object with buffer and filename
+      let buffer, filename;
+      
+      if (pdfFiles[i].buffer && pdfFiles[i].filename) {
+        // If properly structured object
+        buffer = pdfFiles[i].buffer;
+        filename = pdfFiles[i].filename;
+      } else {
+        // If just a buffer
+        buffer = pdfFiles[i];
+        filename = `Document ${i+1}`;
+      }
+      
+      console.log(`[generateQuiz] Processing file ${i+1}: ${filename}`);
+      
+      const prompt = `
+        You are an expert teacher creating a quiz based on this PDF document.
+        
+        Create 5 multiple-choice questions that test understanding of key concepts in the document.
+        Each question must:
+        1. Be based directly on specific content in this document
+        2. Have four answer options (A, B, C, D)
+        3. Have one clearly correct answer
+        4. Include a brief explanation of the correct answer
+        
+        Format your response as a valid JSON array with this structure:
+        [
+          {
+            "question": "Question text here?",
+            "options": ["First option", "Second option", "Third option", "Fourth option"],
+            "correctAnswer": 0,
+            "explanation": "Why this is the correct answer, with reference to document content"
+          }
+        ]
+        
+        Remember: Create exactly 5 questions, each with 4 options. Make sure the content is specifically from this document.
+        Only provide the JSON array, no other text.
+      `;
+      
+      try {
+        const result = await model.generateContent([
+          {
+            inlineData: {
+              data: buffer.toString('base64'),
+              mimeType: "application/pdf",
+            }
+          },
+          prompt
+        ]);
+        
+        const responseText = result.response.text();
+        console.log('[generateQuiz] Received AI response for file:', filename);
+        
+        // Extract JSON if it's wrapped in markdown code blocks
+        const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, responseText];
+        const jsonStr = jsonMatch[1].trim();
+        
+        try {
+          const parsedQuestions = JSON.parse(jsonStr);
+          console.log(`[generateQuiz] Successfully parsed ${parsedQuestions.length} questions for ${filename}`);
+          
+          // Display a sample question in console for debugging
+          console.log(`[generateQuiz] Sample question:`, parsedQuestions[0]);
+          
+          // Add file identifier to each question
+          const questionsWithSource = parsedQuestions.map(q => ({
+            ...q,
+            source: filename
+          }));
+          
+          allQuestions.push(...questionsWithSource);
+        } catch (parseError) {
+          console.error('[generateQuiz] Failed to parse JSON:', parseError);
+          console.log('[generateQuiz] Raw response:', responseText);
+          
+          // Create fallback questions for this document
+          const fallbackQuestions = [
+            {
+              question: `What is the main topic of ${filename}?`,
+              options: [
+                "The primary subject of the document", 
+                "An unrelated concept", 
+                "A minor detail", 
+                "None of the above"
+              ],
+              correctAnswer: 0,
+              explanation: "This is a fallback question.",
+              source: filename
+            }
+          ];
+          
+          allQuestions.push(...fallbackQuestions);
+        }
+      } catch (error) {
+        console.error(`[generateQuiz] Error generating questions:`, error);
+        
+        // Add single fallback question
+        allQuestions.push({
+          question: `What information can be found in ${filename}?`,
+          options: ["Main content", "Unrelated information", "No specific content", "Random data"],
+          correctAnswer: 0,
+          explanation: "This is a fallback question due to an error.",
+          source: filename
+        });
+      }
     }
-
-    console.log('Quiz generated successfully:', parsed);
-    return parsed;
+    
+    console.log(`[generateQuiz] Total questions generated: ${allQuestions.length}`);
+    
+    // Ensure we have at least 5 questions total
+    if (allQuestions.length < 5) {
+      const moreNeeded = 5 - allQuestions.length;
+      console.log(`[generateQuiz] Adding ${moreNeeded} generic questions to reach minimum of 5`);
+      
+      for (let i = 0; i < moreNeeded; i++) {
+        allQuestions.push({
+          question: `Generic Question ${i+1}: What approach is best for studying the content?`,
+          options: ["Understanding key concepts", "Memorizing random facts", "Ignoring main topics", "Not reading the document"],
+          correctAnswer: 0,
+          explanation: "Understanding key concepts is always the best approach.",
+          source: "General"
+        });
+      }
+    }
+    
+    // Print all generated questions to terminal for debugging
+    console.log('\n=== GENERATED QUIZ QUESTIONS ===');
+    allQuestions.slice(0, 5).forEach((q, i) => {
+      console.log(`\nQ${i+1} [${q.source}]: ${q.question}`);
+      q.options.forEach((opt, j) => {
+        const marker = j === q.correctAnswer ? '✓' : ' ';
+        console.log(`  ${marker} ${opt}`);
+      });
+    });
+    console.log('\n===============================\n');
+    
+    // Return only 5 questions
+    return { questions: allQuestions.slice(0, 5) };
+    
   } catch (error) {
-    console.error('Error in generateQuiz:', error);
+    console.error('[generateQuiz] Error in quiz generation:', error);
     throw error;
   }
 }

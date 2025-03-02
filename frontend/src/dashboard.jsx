@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/dashboard.css";
 import "./styles/list-files.css"; // Import the new styles
@@ -8,12 +8,20 @@ import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-van
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
-import { Dock, DockIcon } from "./components/ui/dock"; // Added import
+import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
-import QuizPanel from './components/ui/quiz-panel';
+
 import Toolbar from "./components/ui/toolbar";
 import VoiceChat from "./components/ui/voice-chat"; // Add this import
+import LiveCursor from "./components/ui/livecursor";
+import {
+  ChatBubble,
+  ChatBubbleMessage,
+  ChatBubbleAvatar,
+} from "./components/ui/chat-bubble";
+import { cn } from "./lib/utils";
+import QuizPanel from "./components/ui/quiz-panel";
 
 // Removed ToastDemo component
 
@@ -23,11 +31,15 @@ const Profile = () => {
   const [micOn, setMicOn] = useState(true); // Added state for mic
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showPdfPreview, setShowPdfPreview] = useState(false); // New state for PDF preview visibility
   const { toast } = useToast();
   const [pdfContent, setPdfContent] = useState("");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
+  const [isLoadingAiResponse, setIsLoadingAiResponse] = useState(false); // Added state for loading AI response
+  const [isAiResponding, setIsAiResponding] = useState(false);
+  const [isAiError, setIsAiError] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
 
@@ -70,6 +82,7 @@ const Profile = () => {
     }
 
     setFiles((prevFiles) => [...prevFiles, ...uniqueFiles]);
+    setSelectedFiles([]); // Reset selected files
     console.log(newFiles);
   };
 
@@ -87,10 +100,13 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("pdf", file);
 
-      const response = await fetch("http://localhost:3000/generate-summary", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/generate-summary`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to generate summary");
@@ -112,13 +128,24 @@ const Profile = () => {
   };
 
   const handleSelectFile = (file) => {
-    setSelectedFile(file);
-    // Remove the automatic summary generation
-    // generateSummary(file);
+    if (selectedFile === file) {
+      setShowPdfPreview(!showPdfPreview);
+      if (showPdfPreview) {
+        setSelectedFile(null); // Clear selection when closing preview
+      }
+    } else {
+      setSelectedFile(file);
+      setShowPdfPreview(true);
+    }
   };
 
   const handleRemoveFile = (fileToRemove) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+    // If removing the currently selected file, hide preview
+    if (selectedFile === fileToRemove) {
+      setSelectedFile(null);
+      setShowPdfPreview(false);
+    }
   };
 
   const toggleMic = () => {
@@ -126,22 +153,49 @@ const Profile = () => {
   };
 
   const handleInputSubmit = async (inputValue) => {
+    // Add user message immediately
     setChatHistory((prev) => [
       ...prev,
       { type: "user", content: inputValue, image: userImage },
-    ]); // Add user input to chat history
+    ]);
+
+    setIsAiResponding(true);
+    setIsAiError(false);
+
     try {
       const response = await fetch(
-        `http://localhost:3000/generate-ai-content?prompt=${encodeURIComponent(
-          inputValue
-        )}`
+        `${
+          import.meta.env.VITE_API_URL
+        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
       );
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI response");
+      }
+
       const aiContent = await response.text();
-      setAiContent(aiContent);
-      setChatHistory((prev) => [...prev, { type: "ai", content: aiContent }]); // Add AI response to chat history
-      console.log("AI Content:", aiContent);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          type: "ai",
+          content: aiContent,
+          status: "success",
+        },
+      ]);
     } catch (error) {
       console.error("Error fetching AI content:", error);
+      setIsAiError(true);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          type: "ai",
+          content:
+            "I apologize, but I encountered an error processing your request. Please try again.",
+          status: "error",
+        },
+      ]);
+    } finally {
+      setIsAiResponding(false);
     }
   };
 
@@ -166,8 +220,9 @@ const Profile = () => {
     }
 
     setIsGeneratingSummary(true);
+    setIsLoadingAiResponse(true); // Start loading animation
     toast({
-      title: "Generating Summary",
+      title: "Generating Focus Area",
       description: `Analyzing ${selectedFiles.length} document(s)...`,
       duration: 2000,
     });
@@ -181,10 +236,13 @@ const Profile = () => {
         const formData = new FormData();
         formData.append("pdf", file);
 
-        const response = await fetch("http://localhost:3000/generate-summary", {
-          method: "POST",
-          body: formData,
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/generate-summary`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to generate summary");
@@ -192,28 +250,32 @@ const Profile = () => {
 
         const { summary } = await response.json();
         // Append new summary with file name
+        const focusAreaText = `File: ${file.name}\n\n${summary}`;
         setAiContent(
-          (prev) =>
-            `${prev}${prev ? "\n\n---\n\n" : ""}File: ${
-              file.name
-            }\n\n${summary}`
+          (prev) => `${prev}${prev ? "\n\n---\n\n" : ""}${focusAreaText}`
         );
+        setChatHistory((prev) => [
+          ...prev,
+          { type: "ai", content: focusAreaText },
+        ]);
+        console.log(`Focus Area for ${file.name}:`, summary); // Temporarily show the result in console
       }
 
       toast({
         title: "Success",
-        description: "Summary generated successfully",
+        description: "Focus area generated successfully",
       });
     } catch (error) {
-      console.error("Error generating summary:", error);
+      console.error("Error generating focus area:", error);
       toast({
         title: "Error",
-        description: "Failed to generate summary",
+        description: "Failed to generate focus area",
         variant: "destructive",
         duration: 3000,
       });
     } finally {
       setIsGeneratingSummary(false);
+      setIsLoadingAiResponse(false); // Stop loading animation
     }
   };
 
@@ -226,57 +288,79 @@ const Profile = () => {
       });
       return;
     }
-  
+
     toast({
       title: "Generating Quiz",
       description: `Creating questions from ${selectedFiles.length} document(s)...`,
       duration: 2000,
     });
-  
+
     try {
       const formData = new FormData();
-      // Append each selected file with the same field name
-      selectedFiles.forEach(file => {
-        formData.append('pdfs', file);
+      selectedFiles.forEach((file) => {
+        console.log("Adding file:", file.name);
+        formData.append("pdfs", file);
       });
-  
-      console.log('Sending files:', selectedFiles.map(f => f.name));
-  
-      const response = await fetch('http://localhost:3000/generate-quiz', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-  
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/generate-quiz`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Server error: ${response.status}`);
+        throw new Error(
+          response.status === 404
+            ? "Quiz service unavailable"
+            : `Server error: ${response.status}`
+        );
       }
-  
+
       const data = await response.json();
-      console.log('Quiz data received:', data);
-  
+
+      console.log("Quiz data received:", data);
+
       if (!data.quiz || !data.quiz.questions) {
-        throw new Error('Invalid quiz data received');
+        throw new Error("Invalid quiz data received");
       }
-  
+
       setCurrentQuiz(data.quiz);
       setIsQuizOpen(true);
-      
+
       toast({
         title: "Success",
         description: `Quiz generated from ${selectedFiles.length} documents!`,
       });
     } catch (error) {
-      console.error('Quiz generation error:', error);
+      console.error("Quiz generation error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to generate quiz",
         variant: "destructive",
         duration: 5000,
       });
     }
   };
+
+  // Function to create a data URL for PDF preview
+  const getPdfDataUrl = (file) => {
+    if (!file) return null;
+    return URL.createObjectURL(file);
+  };
+
+  const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
 
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
@@ -294,7 +378,11 @@ const Profile = () => {
   return (
     isAuthenticated && (
       <>
-        <div className="dashboard-container">
+        <div className="dashboard-container" id="dashboard-container">
+          <LiveCursor
+            containerId="dashboard-container"
+            username={user?.name || user?.email}
+          />
           <div className="section div1">
             <ListFiles
               files={files}
@@ -302,6 +390,7 @@ const Profile = () => {
               onRemove={handleRemoveFile}
               selectedFiles={selectedFiles}
               onFileSelect={handleFileSelect}
+              activeFile={showPdfPreview ? selectedFile : null} // Only show active file when preview is open
             />
           </div>
           <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
@@ -311,12 +400,37 @@ const Profile = () => {
             />
           </div>
           <div className="section div3" style={{ padding: 0 }}>
-            <div style={{ width: "100%", height: "100%" }}>
-              <Tldraw
-                onMount={(editor) => {
-                  editor.user.updateUserPreferences({ colorScheme: "dark" });
-                }}
-              />
+            <div
+              style={{ width: "100%", height: "100%", position: "relative" }}
+            >
+              {showPdfPreview && selectedFile ? (
+                <div
+                  className="pdf-preview"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "absolute",
+                    zIndex: 10,
+                    background: "rgba(0,0,0,0.8)",
+                  }}
+                >
+                  <iframe
+                    src={getPdfDataUrl(selectedFile)}
+                    title="PDF Preview"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                    }}
+                  />
+                </div>
+              ) : (
+                <Tldraw
+                  onMount={(editor) => {
+                    editor.user.updateUserPreferences({ colorScheme: "dark" });
+                  }}
+                />
+              )}
             </div>
           </div>
           <div className="section div4">
@@ -335,51 +449,118 @@ const Profile = () => {
           </div>
           <div className="section div6">
             <div
-              style={{
-                height: "100%",
-                overflowY: "auto",
-                padding: "1rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-              }}
+              className="h-full overflow-y-auto p-4 flex flex-col space-y-4"
+              ref={chatContainerRef}
             >
               {chatHistory.map((chat, index) => (
-                <div key={index} className={`chat-message ${chat.type}`}>
-                  <div className={`chat-bubble ${chat.type}`}>
-                    {chat.type === "user" ? (
-                      <img src={chat.image} alt="User" className="chat-image" />
-                    ) : (
-                      <div className="ai-icon-wrapper">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-bot"
-                        >
-                          <path d="M12 8V4H8" />
-                          <rect width="16" height="12" x="4" y="8" rx="2" />
-                          <path d="M2 14h2" />
-                          <path d="M20 14h2" />
-                          <path d="M15 13v2" />
-                          <path d="M9 13v2" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="chat-content">
-                      {typeof chat.content === "object" && chat.content.content
-                        ? chat.content.content
-                        : chat.content}
+                <ChatBubble
+                  key={index}
+                  variant={chat.type === "user" ? "sent" : "received"}
+                >
+                  {chat.type === "user" ? (
+                    <ChatBubbleAvatar
+                      src={userImage}
+                      fallback={user?.name?.charAt(0)}
+                    />
+                  ) : (
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 relative",
+                        isAiResponding &&
+                          index === chatHistory.length - 1 &&
+                          "ai-avatar-loading"
+                      )}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={cn(
+                          "text-white transition-colors duration-200",
+                          chat.status === "error" && "text-red-500"
+                        )}
+                      >
+                        <path d="M12 8V4H8" />
+                        <rect width="16" height="12" x="4" y="8" rx="2" />
+                        <path d="M2 14h2" />
+                        <path d="M20 14h2" />
+                        <path d="M15 13v2" />
+                        <path d="M9 13v2" />
+                      </svg>
                     </div>
+                  )}
+                  {(!isAiResponding ||
+                    index !== chatHistory.length - 1 ||
+                    chat.type === "user") && (
+                    <ChatBubbleMessage
+                      variant={chat.type === "user" ? "sent" : "received"}
+                    >
+                      {chat.content}
+                    </ChatBubbleMessage>
+                  )}
+                </ChatBubble>
+              ))}
+              {isAiResponding && !chatHistory.length && (
+                <ChatBubble variant="received">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 ai-avatar-loading">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-white"
+                    >
+                      <path d="M12 8V4H8" />
+                      <rect width="16" height="12" x="4" y="8" rx="2" />
+                      <path d="M2 14h2" />
+                      <path d="M20 14h2" />
+                      <path d="M15 13v2" />
+                      <path d="M9 13v2" />
+                    </svg>
+                  </div>
+                </ChatBubble>
+              )}
+              {isLoadingAiResponse && (
+                <div className="chat-message ai">
+                  <div className="chat-bubble ai">
+                    <div className="ai-icon-wrapper">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-loader animate-spin"
+                      >
+                        <line x1="12" y1="2" x2="12" y2="6" />
+                        <line x1="12" y1="18" x2="12" y2="22" />
+                        <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+                        <line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+                        <line x1="2" y1="12" x2="6" y2="12" />
+                        <line x1="18" y1="12" x2="22" y2="12" />
+                        <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+                        <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+                      </svg>
+                    </div>
+                    <div className="chat-content">Generating response...</div>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
           <div className="section div7">
@@ -492,13 +673,14 @@ const Profile = () => {
                   <circle cx="20" cy="8" r=".5" />
                 </svg>{" "}
               </DockIcon>
+              <MusicPlayer /> {/* Added MusicPlayer component */}
             </Dock>
           </div>
         </div>
-        <QuizPanel 
-          quiz={currentQuiz} 
-          isOpen={isQuizOpen} 
-          onClose={() => setIsQuizOpen(false)} 
+        <QuizPanel
+          quiz={currentQuiz}
+          isOpen={isQuizOpen}
+          onClose={() => setIsQuizOpen(false)}
         />
         <VoiceChat user={user} /> {/* Add this component */}
         <Toaster />

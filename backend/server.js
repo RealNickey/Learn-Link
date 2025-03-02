@@ -15,7 +15,8 @@ const io = setupVoiceChat(server);
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Add your frontend URL
+  // Allow requests from any origin when deployed
+  origin: process.env.NODE_ENV === 'production' ? '*' : 'http://localhost:5173',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept'],
   credentials: true
@@ -48,15 +49,23 @@ app.post('/generate-quiz', (req, res) => {
         throw new Error('No PDF files provided');
       }
 
-      console.log(`[Quiz Route] Processing ${req.files.length} files:`, 
-        req.files.map(f => f.originalname));
+      console.log('[Quiz Route] Received files:', req.files.map(f => f.originalname).join(', '));
 
-      const pdfBuffers = req.files.map(file => file.buffer);
-      const quiz = await generateQuiz(pdfBuffers);
+      // Create structured PDF data objects with buffer and filename
+      const pdfData = req.files.map(file => ({
+        buffer: file.buffer,
+        filename: file.originalname
+      }));
       
-      console.log('[Quiz Route] Quiz generated successfully');
+      console.log('[Quiz Route] Created PDF data objects:', pdfData.map(p => p.filename).join(', '));
+      
+      // Generate quiz with proper file data
+      const quiz = await generateQuiz(pdfData);
+      
+      console.log('[Quiz Route] Quiz generated successfully with', 
+        quiz.questions.length, 'questions');
+      
       return res.status(200).json({ quiz });
-      
     } catch (error) {
       console.error('[Quiz Route] Error:', error);
       return res.status(500).json({ 
@@ -138,12 +147,21 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something broke!' });
 });
 
-// Start the server with confirmation
-server.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-  console.log('Voice chat enabled');
-  console.log('Available routes:');
-  console.log('- POST /generate-quiz');
-  console.log('- POST /generate-summary');
-  // ... list other routes
-});
+
+// Check if we're in a Vercel serverless environment
+if (process.env.NODE_ENV !== 'production') {
+  // Start the server with confirmation when not in production (local development)
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+    console.log('Available routes:');
+    console.log('- POST /generate-quiz');
+    console.log('- POST /generate-summary');
+    console.log('- POST /compare-pdfs');
+    console.log('- GET /generate-ai-content');
+    console.log('Voice chat enabled');
+
+  });
+}
+
+// Export the Express app for serverless functions
+module.exports = app;
