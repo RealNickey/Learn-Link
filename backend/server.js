@@ -8,7 +8,8 @@ const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Add your frontend URL
+  // Allow requests from any origin when deployed
+  origin: process.env.NODE_ENV === 'production' ? '*' : 'http://localhost:5173',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept'],
   credentials: true
@@ -139,11 +140,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something broke!' });
 });
 
-// Start the server with confirmation
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-  console.log('Available routes:');
-  console.log('- POST /generate-quiz');
-  console.log('- POST /generate-summary');
-  // ... list other routes
-});
+// Check if we're in a Vercel serverless environment
+if (process.env.NODE_ENV !== 'production') {
+  // Start the server with confirmation when not in production (local development)
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+    console.log('Available routes:');
+    console.log('- POST /generate-quiz');
+    console.log('- POST /generate-summary');
+    console.log('- POST /compare-pdfs');
+    console.log('- GET /generate-ai-content');
+  });
+}
+
+// Export the Express app for serverless functions
+module.exports = app;
