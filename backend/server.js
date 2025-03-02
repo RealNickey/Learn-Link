@@ -1,10 +1,17 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const http = require("http");
 const multer = require('multer');
 const { generateAIContent, processPdfContent, comparePdfs, generateQuiz } = require("./aiService");
+const setupVoiceChat = require('./voiceChat');
+
 const app = express();
+const server = http.createServer(app);
 const port = process.env.PORT || 3000;
+
+// Initialize voice chat
+const io = setupVoiceChat(server);
 
 // Middleware
 app.use(cors({
@@ -140,6 +147,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something broke!' });
 });
 
+
 // Check if we're in a Vercel serverless environment
 if (process.env.NODE_ENV !== 'production') {
   // Start the server with confirmation when not in production (local development)
@@ -150,6 +158,8 @@ if (process.env.NODE_ENV !== 'production') {
     console.log('- POST /generate-summary');
     console.log('- POST /compare-pdfs');
     console.log('- GET /generate-ai-content');
+    console.log('Voice chat enabled');
+
   });
 }
 

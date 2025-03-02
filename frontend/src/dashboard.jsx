@@ -11,6 +11,9 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+
+import Toolbar from "./components/ui/toolbar";
+import VoiceChat from "./components/ui/voice-chat"; // Add this import
 import LiveCursor from "./components/ui/livecursor";
 import {
   ChatBubble,
@@ -441,11 +444,8 @@ const Profile = () => {
               onSubmit={handleInputSubmit} // Updated to use handleInputSubmit
             />
           </div>
-          <div className="section div5">
-            <div className="user-info">
-              <img className="profile-image" src={userImage} alt={user.name} />
-              <h2 className="user-name">{user.name}</h2>
-            </div>
+          <div className="section div5 flex items-center justify-center p-3">
+            <Toolbar userName={user.name} userImage={userImage} />
           </div>
           <div className="section div6">
             <div
@@ -682,6 +682,7 @@ const Profile = () => {
           isOpen={isQuizOpen}
           onClose={() => setIsQuizOpen(false)}
         />
+        <VoiceChat user={user} /> {/* Add this component */}
         <Toaster />
       </>
     )
