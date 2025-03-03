@@ -18,6 +18,7 @@ import {
   ChatBubbleAvatar,
 } from "./components/ui/chat-bubble";
 import { cn } from "./lib/utils";
+import { FlashCards } from "./components/ui/flashcards"; // Import FlashCards component
 
 // Removed ToastDemo component
 
@@ -35,6 +36,7 @@ const Profile = () => {
   const [chatHistory, setChatHistory] = useState([]); // Added state for chat history
   const [isAiResponding, setIsAiResponding] = useState(false);
   const [isAiError, setIsAiError] = useState(false);
+  const [isFlashCardsOpen, setIsFlashCardsOpen] = useState(false); // Added state for FlashCards
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -518,7 +520,10 @@ const Profile = () => {
                   <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
                 </svg>
               </DockIcon>
-              <DockIcon title="Flash Cards">
+              <DockIcon
+                title="Flash Cards"
+                onClick={() => setIsFlashCardsOpen(true)}
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -568,6 +573,10 @@ const Profile = () => {
             </Dock>
           </div>
         </div>
+        <FlashCards
+          isOpen={isFlashCardsOpen}
+          onClose={() => setIsFlashCardsOpen(false)}
+        />
         <Toaster />
       </>
     )
