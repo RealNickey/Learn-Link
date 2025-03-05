@@ -166,19 +166,27 @@ const Profile = () => {
       const response = await fetch(
         `${
           import.meta.env.VITE_API_URL
-        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`
+        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to get AI response");
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const aiContent = await response.text();
+      const data = await response.json();
       setChatHistory((prev) => [
         ...prev,
         {
           type: "ai",
-          content: aiContent,
+          content: data.content,
           status: "success",
         },
       ]);

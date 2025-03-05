@@ -3,9 +3,14 @@ const express = require("express");
 const cors = require("cors");
 
 const http = require("http");
-const multer = require('multer');
-const { generateAIContent, processPdfContent, comparePdfs, generateQuiz } = require("./aiService");
-const setupVoiceChat = require('./voiceChat');
+const multer = require("multer");
+const {
+  generateAIContent,
+  processPdfContent,
+  comparePdfs,
+  generateQuiz,
+} = require("./aiService");
+const setupVoiceChat = require("./voiceChat");
 
 const app = express();
 const server = http.createServer(app);
@@ -14,23 +19,38 @@ const port = process.env.PORT || 3000;
 // Initialize voice chat
 const io = setupVoiceChat(server);
 
-// Middleware
-app.use(
-  cors({
-    // Allow requests from specific origins when deployed
-    origin:
-      process.env.NODE_ENV === "production"
-        ? [
-            "https://learn-link-frontend.vercel.app",
-            "https://learn-link.vercel.app",
-            "https://learn-link-git-main-realnickeys.vercel.app",
-          ]
-        : "http://localhost:5173",
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Accept", "Authorization"],
-    credentials: true,
-  })
-);
+// Allow requests from localhost during development
+const allowedOrigins = [
+  "http://localhost:5173", // Local development
+  "https://learn-link-frontend.vercel.app",
+  "https://learn-link.vercel.app",
+  "https://learn-link-git-main-realnickeys.vercel.app",
+];
+
+// Set CORS headers for all responses
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  } else {
+    res.header("Access-Control-Allow-Origin", "*");
+  }
+  
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Credentials", true);
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
+// Standard CORS middleware as backup
+app.use(cors());
+
 app.use(express.json());
 
 // Configure multer for file uploads
@@ -172,20 +192,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something broke!" });
 });
 
-
 // Check if we're in a Vercel serverless environment
 if (process.env.NODE_ENV !== "production") {
   // Start the server with confirmation when not in production (local development)
   app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 
-    console.log('Available routes:');
-    console.log('- POST /generate-quiz');
-    console.log('- POST /generate-summary');
-    console.log('- POST /compare-pdfs');
-    console.log('- GET /generate-ai-content');
-    console.log('Voice chat enabled');
-
+    console.log("Available routes:");
+    console.log("- POST /generate-quiz");
+    console.log("- POST /generate-summary");
+    console.log("- POST /compare-pdfs");
+    console.log("- GET /generate-ai-content");
+    console.log("Voice chat enabled");
   });
 }
 
