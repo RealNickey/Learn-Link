@@ -173,7 +173,9 @@ const Profile = () => {
             Accept: "application/json",
             "Content-Type": "application/json",
           },
-          credentials: "include",
+          // Using credentials: "same-origin" is safer for this type of request
+          // It only sends credentials if the request is to the same origin
+          credentials: "same-origin",
         }
       );
 
