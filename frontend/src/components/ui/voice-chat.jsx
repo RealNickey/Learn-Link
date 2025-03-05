@@ -32,11 +32,14 @@ const VoiceChat = ({ user }) => {
 
   // Initialize socket connection
   useEffect(() => {
-    // Create socket connection
+    // Create socket connection with improved configuration for Vercel
     socketRef.current = io(apiUrl, {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       autoConnect: false, // Don't connect automatically
+      transports: ["websocket", "polling"], // Try WebSocket first, fallback to polling
+      timeout: 10000, // Increase timeout to 10 seconds
+      path: "/socket.io/", // Explicitly set the path
     });
 
     // Socket connection events

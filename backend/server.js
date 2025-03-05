@@ -1,7 +1,6 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-
 const http = require("http");
 const multer = require("multer");
 const {
@@ -19,7 +18,7 @@ const port = process.env.PORT || 3000;
 // Initialize voice chat
 const io = setupVoiceChat(server);
 
-// Allow requests from localhost during development
+// Allow requests from all relevant origins
 const allowedOrigins = [
   "http://localhost:5173", // Local development
   "https://learn-link-frontend.vercel.app",
@@ -34,11 +33,13 @@ app.use(
       // Allow requests with no origin (like mobile apps, curl requests)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        origin.includes("localhost")
+      ) {
         callback(null, origin);
       } else {
         // If the origin is not in the allowed list, we don't send credentials
-        // so we can use * for the origin
         callback(null, false);
       }
     },
@@ -69,6 +70,13 @@ const upload = multer({
 
 // Add OPTIONS handling for preflight requests
 app.options("*", cors());
+
+// Health check endpoint for Socket.IO
+app.get("/socket.io/", (req, res) => {
+  res.send(
+    "Socket.IO is available. Use WebSocket connection instead of HTTP polling."
+  );
+});
 
 // Move quiz route to the top of routes
 app.post("/generate-quiz", (req, res) => {
@@ -196,10 +204,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something broke!" });
 });
 
-// Check if we're in a Vercel serverless environment
-if (process.env.NODE_ENV !== "production") {
-  // Start the server with confirmation when not in production (local development)
-  app.listen(port, () => {
+// Start the server with confirmation for all environments
+if (process.env.VERCEL) {
+  // In Vercel environment we don't need to call listen
+  console.log("Running on Vercel serverless environment");
+} else {
+  // For local development and other environments, start the HTTP server
+  server.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 
     console.log("Available routes:");
@@ -207,9 +218,9 @@ if (process.env.NODE_ENV !== "production") {
     console.log("- POST /generate-summary");
     console.log("- POST /compare-pdfs");
     console.log("- GET /generate-ai-content");
-    console.log("Voice chat enabled");
+    console.log("Voice chat enabled at /socket.io/");
   });
 }
 
-// Export the Express app for serverless functions
-module.exports = app;
+// Export the Express app and server for serverless functions
+module.exports = server;
