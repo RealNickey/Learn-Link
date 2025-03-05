@@ -26,15 +26,13 @@ const secondaryVariant = {
   },
 };
 
-export const FileUpload = ({
-  onChange
-}) => {
+export const FileUpload = ({ onChange }) => {
   const [tempFiles, setTempFiles] = useState([]); // Changed from files to tempFiles
   const fileInputRef = useRef(null);
   const { toast } = useToast();
 
   const validateFile = (file) => {
-    if (file.type !== 'application/pdf') {
+    if (file.type !== "application/pdf") {
       toast({
         title: "Invalid file type",
         description: "Only PDF files are allowed",
@@ -42,7 +40,7 @@ export const FileUpload = ({
       });
       return false;
     }
-    
+
     if (file.size > 20 * 1024 * 1024) {
       toast({
         title: "File too large",
@@ -51,7 +49,7 @@ export const FileUpload = ({
       });
       return false;
     }
-    
+
     return true;
   };
   const [dragActive, setDragActive] = useState(false);
@@ -60,32 +58,32 @@ export const FileUpload = ({
     const validFiles = newFiles.filter(validateFile);
     if (validFiles.length) {
       setTempFiles((prevFiles) => [...prevFiles, ...validFiles]);
-      
+
       // Process each file
       for (const file of validFiles) {
         const formData = new FormData();
-        formData.append('pdf', file);
-        
+        formData.append("pdf", file);
+
         try {
           await handleFileUpload(formData);
           onChange([file]); // Notify parent of successful upload
-          
+
           // Remove from temp files after successful upload
-          setTempFiles(prev => prev.filter(f => f !== file));
-          
+          setTempFiles((prev) => prev.filter((f) => f !== file));
+
           toast({
             title: "Success",
             description: "File uploaded successfully",
           });
         } catch (error) {
-          console.error('Failed to upload file:', error);
+          console.error("Failed to upload file:", error);
           toast({
             title: "Error",
             description: "Failed to upload file",
             variant: "destructive",
           });
           // Remove failed file from temp files
-          setTempFiles(prev => prev.filter(f => f !== file));
+          setTempFiles((prev) => prev.filter((f) => f !== file));
         }
       }
     }
@@ -109,26 +107,29 @@ export const FileUpload = ({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     const files = [...e.dataTransfer.files];
     handleFileChange(files);
   };
 
   const handleFileUpload = async (formData) => {
     try {
-      const response = await fetch('http://localhost:3000/upload-pdf', {
-        method: 'POST',
-        body: formData,
-      });
-      
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/upload-pdf`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error('Error uploading PDF:', error);
+      console.error("Error uploading PDF:", error);
       throw error;
     }
   };
@@ -144,12 +145,12 @@ export const FileUpload = ({
     noClick: true,
     onDrop: handleFileChange,
     accept: {
-      'application/pdf': ['.pdf']
+      "application/pdf": [".pdf"],
     },
     maxSize: 20 * 1024 * 1024,
     onDropRejected: (fileRejections) => {
       const error = fileRejections[0]?.errors[0];
-      if (error?.code === 'file-too-large') {
+      if (error?.code === "file-too-large") {
         toast({
           title: "File too large",
           description: "File size should be less than 20MB",
@@ -174,7 +175,8 @@ export const FileUpload = ({
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
-        onDrop={handleDrop}>
+        onDrop={handleDrop}
+      >
         <input
           ref={fileInputRef}
           id="file-upload-handle"
@@ -242,7 +244,10 @@ export const FileUpload = ({
                     </motion.p>
                   </div>
                   <div className="mt-2 w-full bg-neutral-800 rounded-full h-2">
-                    <div className="animate-pulse bg-neutral-400 h-2 rounded-full" style={{width: '100%'}}></div>
+                    <div
+                      className="animate-pulse bg-neutral-400 h-2 rounded-full"
+                      style={{ width: "100%" }}
+                    ></div>
                   </div>
                 </motion.div>
               ))}
