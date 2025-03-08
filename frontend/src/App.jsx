@@ -29,6 +29,24 @@ const AppContent = () => {
     setIsTransitioning(false);
   };
 
+  // Routes component extracted to separate component
+  const AppRoutes = ({ location, onNavigate }) => {
+    const navigate = useNavigate();
+
+    // Handle navigation with transitions
+    const handleClick = (path) => {
+      onNavigate(path);
+      setTimeout(() => navigate(path), 500); // Delay navigation to allow transition
+    };
+
+    return (
+      <Routes location={location}>
+        <Route path="/" element={<LandingPage onNavigate={handleClick} />} />
+        <Route path="/dashboard" element={<Profile onNavigate={handleClick} />} />
+      </Routes>
+    );
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -41,17 +59,7 @@ const AppContent = () => {
                 onTransitionComplete={handleTransitionComplete}
               />
             ) : (
-              <Routes location={location} key={location.pathname}>
-                <Route
-                  path="/"
-                  element={
-                    <LandingPage
-                      onNavigate={(path) => handleTransition(path)}
-                    />
-                  }
-                />
-                <Route path="/dashboard" element={<Profile />} />
-              </Routes>
+              <AppRoutes location={location} onNavigate={handleTransition} />
             )}
           </AnimatePresence>
         </Suspense>

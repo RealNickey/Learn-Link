@@ -394,18 +394,24 @@ const Profile = () => {
   // Function to create a data URL for PDF preview
   const getPdfDataUrl = (file) => {
     if (!file) return null;
-    const url = URL.createObjectURL(file);
-    setPdfContent(url); // Store the URL in state
-    return url;
+    return URL.createObjectURL(file);
   };
 
   useEffect(() => {
-    return () => {
-      if (pdfContent) {
-        URL.revokeObjectURL(pdfContent); // Revoke the URL when component unmounts
-      }
-    };
-  }, [pdfContent]);
+    // Create URL only when selected file changes
+    if (selectedFile) {
+      const url = URL.createObjectURL(selectedFile);
+      setPdfContent(url);
+      
+      // Cleanup previous URL when selected file changes or component unmounts
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      // Clear PDF content if no file is selected
+      setPdfContent("");
+    }
+  }, [selectedFile]); // Only re-run when selectedFile changes
 
   const chatContainerRef = useRef(null);
 

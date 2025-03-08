@@ -29,7 +29,7 @@ const LandingPage = ({ onNavigate }) => {
       <motion.h1
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.8 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
         className="jetbrains-mono"
       >
         Welcome to Learn-Link
@@ -38,7 +38,7 @@ const LandingPage = ({ onNavigate }) => {
       <motion.p
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.8 }}
+        transition={{ delay: 0.4, duration: 0.6 }}
       >
         Your one-stop solution for learning and collaboration.
       </motion.p>
@@ -46,7 +46,7 @@ const LandingPage = ({ onNavigate }) => {
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.8 }}
+        transition={{ delay: 0.6, duration: 0.6 }}
       >
         <br></br>
         <button
