@@ -527,8 +527,9 @@ const Profile = () => {
                     store={store}
                     onMount={(editor) => {
                       editor.user.updateUserPreferences({
-                        colorScheme: "dark",
+                        colorScheme: "dark"
                       });
+                      editor.setCurrentTool('draw');
                       const container = editor.getContainer();
                       const focusOnPointerDown = () => editor.focus();
                       container.addEventListener(
