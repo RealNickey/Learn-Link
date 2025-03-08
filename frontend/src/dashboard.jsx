@@ -473,11 +473,26 @@ const Profile = () => {
           </motion.div>
           <motion.div
             className="section div3"
-            style={{ padding: 0 }}
+            style={{
+              padding: 0,
+              position: "relative",
+              overflow: "hidden",
+              border: "2px solid #3c3c3c",
+              borderRadius: "0.5rem",
+              background: "rgba(0, 0, 0, 0.3)",
+              display: "flex",
+              flexDirection: "column",
+            }}
             variants={itemVariants}
           >
             <div
-              style={{ width: "100%", height: "100%", position: "relative" }}
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "relative",
+                flex: 1,
+                minHeight: 0, // This is crucial for flex child to respect parent height
+              }}
             >
               {showPdfPreview && selectedFile ? (
                 <div
@@ -501,24 +516,34 @@ const Profile = () => {
                   />
                 </div>
               ) : (
-                <Tldraw
-                  store={store}
-                  onMount={(editor) => {
-                    editor.user.updateUserPreferences({ colorScheme: "dark" });
-                    const container = editor.getContainer();
-                    const focusOnPointerDown = () => editor.focus();
-                    container.addEventListener(
-                      "pointerdown",
-                      focusOnPointerDown
-                    );
-                    return () => {
-                      container.removeEventListener(
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "relative",
+                  }}
+                >
+                  <Tldraw
+                    store={store}
+                    onMount={(editor) => {
+                      editor.user.updateUserPreferences({
+                        colorScheme: "dark",
+                      });
+                      const container = editor.getContainer();
+                      const focusOnPointerDown = () => editor.focus();
+                      container.addEventListener(
                         "pointerdown",
                         focusOnPointerDown
                       );
-                    };
-                  }}
-                />
+                      return () => {
+                        container.removeEventListener(
+                          "pointerdown",
+                          focusOnPointerDown
+                        );
+                      };
+                    }}
+                  />
+                </div>
               )}
             </div>
           </motion.div>
