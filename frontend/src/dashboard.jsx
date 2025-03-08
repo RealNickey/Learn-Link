@@ -394,9 +394,7 @@ const Profile = () => {
   // Function to create a data URL for PDF preview
   const getPdfDataUrl = (file) => {
     if (!file) return null;
-    const url = URL.createObjectURL(file);
-    setPdfContent(url); // Store the URL in state
-    return url;
+    return URL.createObjectURL(file);
   };
 
   useEffect(() => {
