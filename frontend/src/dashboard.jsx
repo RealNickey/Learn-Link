@@ -10,7 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
-import { Tldraw } from "tldraw";
+import { Tldraw, useEditor } from "tldraw";
+import { useSyncDemo } from "@tldraw/sync";
 import "tldraw/tldraw.css";
 
 import Toolbar from "./components/ui/toolbar";
@@ -70,6 +71,8 @@ const Profile = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
+
+  const store = useSyncDemo({ roomId: "learn-link-whiteboard" });
 
   useEffect(() => {
     // Short delay to match the page transition
@@ -402,7 +405,7 @@ const Profile = () => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPdfContent(url);
-      
+
       // Cleanup previous URL when selected file changes or component unmounts
       return () => {
         URL.revokeObjectURL(url);
@@ -499,8 +502,21 @@ const Profile = () => {
                 </div>
               ) : (
                 <Tldraw
+                  store={store}
                   onMount={(editor) => {
                     editor.user.updateUserPreferences({ colorScheme: "dark" });
+                    const container = editor.getContainer();
+                    const focusOnPointerDown = () => editor.focus();
+                    container.addEventListener(
+                      "pointerdown",
+                      focusOnPointerDown
+                    );
+                    return () => {
+                      container.removeEventListener(
+                        "pointerdown",
+                        focusOnPointerDown
+                      );
+                    };
                   }}
                 />
               )}
