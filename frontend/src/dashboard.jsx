@@ -394,8 +394,18 @@ const Profile = () => {
   // Function to create a data URL for PDF preview
   const getPdfDataUrl = (file) => {
     if (!file) return null;
-    return URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
+    setPdfContent(url); // Store the URL in state
+    return url;
   };
+
+  useEffect(() => {
+    return () => {
+      if (pdfContent) {
+        URL.revokeObjectURL(pdfContent); // Revoke the URL when component unmounts
+      }
+    };
+  }, [pdfContent]);
 
   const chatContainerRef = useRef(null);
 
@@ -493,7 +503,7 @@ const Profile = () => {
           <motion.div className="section div4" variants={itemVariants}>
             <PlaceholdersAndVanishInput
               placeholders={[
-                "What is Virutal Reality",
+                "What is Virtual Reality",
                 "Which are the types of CSS",
                 "Which are the layers of OSI model",
               ]}
