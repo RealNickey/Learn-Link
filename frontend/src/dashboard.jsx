@@ -22,6 +22,7 @@ import {
 } from "./components/ui/chat-bubble";
 import { cn } from "./lib/utils";
 import QuizPanel from "./components/ui/quiz-panel";
+import { FlashCard } from "./components/ui/flash-card";
 
 // Removed ToastDemo component
 
@@ -42,6 +43,7 @@ const Profile = () => {
   const [isAiError, setIsAiError] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
+  const [isFlashCardOpen, setIsFlashCardOpen] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -410,9 +412,7 @@ const Profile = () => {
             />
           </div>
           <div className="section div3" style={{ padding: 0 }}>
-            <div
-              style={{ width: "100%", height: "100%", position: "relative" }}
-            >
+            <div style={{ width: "100%", height: "100%", position: "relative", zIndex: 1 }}>
               {showPdfPreview && selectedFile ? (
                 <div
                   className="pdf-preview"
@@ -636,7 +636,7 @@ const Profile = () => {
                   <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
                 </svg>
               </DockIcon>
-              <DockIcon title="Flash Cards">
+              <DockIcon title="Flash Cards" onClick={() => setIsFlashCardOpen(true)}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -691,6 +691,10 @@ const Profile = () => {
           quiz={currentQuiz}
           isOpen={isQuizOpen}
           onClose={() => setIsQuizOpen(false)}
+        />
+        <FlashCard 
+          isOpen={isFlashCardOpen} 
+          onClose={() => setIsFlashCardOpen(false)} 
         />
         <VoiceChat user={user} /> {/* Add this component */}
         <Toaster />
