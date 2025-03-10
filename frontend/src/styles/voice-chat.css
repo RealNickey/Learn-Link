@@ -1,65 +1,85 @@
 .voice-chat-container {
   position: fixed;
-  bottom: 80px;
+  bottom: 100px; /* Changed from top: 20px to bottom: 100px to position above bottom */
   right: 20px;
-  width: 300px;
-  background-color: rgba(15, 15, 44, 0.95);
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  color: white;
+  width: 224px;
+  background-color: #292B2F;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  color: #fff;
   z-index: 1000;
   transition: all 0.3s ease;
   overflow: hidden;
   max-height: 500px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .voice-chat-container.collapsed {
-  max-height: 60px;
+  height: 48px;
+  padding: 0 16px;
+}
+
+.voice-chat-container.expanded {
+  height: auto;
+  max-height: 500px;
 }
 
 .voice-chat-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  background-color: rgba(0, 0, 0, 0.3);
+  height: 48px;
+  padding: 0;
   cursor: pointer;
+  background-color: #2B2D31;
+  border-bottom: 1px solid #1E1F22;
 }
 
 .voice-chat-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .online-indicator {
-  font-size: 12px;
+  font-size: 13px;
+  color: #B9BBBE;
+  font-weight: 500;
+  margin-left: 8px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+}
+
+.voice-chat-container.collapsed .online-indicator {
+  font-size: 12px;
+  color: #B5BAC1;
 }
 
 /* User profile section */
 .user-profile {
-  padding: 15px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  background-color: #313338;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .username-display {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 10px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 5px;
+  padding: 8px 12px;
+  background-color: #2B2D31;
+  border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .username-display:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #e2e8f0;
 }
 
 .display-name {
@@ -115,65 +135,80 @@
 
 /* Controls section */
 .voice-controls {
-  display: flex;
-  justify-content: space-between;
-  padding: 15px;
-  background-color: rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #313338;
 }
 
 .voice-controls button {
-  padding: 8px 12px;
+  padding: 8px;
+  border-radius: 4px;
   font-size: 12px;
+  font-weight: 500;
+  background-color: #2B2D31;
+  color: #B5BAC1;
+  border: none;
+  cursor: pointer;
 }
 
 .connect-button.active {
-  background-color: #34d399;
-  color: #fff;
+  background-color: #23A559;
+  color: white;
 }
 
 .mic-button.active {
-  background-color: #3b82f6;
-  color: #fff;
+  background-color: #5865F2;
+  color: white;
 }
 
 .mute-button.active {
-  background-color: #ef4444;
-  color: #fff;
+  background-color: #ED4245;
+  color: white;
 }
 
 /* Users list section */
 .users-list {
-  padding: 15px;
-  max-height: 180px;
+  padding: 12px 16px;
+  max-height: 200px;
   overflow-y: auto;
+  background-color: #313338;
 }
 
 .users-list h4 {
-  margin: 0;
-  margin-bottom: 10px;
-  font-size: 14px;
-  opacity: 0.8;
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  color: #B5BAC1;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .users-list ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .users-list li {
-  padding: 8px 10px;
-  margin-bottom: 5px;
-  border-radius: 5px;
-  background-color: rgba(0, 0, 0, 0.2);
+  padding: 6px 8px;
+  border-radius: 4px;
+  background-color: #2B2D31;
+  margin-bottom: 4px;
   font-size: 14px;
+  color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background-color 0.2s;
+  gap: 10px;
 }
 
 .users-list li.online {
-  border-left: 3px solid #34d399;
+  border-left: 3px solid #23A559;
 }
 
 .users-list li.offline {
@@ -182,13 +217,13 @@
 }
 
 .users-list li.current-user {
-  background-color: rgba(59, 130, 246, 0.2);
+  background-color: #404249;
   border-left: 3px solid #3b82f6;
 }
 
 .status-icons {
   display: flex;
-  gap: 5px;
+  gap: 4px;
 }
 
 .mic-icon, .mute-icon, .you-indicator {
@@ -204,22 +239,23 @@
 
 /* Footer with instructions */
 .voice-chat-footer {
-  padding: 15px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  background-color: #313338;
+  border-top: 1px solid #1E1F22;
 }
 
 .connection-instructions h5 {
   margin: 0 0 8px 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
 }
 
 .connection-instructions ol {
   margin: 0;
-  padding-left: 20px;
+  padding-left: 16px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #64748b;
   line-height: 1.5;
 }
 
@@ -229,20 +265,175 @@
 }
 
 .users-list::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+  background: #2B2D31;
 }
 
 .users-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: #202225;
   border-radius: 2px;
+}
+
+.avatar-stack {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.avatar-stack img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid #292B2F;
+  background-color: #36393F;
+  margin-left: -6px;
+  transition: transform 0.2s;
+}
+
+.avatar-stack img:hover {
+  transform: translateY(-2px);
+}
+
+.avatar-stack img:first-child {
+  margin-left: 0;
+  z-index: 3;
+}
+
+.avatar-stack img:nth-child(2) {
+  z-index: 2;
+}
+
+.avatar-stack img:nth-child(3) {
+  z-index: 1;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.collapsed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Hide all expanded content when collapsed */
+.voice-chat-container.collapsed .user-profile,
+.voice-chat-container.collapsed .voice-controls,
+.voice-chat-container.collapsed .users-list,
+.voice-chat-container.collapsed .voice-chat-footer {
+  display: none;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .voice-chat-container {
-    width: 90%;
-    right: 5%;
-    left: 5%;
-    bottom: 70px;
+    width: 100%;
+    max-width: 280px;
+    right: 50%;
+    transform: translateX(50%);
+    bottom: 100px; /* Changed from top: 20px to bottom: 100px */
   }
+}
+
+.avatar-selector {
+  position: absolute;
+  bottom: 100%; /* Changed from top: 60px to bottom: 100% */
+  right: 0;
+  margin-bottom: 10px; /* Added margin to create space between selector and container */
+  width: 280px;
+  background-color: #36393F;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  overflow: hidden;
+}
+
+.avatar-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #2F3136;
+  border-bottom: 1px solid #202225;
+}
+
+.avatar-selector-header h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #B9BBBE;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 16px;
+}
+
+.avatar-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.avatar-option:hover {
+  background-color: #32353B;
+}
+
+.avatar-option.selected {
+  background-color: #5865F2;
+}
+
+.avatar-option img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+}
+
+.avatar-option span {
+  font-size: 12px;
+  color: #B9BBBE;
+}
+
+.avatar-option.selected span {
+  color: #fff;
+}
+
+.change-avatar-button {
+  background: none;
+  border: none;
+  color: #B9BBBE;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.change-avatar-button:hover {
+  background-color: #32353B;
 }

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { Button } from "./button";
 import "./../../styles/voice-chat.css";
+import { avatars } from '../../assets/avatars';
+import AvatarSelector from './AvatarSelector';
 
 const VoiceChat = ({ user }) => {
   const [connected, setConnected] = useState(false);
@@ -12,6 +14,8 @@ const VoiceChat = ({ user }) => {
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
   const [customUsername, setCustomUsername] = useState("");
   const [editingName, setEditingName] = useState(false);
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(avatars[0].url);
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -28,6 +32,7 @@ const VoiceChat = ({ user }) => {
     mute: false,
     username: defaultUsername,
     online: false,
+    avatar: selectedAvatar,
   });
 
   // Initialize socket connection
@@ -109,6 +114,14 @@ const VoiceChat = ({ user }) => {
       stopAudioRecording();
     }
   }, [micEnabled, connected]);
+
+  // Update avatar when selectedAvatar changes
+  useEffect(() => {
+    userStatus.current.avatar = selectedAvatar;
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("userInformation", userStatus.current);
+    }
+  }, [selectedAvatar]);
 
   // Setup audio recording and transmission
   const setupAudioRecording = async () => {
@@ -255,53 +268,126 @@ const VoiceChat = ({ user }) => {
     (key) => users[key].username === userStatus.current.username
   );
 
+  // Replace the getAvatarUrl function with this:
+  const getAvatarUrl = (userData) => {
+    return userData.avatar || avatars[0].url; // Use user's selected avatar or default
+  };
+
+  const renderUserProfile = () => (
+    <div className="user-profile">
+      <div className="username-display">
+        <div className="user-info">
+          <img
+            src={selectedAvatar}
+            alt="Your avatar"
+            className="user-avatar"
+            onClick={() => setShowAvatarSelector(true)}
+          />
+          <span className="display-name">
+            {userStatus.current.username} {connected && "(You)"}
+          </span>
+        </div>
+        <button
+          className="change-avatar-button"
+          onClick={() => setShowAvatarSelector(true)}
+        >
+          Change Avatar
+        </button>
+      </div>
+      {editingName ? (
+        <div className="username-edit">
+          <input
+            type="text"
+            value={customUsername}
+            onChange={handleUsernameChange}
+            placeholder="Enter your display name"
+          />
+          <button onClick={saveUsername}>Save</button>
+        </div>
+      ) : (
+        <div
+          className="username-display"
+          onClick={() => setEditingName(true)}
+        >
+          <span className="display-name">
+            {userStatus.current.username} {connected && "(You)"}
+          </span>
+          <span className="edit-icon">✏️</span>
+        </div>
+      )}
+      <div className="connection-status">
+        Status:{" "}
+        <span className={`status-${connectionStatus}`}>
+          {connectionStatus === "connected"
+            ? "Connected"
+            : connectionStatus === "error"
+            ? "Connection Error"
+            : "Disconnected"}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
-    <div
-      className={`voice-chat-container ${expanded ? "expanded" : "collapsed"}`}
-    >
+    <div className={`voice-chat-container ${expanded ? "expanded" : "collapsed"}`}>
       <div className="voice-chat-header" onClick={() => setExpanded(!expanded)}>
-        <h3>Voice Chat {connected ? "🟢" : "🔴"}</h3>
+        {!expanded && (
+          <div className="collapsed-header">
+            <div className="avatar-stack">
+              {Object.entries(users)
+                .filter(([_, userData]) => userData.online)
+                .slice(0, 3)
+                .map(([socketId, userData]) => (
+                  <img
+                    key={socketId}
+                    src={userData.avatar || avatars[0].url}
+                    alt={userData.username}
+                  />
+                ))}
+            </div>
+            <div className="online-indicator">
+              {onlineUsersCount}
+            </div>
+          </div>
+        )}
+        {expanded ? (
+          <h3>
+            Voice Chat {connected ? "🟢" : "🔴"}
+          </h3>
+        ) : (
+          <div className="collapsed-header">
+            <div className="avatar-stack">
+              {Object.entries(users)
+                .filter(([_, userData]) => userData.online)
+                .slice(0, 3)
+                .map(([socketId, userData]) => (
+                  <img
+                    key={socketId}
+                    src={userData.avatar || avatars[0].url}
+                    alt={userData.username}
+                  />
+                ))}
+            </div>
+          </div>
+        )}
         <div className="online-indicator">
-          {onlineUsersCount} online {expanded ? "▼" : "▲"}
+          {onlineUsersCount} {expanded ? "▼" : "▲"}
         </div>
       </div>
 
       {expanded && (
         <>
-          <div className="user-profile">
-            {editingName ? (
-              <div className="username-edit">
-                <input
-                  type="text"
-                  value={customUsername}
-                  onChange={handleUsernameChange}
-                  placeholder="Enter your display name"
-                />
-                <button onClick={saveUsername}>Save</button>
-              </div>
-            ) : (
-              <div
-                className="username-display"
-                onClick={() => setEditingName(true)}
-              >
-                <span className="display-name">
-                  {userStatus.current.username} {connected && "(You)"}
-                </span>
-                <span className="edit-icon">✏️</span>
-              </div>
-            )}
-            <div className="connection-status">
-              Status:{" "}
-              <span className={`status-${connectionStatus}`}>
-                {connectionStatus === "connected"
-                  ? "Connected"
-                  : connectionStatus === "error"
-                  ? "Connection Error"
-                  : "Disconnected"}
-              </span>
-            </div>
-          </div>
-
+          {renderUserProfile()}
+          {showAvatarSelector && (
+            <AvatarSelector
+              selectedAvatar={selectedAvatar}
+              onSelect={(avatar) => {
+                setSelectedAvatar(avatar);
+                setShowAvatarSelector(false);
+              }}
+              onClose={() => setShowAvatarSelector(false)}
+            />
+          )}
           <div className="voice-controls">
             <Button
               variant={connected ? "default" : "outline"}
@@ -341,7 +427,14 @@ const VoiceChat = ({ user }) => {
                       socketId === currentUserSocketId ? "current-user" : ""
                     }`}
                   >
-                    <span className="username">{userData.username}</span>
+                    <div className="user-info">
+                      <img
+                        src={userData.avatar || avatars[0].url}
+                        alt={userData.username}
+                        className="user-avatar"
+                      />
+                      <span className="username">{userData.username}</span>
+                    </div>
                     <span className="status-icons">
                       {userData.microphone && userData.online && (
                         <span className="mic-icon" title="Microphone On">
