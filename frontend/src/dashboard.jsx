@@ -10,7 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
-import { Tldraw } from "tldraw";
+import { Tldraw, useEditor } from "tldraw";
+import { useSyncDemo } from "@tldraw/sync";
 import "tldraw/tldraw.css";
 
 import Toolbar from "./components/ui/toolbar";
@@ -70,6 +71,8 @@ const Profile = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
+
+  const store = useSyncDemo({ roomId: "learn-link-whiteboard" });
 
   useEffect(() => {
     // Short delay to match the page transition
@@ -402,7 +405,7 @@ const Profile = () => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPdfContent(url);
-      
+
       // Cleanup previous URL when selected file changes or component unmounts
       return () => {
         URL.revokeObjectURL(url);
@@ -470,11 +473,26 @@ const Profile = () => {
           </motion.div>
           <motion.div
             className="section div3"
-            style={{ padding: 0 }}
+            style={{
+              padding: 0,
+              position: "relative",
+              overflow: "hidden",
+              border: "2px solid #3c3c3c",
+              borderRadius: "0.5rem",
+              background: "rgba(0, 0, 0, 0.3)",
+              display: "flex",
+              flexDirection: "column",
+            }}
             variants={itemVariants}
           >
             <div
-              style={{ width: "100%", height: "100%", position: "relative" }}
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "relative",
+                flex: 1,
+                minHeight: 0, // This is crucial for flex child to respect parent height
+              }}
             >
               {showPdfPreview && selectedFile ? (
                 <div
@@ -498,11 +516,35 @@ const Profile = () => {
                   />
                 </div>
               ) : (
-                <Tldraw
-                  onMount={(editor) => {
-                    editor.user.updateUserPreferences({ colorScheme: "dark" });
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "relative",
                   }}
-                />
+                >
+                  <Tldraw
+                    store={store}
+                    onMount={(editor) => {
+                      editor.user.updateUserPreferences({
+                        colorScheme: "dark"
+                      });
+                      editor.setCurrentTool('draw');
+                      const container = editor.getContainer();
+                      const focusOnPointerDown = () => editor.focus();
+                      container.addEventListener(
+                        "pointerdown",
+                        focusOnPointerDown
+                      );
+                      return () => {
+                        container.removeEventListener(
+                          "pointerdown",
+                          focusOnPointerDown
+                        );
+                      };
+                    }}
+                  />
+                </div>
               )}
             </div>
           </motion.div>
