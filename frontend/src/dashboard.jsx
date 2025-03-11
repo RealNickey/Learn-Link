@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/dashboard.css";
 import "./styles/list-files.css"; // Import the new styles
+import { motion } from "framer-motion"; // Import motion
 import { FileUpload } from "./components/ui/file-upload";
 import { ListFiles } from "./components/ui/list-files";
 import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-vanish-input";
@@ -9,7 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
-import { Tldraw } from "tldraw";
+import { Tldraw, useEditor } from "tldraw";
+import { useSyncDemo } from "@tldraw/sync";
 import "tldraw/tldraw.css";
 
 import Toolbar from "./components/ui/toolbar";
@@ -23,7 +25,31 @@ import {
 import { cn } from "./lib/utils";
 import QuizPanel from "./components/ui/quiz-panel";
 
-// Removed ToastDemo component
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      when: "beforeChildren",
+      staggerChildren: 0.1,
+      duration: 0.6,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 10,
+    },
+  },
+};
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
@@ -42,8 +68,19 @@ const Profile = () => {
   const [isAiError, setIsAiError] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
+
+  const store = useSyncDemo({ roomId: "learn-link-whiteboard" });
+
+  useEffect(() => {
+    // Short delay to match the page transition
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleFileUpload = (newFiles) => {
     const duplicateFiles = newFiles.filter((newFile) =>
@@ -363,6 +400,22 @@ const Profile = () => {
     return URL.createObjectURL(file);
   };
 
+  useEffect(() => {
+    // Create URL only when selected file changes
+    if (selectedFile) {
+      const url = URL.createObjectURL(selectedFile);
+      setPdfContent(url);
+
+      // Cleanup previous URL when selected file changes or component unmounts
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      // Clear PDF content if no file is selected
+      setPdfContent("");
+    }
+  }, [selectedFile]); // Only re-run when selectedFile changes
+
   const chatContainerRef = useRef(null);
 
   useEffect(() => {
@@ -388,12 +441,18 @@ const Profile = () => {
   return (
     isAuthenticated && (
       <>
-        <div className="dashboard-container" id="dashboard-container">
+        <motion.div
+          className="dashboard-container"
+          id="dashboard-container"
+          variants={containerVariants}
+          initial="hidden"
+          animate={isLoaded ? "visible" : "hidden"}
+        >
           <LiveCursor
             containerId="dashboard-container"
             username={user?.name || user?.email}
           />
-          <div className="section div1">
+          <motion.div className="section div1" variants={itemVariants}>
             <ListFiles
               files={files}
               onSelect={handleSelectFile}
@@ -402,16 +461,38 @@ const Profile = () => {
               onFileSelect={handleFileSelect}
               activeFile={showPdfPreview ? selectedFile : null} // Only show active file when preview is open
             />
-          </div>
-          <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
+          </motion.div>
+          <motion.div
+            className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2"
+            variants={itemVariants}
+          >
             <FileUpload
               onChange={handleFileUpload}
               onPdfUpload={handlePdfUpload}
             />
-          </div>
-          <div className="section div3" style={{ padding: 0 }}>
+          </motion.div>
+          <motion.div
+            className="section div3"
+            style={{
+              padding: 0,
+              position: "relative",
+              overflow: "hidden",
+              border: "2px solid #3c3c3c",
+              borderRadius: "0.5rem",
+              background: "rgba(0, 0, 0, 0.3)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+            variants={itemVariants}
+          >
             <div
-              style={{ width: "100%", height: "100%", position: "relative" }}
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "relative",
+                flex: 1,
+                minHeight: 0, // This is crucial for flex child to respect parent height
+              }}
             >
               {showPdfPreview && selectedFile ? (
                 <div
@@ -435,29 +516,56 @@ const Profile = () => {
                   />
                 </div>
               ) : (
-                <Tldraw
-                  onMount={(editor) => {
-                    editor.user.updateUserPreferences({ colorScheme: "dark" });
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "relative",
                   }}
-                />
+                >
+                  <Tldraw
+                    store={store}
+                    onMount={(editor) => {
+                      editor.user.updateUserPreferences({
+                        colorScheme: "dark"
+                      });
+                      editor.setCurrentTool('draw');
+                      const container = editor.getContainer();
+                      const focusOnPointerDown = () => editor.focus();
+                      container.addEventListener(
+                        "pointerdown",
+                        focusOnPointerDown
+                      );
+                      return () => {
+                        container.removeEventListener(
+                          "pointerdown",
+                          focusOnPointerDown
+                        );
+                      };
+                    }}
+                  />
+                </div>
               )}
             </div>
-          </div>
-          <div className="section div4">
+          </motion.div>
+          <motion.div className="section div4" variants={itemVariants}>
             <PlaceholdersAndVanishInput
               placeholders={[
-                "What is Virutal Reality",
+                "What is Virtual Reality",
                 "Which are the types of CSS",
                 "Which are the layers of OSI model",
               ]}
               onChange={(e) => console.log(e.target.value)}
               onSubmit={handleInputSubmit} // Updated to use handleInputSubmit
             />
-          </div>
-          <div className="section div5 flex items-center justify-center p-3">
+          </motion.div>
+          <motion.div
+            className="section div5 flex items-center justify-center p-3"
+            variants={itemVariants}
+          >
             <Toolbar userName={user.name} userImage={userImage} />
-          </div>
-          <div className="section div6">
+          </motion.div>
+          <motion.div className="section div6" variants={itemVariants}>
             <div
               className="h-full overflow-y-auto p-4 flex flex-col space-y-4"
               ref={chatContainerRef}
@@ -572,8 +680,8 @@ const Profile = () => {
                 </div>
               )}
             </div>
-          </div>
-          <div className="section div7">
+          </motion.div>
+          <motion.div className="section div7" variants={itemVariants}>
             <Dock>
               <DockIcon
                 onClick={toggleMic}
@@ -685,8 +793,8 @@ const Profile = () => {
               </DockIcon>
               <MusicPlayer /> {/* Added MusicPlayer component */}
             </Dock>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         <QuizPanel
           quiz={currentQuiz}
           isOpen={isQuizOpen}
