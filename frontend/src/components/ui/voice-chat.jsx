@@ -15,7 +15,7 @@ const VoiceChat = ({ user }) => {
   const [customUsername, setCustomUsername] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState(avatars[0].url);
+  const [selectedAvatar, setSelectedAvatar] = useState(user?.picture || avatars[0].url);
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
