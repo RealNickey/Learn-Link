@@ -16,10 +16,30 @@ const Profile = lazy(() => import("./dashboard"));
 const AppContent = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionTarget, setTransitionTarget] = useState("");
+  const [isDashboardPreloaded, setIsDashboardPreloaded] = useState(false);
   const location = useLocation();
+
+  // Preload the dashboard component
+  useEffect(() => {
+    const preloadDashboard = async () => {
+      try {
+        // Wait for landing page to be visible first
+        setTimeout(async () => {
+          await import("./dashboard");
+          setIsDashboardPreloaded(true);
+          console.log("Dashboard preloaded successfully");
+        }, 1000); // Delay preloading to prioritize landing page rendering
+      } catch (error) {
+        console.error("Failed to preload dashboard:", error);
+      }
+    };
+    
+    preloadDashboard();
+  }, []);
 
   // Handle transition between routes
   const handleTransition = (targetPath) => {
+    // Always show the transition animation
     setTransitionTarget(targetPath);
     setIsTransitioning(true);
   };
@@ -35,13 +55,13 @@ const AppContent = () => {
 
     // Handle navigation with transitions
     const handleClick = (path) => {
+      // Always use the transition animation
       onNavigate(path);
-      setTimeout(() => navigate(path), 500); // Delay navigation to allow transition
     };
 
     return (
       <Routes location={location}>
-        <Route path="/" element={<LandingPage onNavigate={handleClick} />} />
+        <Route path="/" element={<LandingPage onNavigate={handleClick} isDashboardReady={isDashboardPreloaded} />} />
         <Route path="/dashboard" element={<Profile onNavigate={handleClick} />} />
       </Routes>
     );
@@ -69,11 +89,6 @@ const AppContent = () => {
 };
 
 function App() {
-  useEffect(() => {
-    // Preload the Profile component
-    import("./dashboard");
-  }, []);
-
   return (
     <Router>
       <AppContent />
