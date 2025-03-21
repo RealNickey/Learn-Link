@@ -12,6 +12,16 @@ import { AnimatePresence } from "framer-motion";
 const LandingPage = lazy(() => import("./LandingPage"));
 const Profile = lazy(() => import("./dashboard"));
 
+// Custom loading component that only shows when dashboard isn't preloaded
+const DashboardLoader = ({ isPreloaded }) => {
+  if (isPreloaded) return null;
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+    </div>
+  );
+};
+
 // Wrapped component with transition logic
 const AppContent = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -24,26 +34,32 @@ const AppContent = () => {
   useEffect(() => {
     const preloadDashboard = async () => {
       try {
-        // Wait for landing page to be visible first
-        setTimeout(async () => {
-          await import("./dashboard");
-          setIsDashboardPreloaded(true);
-          console.log("Dashboard preloaded successfully");
-        }, 1000); // Delay preloading to prioritize landing page rendering
+        const dashboardModule = await import("./dashboard");
+        setIsDashboardPreloaded(true);
+        console.log("Dashboard preloaded successfully");
       } catch (error) {
         console.error("Failed to preload dashboard:", error);
       }
     };
     
-    preloadDashboard();
+    // Start preloading after a short delay to prioritize landing page
+    const timer = setTimeout(preloadDashboard, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Handle transition between routes
   const handleTransition = (targetPath) => {
     setTransitionTarget(targetPath);
     setIsTransitioning(true);
-    // Navigate immediately so Suspense can start loading if needed
-    navigate(targetPath);
+    
+    // If transitioning to dashboard and it's preloaded, navigate after animation
+    if (targetPath === "/dashboard") {
+      setTimeout(() => {
+        navigate(targetPath);
+      }, 500); // Match this with your transition duration
+    } else {
+      navigate(targetPath);
+    }
   };
 
   // Callback when transition is complete
@@ -53,7 +69,6 @@ const AppContent = () => {
 
   // Routes component extracted to separate component
   const AppRoutes = ({ location, onNavigate }) => {
-    // Handle navigation with transitions
     const handleClick = (path) => {
       onNavigate(path);
     };
@@ -64,11 +79,7 @@ const AppContent = () => {
         <Route 
           path="/dashboard" 
           element={
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-screen">
-                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
-              </div>
-            }>
+            <Suspense fallback={<DashboardLoader isPreloaded={isDashboardPreloaded} />}>
               <Profile onNavigate={handleClick} />
             </Suspense>
           } 
