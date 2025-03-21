@@ -18,6 +18,7 @@ const AppContent = () => {
   const [transitionTarget, setTransitionTarget] = useState("");
   const [isDashboardPreloaded, setIsDashboardPreloaded] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Preload the dashboard component
   useEffect(() => {
@@ -39,9 +40,10 @@ const AppContent = () => {
 
   // Handle transition between routes
   const handleTransition = (targetPath) => {
-    // Always show the transition animation
     setTransitionTarget(targetPath);
     setIsTransitioning(true);
+    // Navigate immediately so Suspense can start loading if needed
+    navigate(targetPath);
   };
 
   // Callback when transition is complete
@@ -51,18 +53,26 @@ const AppContent = () => {
 
   // Routes component extracted to separate component
   const AppRoutes = ({ location, onNavigate }) => {
-    const navigate = useNavigate();
-
     // Handle navigation with transitions
     const handleClick = (path) => {
-      // Always use the transition animation
       onNavigate(path);
     };
 
     return (
       <Routes location={location}>
         <Route path="/" element={<LandingPage onNavigate={handleClick} isDashboardReady={isDashboardPreloaded} />} />
-        <Route path="/dashboard" element={<Profile onNavigate={handleClick} />} />
+        <Route 
+          path="/dashboard" 
+          element={
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-screen">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+              </div>
+            }>
+              <Profile onNavigate={handleClick} />
+            </Suspense>
+          } 
+        />
       </Routes>
     );
   };
@@ -70,19 +80,17 @@ const AppContent = () => {
   return (
     <div className="App">
       <header className="App-header">
-        <Suspense fallback={<div>Loading...</div>}>
-          <AnimatePresence mode="wait">
-            {isTransitioning ? (
-              <PageTransition
-                key="transition"
-                targetPath={transitionTarget}
-                onTransitionComplete={handleTransitionComplete}
-              />
-            ) : (
-              <AppRoutes location={location} onNavigate={handleTransition} />
-            )}
-          </AnimatePresence>
-        </Suspense>
+        <AnimatePresence mode="wait">
+          {isTransitioning ? (
+            <PageTransition
+              key="transition"
+              targetPath={transitionTarget}
+              onTransitionComplete={handleTransitionComplete}
+            />
+          ) : (
+            <AppRoutes location={location} onNavigate={handleTransition} />
+          )}
+        </AnimatePresence>
       </header>
     </div>
   );
