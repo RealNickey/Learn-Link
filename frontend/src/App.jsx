@@ -41,7 +41,7 @@ const AppContent = () => {
         console.error("Failed to preload dashboard:", error);
       }
     };
-    
+
     // Start preloading after a short delay to prioritize landing page
     const timer = setTimeout(preloadDashboard, 1000);
     return () => clearTimeout(timer);
@@ -51,7 +51,7 @@ const AppContent = () => {
   const handleTransition = (targetPath) => {
     setTransitionTarget(targetPath);
     setIsTransitioning(true);
-    
+
     // If transitioning to dashboard and it's preloaded, navigate after animation
     if (targetPath === "/dashboard") {
       setTimeout(() => {
@@ -75,14 +75,24 @@ const AppContent = () => {
 
     return (
       <Routes location={location}>
-        <Route path="/" element={<LandingPage onNavigate={handleClick} isDashboardReady={isDashboardPreloaded} />} />
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/"
           element={
-            <Suspense fallback={<DashboardLoader isPreloaded={isDashboardPreloaded} />}>
+            <LandingPage
+              onNavigate={handleClick}
+              isDashboardReady={isDashboardPreloaded}
+            />
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <Suspense
+              fallback={<DashboardLoader isPreloaded={isDashboardPreloaded} />}
+            >
               <Profile onNavigate={handleClick} />
             </Suspense>
-          } 
+          }
         />
       </Routes>
     );
