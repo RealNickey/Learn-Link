@@ -27,7 +27,7 @@ const PageTransition = ({ targetPath, onTransitionComplete }) => {
         }
         return newVal;
       });
-    }, 30); // Speed of counter increment
+    }, 35); // Speed of counter increment
 
     return () => clearInterval(interval);
   }, [targetPath, navigate, onTransitionComplete]);
