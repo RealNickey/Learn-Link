@@ -15,6 +15,7 @@ import "tldraw/tldraw.css";
 
 import Toolbar from "./components/ui/toolbar";
 import VoiceChat from "./components/ui/voice-chat"; // Add this import
+import GeminiVoice from "./components/ui/gemini-voice"; // Add import for GeminiVoice
 import LiveCursor from "./components/ui/livecursor";
 import {
   ChatBubble,
@@ -53,7 +54,8 @@ const itemVariants = {
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
   const [files, setFiles] = useState([]);
-  const [micOn, setMicOn] = useState(true); // Added state for mic
+  const [voiceChatOn, setVoiceChatOn] = useState(false); // For regular voice chat
+  const [geminiVoiceOn, setGeminiVoiceOn] = useState(false); // For Gemini AI voice chat
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
   const [selectedFile, setSelectedFile] = useState(null);
   const [showPdfPreview, setShowPdfPreview] = useState(false); // New state for PDF preview visibility
@@ -69,7 +71,7 @@ const Profile = () => {
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const userImage = user.picture; // Store user image in a variable
+  const userImage = user?.picture; // Store user image in a variable
 
   useEffect(() => {
     // Short delay to match the page transition
@@ -182,8 +184,29 @@ const Profile = () => {
     }
   };
 
-  const toggleMic = () => {
-    setMicOn(!micOn);
+  // Toggle functions for both voice chats
+  const toggleVoiceChat = () => {
+    // If enabling regular voice chat, disable Gemini voice
+    if (!voiceChatOn && geminiVoiceOn) {
+      setGeminiVoiceOn(false);
+    }
+    setVoiceChatOn(!voiceChatOn);
+  };
+
+  const toggleGeminiVoice = () => {
+    // If enabling Gemini voice, disable regular voice chat
+    if (!geminiVoiceOn && voiceChatOn) {
+      setVoiceChatOn(false);
+    }
+    setGeminiVoiceOn(!geminiVoiceOn);
+
+    // Show a toast notification when Gemini Voice is activated
+    if (!geminiVoiceOn) {
+      toast({
+        title: "Gemini AI Voice Activated",
+        description: "You can now talk to Gemini AI about your documents",
+      });
+    }
   };
 
   const handleInputSubmit = async (inputValue) => {
@@ -402,7 +425,7 @@ const Profile = () => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPdfContent(url);
-      
+
       // Cleanup previous URL when selected file changes or component unmounts
       return () => {
         URL.revokeObjectURL(url);
@@ -642,10 +665,23 @@ const Profile = () => {
           <motion.div className="section div7" variants={itemVariants}>
             <Dock>
               <DockIcon
-                onClick={toggleMic}
-                title={micOn ? "Mic On" : "Mic Off"}
+                onClick={toggleGeminiVoice}
+                title={
+                  geminiVoiceOn
+                    ? "Disable Gemini AI Voice"
+                    : "Enable Gemini AI Voice"
+                }
+                className={cn("relative", geminiVoiceOn ? "active-icon" : "")}
               >
-                {micOn ? (
+                <motion.div
+                  initial={{ scale: 1 }}
+                  animate={{ scale: geminiVoiceOn ? [1, 1.2, 1] : 1 }}
+                  transition={{
+                    duration: 0.5,
+                    repeat: geminiVoiceOn ? Infinity : 0,
+                    repeatDelay: 1,
+                  }}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -656,11 +692,44 @@ const Profile = () => {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="lucide lucide-mic"
+                    className="text-white"
                   >
                     <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
+                    <line x1="12" y1="19" x2="12" y2="22" />
+                  </svg>
+                </motion.div>
+                {geminiVoiceOn && (
+                  <motion.div
+                    className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500"
+                    initial={{ scale: 0.8, opacity: 0.8 }}
+                    animate={{ scale: 1.2, opacity: 0.6 }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                )}
+              </DockIcon>
+              <DockIcon
+                onClick={toggleVoiceChat}
+                title={voiceChatOn ? "Disable Voice Chat" : "Enable Voice Chat"}
+                className={voiceChatOn ? "active-icon" : ""}
+              >
+                {voiceChatOn ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-users text-green-400"
+                  >
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 ) : (
                   <svg
@@ -673,14 +742,12 @@ const Profile = () => {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="lucide lucide-mic-off"
+                    className="lucide lucide-users"
                   >
-                    <line x1="2" x2="22" y1="2" y2="22" />
-                    <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
-                    <path d="M5 10v2a7 7 0 0 0 12 5" />
-                    <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
-                    <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 )}
               </DockIcon>
@@ -758,7 +825,13 @@ const Profile = () => {
           isOpen={isQuizOpen}
           onClose={() => setIsQuizOpen(false)}
         />
-        <VoiceChat user={user} /> {/* Add this component */}
+        {voiceChatOn && <VoiceChat user={user} />}
+        <GeminiVoice
+          user={user}
+          micActive={geminiVoiceOn}
+          selectedFiles={selectedFiles}
+          onToggle={toggleGeminiVoice}
+        />
         <Toaster />
       </>
     )

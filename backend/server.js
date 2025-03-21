@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const multer = require("multer");
+const { Server } = require("socket.io");
 const {
   generateAIContent,
   processPdfContent,
@@ -10,13 +11,25 @@ const {
   generateQuiz,
 } = require("./aiService");
 const setupVoiceChat = require("./voiceChat");
+const setupGeminiVoice = require("./geminiVoiceService");
 
 const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 3000;
 
 // Initialize voice chat
-const io = setupVoiceChat(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+  maxHttpBufferSize: 50 * 1024 * 1024, // 50MB limit for WebSocket messages
+});
+setupVoiceChat(io);
+
+// Initialize Gemini voice service with the same Socket.IO instance
+setupGeminiVoice(io);
 
 // Allow requests from all relevant origins
 const allowedOrigins = [
@@ -56,14 +69,15 @@ app.use(
 );
 
 // Parse JSON bodies
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit per file
+    fileSize: 50 * 1024 * 1024, // 50MB limit per file
     files: 3, // Maximum 3 files
   },
 });
@@ -219,6 +233,7 @@ if (process.env.VERCEL) {
     console.log("- POST /compare-pdfs");
     console.log("- GET /generate-ai-content");
     console.log("Voice chat enabled at /socket.io/");
+    console.log("Gemini voice service enabled at /socket.io/");
   });
 }
 

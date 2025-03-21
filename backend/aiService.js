@@ -9,7 +9,9 @@ if (!process.env.GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "models/gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({
+  model: "models/gemini-2.0-flash-exp",
+});
 
 async function generateAIContent(prompt) {
   try {
