@@ -3,7 +3,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/LandingPage.css";
 import { motion } from "framer-motion";
 
-const LandingPage = ({ onNavigate }) => {
+const LandingPage = ({ onNavigate, isDashboardReady }) => {
   const { loginWithRedirect } = useAuth0();
 
   useEffect(() => {
