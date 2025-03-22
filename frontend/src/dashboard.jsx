@@ -175,6 +175,8 @@ const Profile = () => {
 
   const handleRemoveFile = (fileToRemove) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+    // Also remove from selectedFiles if it was selected
+    setSelectedFiles((prev) => prev.filter((file) => file !== fileToRemove));
     // If removing the currently selected file, hide preview
     if (selectedFile === fileToRemove) {
       setSelectedFile(null);
@@ -266,10 +268,18 @@ const Profile = () => {
   };
 
   const handleFocusArea = async () => {
-    if (selectedFiles.length === 0) {
+    // First verify that all selected files still exist in files array
+    const validSelectedFiles = selectedFiles.filter(selected => 
+      files.some(file => file === selected)
+    );
+
+    // Update selectedFiles to remove any invalid selections
+    setSelectedFiles(validSelectedFiles);
+
+    if (validSelectedFiles.length === 0) {
       toast({
         title: "No files selected",
-        description: "Please select at least one file using the checkboxes",
+        description: "Please select at least one valid PDF file",
         variant: "destructive",
       });
       return;
@@ -284,7 +294,7 @@ const Profile = () => {
     try {
       let allContent = '';
       
-      for (const file of selectedFiles) {
+      for (const file of validSelectedFiles) {
         const formData = new FormData();
         formData.append("pdf", file);
 
