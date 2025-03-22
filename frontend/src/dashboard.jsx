@@ -253,6 +253,18 @@ const Profile = () => {
     );
   };
 
+  const scrollToBottom = (behavior = 'smooth', delay = 0) => {
+    setTimeout(() => {
+      if (chatContainerRef.current) {
+        const scrollHeight = chatContainerRef.current.scrollHeight;
+        chatContainerRef.current.scrollTo({
+          top: scrollHeight,
+          behavior
+        });
+      }
+    }, delay);
+  };
+
   const handleFocusArea = async () => {
     if (selectedFiles.length === 0) {
       toast({
@@ -264,18 +276,14 @@ const Profile = () => {
     }
 
     setIsGeneratingSummary(true);
-    setIsLoadingAiResponse(true); // Start loading animation
-    toast({
-      title: "Generating Focus Area",
-      description: `Analyzing ${selectedFiles.length} document(s)...`,
-      duration: 2000,
-    });
+    setIsLoadingAiResponse(true);
+
+    // Initial scroll to loading animation
+    scrollToBottom('smooth', 100);
 
     try {
-      // Clear previous content
-      setAiContent("");
-
-      // Process each selected file
+      let allContent = '';
+      
       for (const file of selectedFiles) {
         const formData = new FormData();
         formData.append("pdf", file);
@@ -288,22 +296,37 @@ const Profile = () => {
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to generate summary");
-        }
+        if (!response.ok) throw new Error("Failed to generate summary");
 
         const { summary } = await response.json();
-        // Append new summary with file name
-        const focusAreaText = `File: ${file.name}\n\n${summary}`;
-        setAiContent(
-          (prev) => `${prev}${prev ? "\n\n---\n\n" : ""}${focusAreaText}`
-        );
-        setChatHistory((prev) => [
-          ...prev,
-          { type: "ai", content: focusAreaText },
-        ]);
-        console.log(`Focus Area for ${file.name}:`, summary); // Temporarily show the result in console
+        const focusAreaText = `📄 File: ${file.name}\n\n${summary}\n\n`;
+        allContent += focusAreaText;
+
+        // Update chat history with loading message
+        setChatHistory(prev => [...prev, {
+          type: "ai",
+          content: "Analyzing document...",
+          status: "loading",
+          id: `loading-${Date.now()}`
+        }]);
+
+        // Scroll to show loading message
+        scrollToBottom('smooth', 100);
       }
+
+      // Remove any loading messages and add final content
+      setChatHistory(prev => [
+        ...prev.filter(msg => msg.status !== "loading"),
+        {
+          type: "ai",
+          content: allContent.trim(),
+          status: "success",
+          id: `focus-${Date.now()}`
+        }
+      ]);
+
+      // Final scroll after content is added
+      scrollToBottom('smooth', 200);
 
       toast({
         title: "Success",
@@ -319,7 +342,7 @@ const Profile = () => {
       });
     } finally {
       setIsGeneratingSummary(false);
-      setIsLoadingAiResponse(false); // Stop loading animation
+      setIsLoadingAiResponse(false);
     }
   };
 
@@ -417,8 +440,13 @@ const Profile = () => {
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
+      const shouldScroll = 
+        chatContainerRef.current.scrollTop + chatContainerRef.current.clientHeight >=
+        chatContainerRef.current.scrollHeight - 100;
+      
+      if (shouldScroll) {
+        scrollToBottom('smooth', 100);
+      }
     }
   }, [chatHistory]);
 
