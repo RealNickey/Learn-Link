@@ -2,12 +2,65 @@ import React, { useEffect, useState, useRef } from 'react';
 import AblySpaces from '@ably/spaces';
 import * as Ably from 'ably';
 
+const CursorUtils = {
+  // Convert absolute coordinates to relative (0-1) coordinates
+  toRelativePosition: (x, y, container) => {
+    const rect = container.getBoundingClientRect();
+    return {
+      x: x / rect.width,
+      y: y / rect.height
+    };
+  },
+
+  // Convert relative coordinates back to absolute for the current screen
+  toAbsolutePosition: (relX, relY, container) => {
+    const rect = container.getBoundingClientRect();
+    const zoom = window.visualViewport?.scale || 1;
+    const dpr = window.devicePixelRatio || 1;
+
+    return {
+      x: relX * rect.width * zoom / dpr,
+      y: relY * rect.height * zoom / dpr
+    };
+  }
+};
+
 const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous' }) => {
   const [cursors, setCursors] = useState({});
   const clientRef = useRef(null);
   const spaceRef = useRef(null);
+  const containerRef = useRef(null);
+
+  // Track window resize for cursor position updates
+  useEffect(() => {
+    const updateCursorPositions = () => {
+      if (!containerRef.current) return;
+
+      setCursors(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(key => {
+          if (updated[key].position) {
+            const abs = CursorUtils.toAbsolutePosition(
+              updated[key].position.relX,
+              updated[key].position.relY,
+              containerRef.current
+            );
+            updated[key].screenPosition = abs;
+          }
+        });
+        return updated;
+      });
+    };
+
+    const debouncedUpdate = debounce(updateCursorPositions, 100);
+    window.addEventListener('resize', debouncedUpdate);
+    return () => window.removeEventListener('resize', debouncedUpdate);
+  }, []);
 
   useEffect(() => {
+    containerRef.current = document.getElementById(containerId);
+    if (!containerRef.current) return;
+
     const setupAbly = async () => {
       try {
         // Initialize Ably client with proper configuration
@@ -36,39 +89,56 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
 
         // Subscribe to cursor updates
         space.cursors.subscribe('update', (cursorUpdate) => {
-          console.log('Cursor update received:', cursorUpdate);
+          if (!containerRef.current) return;
+
+          const absolutePos = cursorUpdate.position ? 
+            CursorUtils.toAbsolutePosition(
+              cursorUpdate.position.relX,
+              cursorUpdate.position.relY,
+              containerRef.current
+            ) : null;
+
           setCursors(prev => ({
             ...prev,
-            [cursorUpdate.connectionId]: cursorUpdate
+            [cursorUpdate.connectionId]: {
+              ...cursorUpdate,
+              screenPosition: absolutePos
+            }
           }));
         });
 
         // Track user's cursor with debouncing
         let timeoutId;
         const handleMouseMove = (event) => {
-          if (!spaceRef.current) return;
+          if (!spaceRef.current || !containerRef.current) return;
 
           const { clientX, clientY } = event;
-          const container = document.getElementById(containerId);
-          const boundingBox = container?.getBoundingClientRect();
+          const container = containerRef.current;
+          const boundingBox = container.getBoundingClientRect();
           
           if (!boundingBox) return;
 
           clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
+            // Calculate relative position (0-1)
             const x = clientX - boundingBox.left;
             const y = clientY - boundingBox.top;
+            const relativePos = CursorUtils.toRelativePosition(x, y, container);
 
-            // Send cursor position relative to container
+            // Send normalized coordinates
             spaceRef.current.cursors.set({
-              position: { x, y },
+              position: {
+                relX: relativePos.x,
+                relY: relativePos.y,
+                timestamp: Date.now()
+              },
               data: { 
                 color: '#FF5733',
                 containerId,
-                username // Add username to cursor data
+                username
               }
             }).catch(console.error);
-          }, 0);
+          }, 16); // ~60fps
         };
 
         window.addEventListener('mousemove', handleMouseMove);
@@ -98,16 +168,16 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
   return (
     <>
       {Object.values(cursors).map((cursor) => (
-        cursor?.position && cursor?.data?.containerId === containerId && (
+        cursor?.screenPosition && cursor?.data?.containerId === containerId && (
           <div
             key={cursor.connectionId}
             style={{
               position: 'fixed',
-              left: cursor.position.x,
-              top: cursor.position.y,
+              left: cursor.screenPosition.x,
+              top: cursor.screenPosition.y,
               transform: 'translate(-50%, -50%)',
               pointerEvents: 'none',
-              transition: 'all 0.1s ease',
+              transition: 'transform 0.1s ease, left 0.1s ease, top 0.1s ease',
               zIndex: 1000
             }}
           >
@@ -145,6 +215,15 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
       ))}
     </>
   );
+};
+
+// Utility function for debouncing
+const debounce = (fn, ms) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), ms);
+  };
 };
 
 export default LiveCursor;
