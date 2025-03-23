@@ -1,0 +1,9 @@
+.top-right-section {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 300px;
+  height: 60px; /* Adjust height as needed */
+  background-color: transparent; /* Make background transparent */
+}

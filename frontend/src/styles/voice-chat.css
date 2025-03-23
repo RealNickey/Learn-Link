@@ -26,19 +26,78 @@
   cursor: pointer;
 }
 
-.voice-chat-header h3 {
-  margin: 0;
-  font-size: 16px;
+/* Style for avatar stacks in both single and multiple user mode */
+.avatar-stack {
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 
-.online-indicator {
-  font-size: 12px;
+/* Avatar styling for consistency */
+.avatar, .user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Multiple users avatar stack */
+.multiple-users .avatar {
+  margin-left: -10px;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+}
+
+.multiple-users .avatar:first-child {
+  margin-left: 0;
+  z-index: 4;
+}
+
+.multiple-users .avatar:nth-child(2) {
+  z-index: 3;
+}
+
+.multiple-users .avatar:nth-child(3) {
+  z-index: 2;
+}
+
+.multiple-users .avatar:nth-child(4) {
+  z-index: 1;
+}
+
+/* Single user mode */
+.single-user {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
+}
+
+.single-user .username {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  margin-left: 10px;
+}
+
+/* +N indicator for more participants */
+.more-indicator {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(59, 130, 246, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  margin-left: -10px;
+  font-weight: 600;
+  color: #fff;
+  z-index: 0;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+}
+
+.toggle-indicator {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* User profile section */

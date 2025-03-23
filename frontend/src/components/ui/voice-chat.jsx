@@ -32,17 +32,15 @@ const VoiceChat = ({ user }) => {
 
   // Initialize socket connection
   useEffect(() => {
-    // Create socket connection with improved configuration for Vercel
     socketRef.current = io(apiUrl, {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      autoConnect: false, // Don't connect automatically
-      transports: ["websocket", "polling"], // Try WebSocket first, fallback to polling
-      timeout: 10000, // Increase timeout to 10 seconds
-      path: "/socket.io/", // Explicitly set the path
+      autoConnect: false,
+      transports: ["websocket", "polling"],
+      timeout: 10000,
+      path: "/socket.io/",
     });
 
-    // Socket connection events
     socketRef.current.on("connect", () => {
       setConnectionStatus("connected");
       console.log("Connected to voice chat server!");
@@ -241,29 +239,59 @@ const VoiceChat = ({ user }) => {
   };
 
   // Count online users
-  const onlineUsersCount = Object.values(users).filter(
-    (user) => user.online
-  ).length;
-
-  // Check if current user is in the participants list
-  const isUserListed = Object.values(users).some(
-    (u) => u.username === userStatus.current.username
-  );
+  const onlineUsers = Object.values(users).filter((user) => user.online);
+  const onlineUsersCount = onlineUsers.length;
+  
+  // Check if there are other participants besides the current user
+  const hasOtherParticipants = onlineUsersCount > (connected ? 1 : 0);
 
   // Find current user's socket ID
   const currentUserSocketId = Object.keys(users).find(
     (key) => users[key].username === userStatus.current.username
   );
 
+  // Function to get avatar URL
+  const getAvatarUrl = (username) => {
+    // Using default avatar service - replace with your actual avatar logic
+    return `https://api.dicebear.com/7.x/avatars/svg?seed=${username}`;
+  };
+
   return (
-    <div
-      className={`voice-chat-container ${expanded ? "expanded" : "collapsed"}`}
-    >
+    <div className={`voice-chat-container ${expanded ? "expanded" : "collapsed"}`}>
       <div className="voice-chat-header" onClick={() => setExpanded(!expanded)}>
-        <h3>Voice Chat {connected ? "🟢" : "🔴"}</h3>
-        <div className="online-indicator">
-          {onlineUsersCount} online {expanded ? "▼" : "▲"}
-        </div>
+        {!expanded && (
+          hasOtherParticipants ? (
+            // Multiple users view - only show avatars in circles
+            <div className="multiple-users">
+              <div className="avatar-stack">
+                {onlineUsers
+                  .slice(0, 4)
+                  .map((userData, index) => (
+                    <img
+                      key={index}
+                      src={getAvatarUrl(userData.username)}
+                      alt={userData.username}
+                      className="avatar"
+                    />
+                  ))}
+                {onlineUsersCount > 4 && (
+                  <div className="more-indicator">+{onlineUsersCount - 4}</div>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Single user view - show avatar and name
+            <div className="single-user">
+              <img 
+                src={getAvatarUrl(userStatus.current.username)}
+                alt={userStatus.current.username}
+                className="avatar"
+              />
+              <span className="username">{userStatus.current.username}</span>
+            </div>
+          )
+        )}
+        <div className="toggle-indicator">{expanded ? "▼" : "▲"}</div>
       </div>
 
       {expanded && (
@@ -341,7 +369,14 @@ const VoiceChat = ({ user }) => {
                       socketId === currentUserSocketId ? "current-user" : ""
                     }`}
                   >
-                    <span className="username">{userData.username}</span>
+                    <div className="user-info">
+                      <img
+                        src={getAvatarUrl(userData.username)}
+                        alt={userData.username}
+                        className="user-avatar"
+                      />
+                      <span className="username">{userData.username}</span>
+                    </div>
                     <span className="status-icons">
                       {userData.microphone && userData.online && (
                         <span className="mic-icon" title="Microphone On">
