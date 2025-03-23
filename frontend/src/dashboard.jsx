@@ -94,6 +94,11 @@ const Profile = () => {
 
     socket.on("connect_error", (err) => {
       console.error("Connection error:", err);
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to server",
+        variant: "destructive",
+      });
     });
 
     // Clean up on unmount
@@ -532,6 +537,7 @@ const Profile = () => {
               selectedFiles={selectedFiles}
               onFileSelect={handleFileSelect}
               activeFile={showPdfPreview ? selectedFile : null} // Only show active file when preview is open
+              socket={socketRef}  // Add socket prop here
             />
           </motion.div>
           <motion.div
@@ -541,7 +547,7 @@ const Profile = () => {
             <FileUpload
               onChange={handleFileUpload}
               onPdfUpload={handlePdfUpload}
-              socket={socketRef}
+              socket={socketRef}  // Add socket prop here
             />
           </motion.div>
           <motion.div

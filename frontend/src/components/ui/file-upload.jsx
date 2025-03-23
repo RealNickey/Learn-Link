@@ -31,6 +31,23 @@ export const FileUpload = ({ onChange, socket }) => {
   const fileInputRef = useRef(null);
   const { toast } = useToast();
 
+  // Handle file upload errors from socket
+  React.useEffect(() => {
+    if (!socket) return;
+
+    socket.on("fileUploadError", ({ error }) => {
+      toast({
+        title: "Upload Error",
+        description: error,
+        variant: "destructive",
+      });
+    });
+
+    return () => {
+      socket.off("fileUploadError");
+    };
+  }, [socket, toast]);
+
   const validateFile = (file) => {
     if (file.type !== "application/pdf") {
       toast({
@@ -65,7 +82,19 @@ export const FileUpload = ({ onChange, socket }) => {
         formData.append("pdf", file);
 
         try {
-          await handleFileUpload(formData);
+          const result = await handleFileUpload(formData);
+          
+          // If upload successful, notify other participants through socket
+          if (result && socket) {
+            socket.emit("fileUploaded", {
+              id: result.file.id,
+              name: result.file.name,
+              size: result.file.size,
+              type: file.type,
+              uploadedAt: new Date().toISOString()
+            });
+          }
+
           onChange([file]); // Notify parent of successful upload
 
           // Remove from temp files after successful upload
