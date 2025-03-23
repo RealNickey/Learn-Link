@@ -10,6 +10,9 @@ const {
   generateQuiz,
 } = require("./aiService");
 const setupVoiceChat = require("./voiceChat");
+const { v4: uuidv4 } = require("uuid");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const server = http.createServer(app);
@@ -58,12 +61,29 @@ app.use(
 // Parse JSON bodies
 app.use(express.json());
 
+// Create uploads directory if it doesn't exist
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 // Configure multer for file uploads
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const fileId = uuidv4();
+    // Save the original filename and the unique id
+    const fileName = `${fileId}-${file.originalname}`;
+    cb(null, fileName);
+  },
+});
+
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit per file
+    fileSize: 20 * 1024 * 1024, // 20MB limit per file
     files: 3, // Maximum 3 files
   },
 });
@@ -133,7 +153,32 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
       return res.status(400).json({ error: "No PDF file uploaded" });
     }
 
-    res.json({ message: "File uploaded successfully" });
+    // Get the file details
+    const file = req.file;
+    const fileId = file.filename.split("-")[0]; // Extract the UUID
+    const originalName = path.basename(file.originalname);
+    const fileSize = file.size;
+    const filePath = file.path;
+
+    // File metadata to broadcast
+    const fileData = {
+      id: fileId,
+      name: originalName,
+      size: fileSize,
+      path: filePath,
+      type: file.mimetype,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    // Broadcast to all connected clients
+    io.emit("fileShared", fileData);
+
+    console.log(`[File Sync] File uploaded and broadcast: ${originalName}`);
+
+    res.json({
+      message: "File uploaded successfully",
+      file: fileData,
+    });
   } catch (error) {
     console.error("Error uploading PDF:", error);
     res.status(500).json({ error: "Failed to upload PDF" });
@@ -195,6 +240,38 @@ app.get("/generate-ai-content", async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to generate content: " + error.message });
+  }
+});
+
+// File download endpoint
+app.get("/download-file/:fileId", (req, res) => {
+  try {
+    const fileId = req.params.fileId;
+
+    // Find files matching the ID pattern in the uploads directory
+    const files = fs.readdirSync(uploadDir);
+    const targetFile = files.find((file) => file.startsWith(fileId));
+
+    if (!targetFile) {
+      return res.status(404).json({ error: "File not found" });
+    }
+
+    const filePath = path.join(uploadDir, targetFile);
+    const originalName = targetFile.substring(targetFile.indexOf("-") + 1);
+
+    // Set headers for file download
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${originalName}"`
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    // Stream the file to the client
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error("Error downloading file:", error);
+    res.status(500).json({ error: "Failed to download file" });
   }
 });
 

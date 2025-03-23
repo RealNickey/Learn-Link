@@ -26,7 +26,7 @@ const secondaryVariant = {
   },
 };
 
-export const FileUpload = ({ onChange }) => {
+export const FileUpload = ({ onChange, socket }) => {
   const [tempFiles, setTempFiles] = useState([]); // Changed from files to tempFiles
   const fileInputRef = useRef(null);
   const { toast } = useToast();
@@ -127,6 +127,9 @@ export const FileUpload = ({ onChange }) => {
       }
 
       const result = await response.json();
+
+      // No need to explicitly emit socket event as the server will broadcast to all clients
+
       return result;
     } catch (error) {
       console.error("Error uploading PDF:", error);

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
+import { io } from "socket.io-client";
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
 
@@ -23,6 +24,7 @@ import {
 } from "./components/ui/chat-bubble";
 import { cn } from "./lib/utils";
 import QuizPanel from "./components/ui/quiz-panel";
+import SharedFiles from "./components/ui/shared-files"; // Import SharedFiles
 
 // Animation variants
 const containerVariants = {
@@ -68,8 +70,39 @@ const Profile = () => {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [socketRef, setSocketRef] = useState(null);
 
   const userImage = user.picture; // Store user image in a variable
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Initialize socket connection
+  useEffect(() => {
+    const socket = io(apiUrl, {
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      autoConnect: true,
+      transports: ["websocket", "polling"],
+      timeout: 10000,
+      path: "/socket.io/",
+    });
+
+    setSocketRef(socket);
+
+    socket.on("connect", () => {
+      console.log("Connected to socket server!");
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Connection error:", err);
+    });
+
+    // Clean up on unmount
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [apiUrl]);
 
   useEffect(() => {
     // Short delay to match the page transition
@@ -255,13 +288,13 @@ const Profile = () => {
     );
   };
 
-  const scrollToBottom = (behavior = 'smooth', delay = 0) => {
+  const scrollToBottom = (behavior = "smooth", delay = 0) => {
     setTimeout(() => {
       if (chatContainerRef.current) {
         const scrollHeight = chatContainerRef.current.scrollHeight;
         chatContainerRef.current.scrollTo({
           top: scrollHeight,
-          behavior
+          behavior,
         });
       }
     }, delay);
@@ -269,8 +302,8 @@ const Profile = () => {
 
   const handleFocusArea = async () => {
     // First verify that all selected files still exist in files array
-    const validSelectedFiles = selectedFiles.filter(selected => 
-      files.some(file => file === selected)
+    const validSelectedFiles = selectedFiles.filter((selected) =>
+      files.some((file) => file === selected)
     );
 
     // Update selectedFiles to remove any invalid selections
@@ -289,11 +322,11 @@ const Profile = () => {
     setIsLoadingAiResponse(true);
 
     // Initial scroll to loading animation
-    scrollToBottom('smooth', 100);
+    scrollToBottom("smooth", 100);
 
     try {
-      let allContent = '';
-      
+      let allContent = "";
+
       for (const file of validSelectedFiles) {
         const formData = new FormData();
         formData.append("pdf", file);
@@ -313,30 +346,33 @@ const Profile = () => {
         allContent += focusAreaText;
 
         // Update chat history with loading message
-        setChatHistory(prev => [...prev, {
-          type: "ai",
-          content: "Analyzing document...",
-          status: "loading",
-          id: `loading-${Date.now()}`
-        }]);
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            type: "ai",
+            content: "Analyzing document...",
+            status: "loading",
+            id: `loading-${Date.now()}`,
+          },
+        ]);
 
         // Scroll to show loading message
-        scrollToBottom('smooth', 100);
+        scrollToBottom("smooth", 100);
       }
 
       // Remove any loading messages and add final content
-      setChatHistory(prev => [
-        ...prev.filter(msg => msg.status !== "loading"),
+      setChatHistory((prev) => [
+        ...prev.filter((msg) => msg.status !== "loading"),
         {
           type: "ai",
           content: allContent.trim(),
           status: "success",
-          id: `focus-${Date.now()}`
-        }
+          id: `focus-${Date.now()}`,
+        },
       ]);
 
       // Final scroll after content is added
-      scrollToBottom('smooth', 200);
+      scrollToBottom("smooth", 200);
 
       toast({
         title: "Success",
@@ -435,7 +471,7 @@ const Profile = () => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPdfContent(url);
-      
+
       // Cleanup previous URL when selected file changes or component unmounts
       return () => {
         URL.revokeObjectURL(url);
@@ -450,12 +486,13 @@ const Profile = () => {
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      const shouldScroll = 
-        chatContainerRef.current.scrollTop + chatContainerRef.current.clientHeight >=
+      const shouldScroll =
+        chatContainerRef.current.scrollTop +
+          chatContainerRef.current.clientHeight >=
         chatContainerRef.current.scrollHeight - 100;
-      
+
       if (shouldScroll) {
-        scrollToBottom('smooth', 100);
+        scrollToBottom("smooth", 100);
       }
     }
   }, [chatHistory]);
@@ -504,6 +541,7 @@ const Profile = () => {
             <FileUpload
               onChange={handleFileUpload}
               onPdfUpload={handlePdfUpload}
+              socket={socketRef}
             />
           </motion.div>
           <motion.div
@@ -678,12 +716,55 @@ const Profile = () => {
             </div>
           </motion.div>
           <motion.div className="section div7" variants={itemVariants}>
-            <Dock>
-              <DockIcon
-                onClick={toggleMic}
-                title={micOn ? "Mic On" : "Mic Off"}
-              >
-                {micOn ? (
+            <div className="flex flex-col space-y-4">
+              {/* Shared files component */}
+              <SharedFiles socket={socketRef} user={user} />
+
+              <Dock>
+                <DockIcon
+                  onClick={toggleMic}
+                  title={micOn ? "Mic On" : "Mic Off"}
+                >
+                  {micOn ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-mic"
+                    >
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                      <line x1="12" x2="12" y1="19" y2="22" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-mic-off"
+                    >
+                      <line x1="2" x2="22" y1="2" y2="22" />
+                      <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
+                      <path d="M5 10v2a7 7 0 0 0 12 5" />
+                      <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
+                      <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
+                      <line x1="12" x2="12" y1="19" y2="22" />
+                    </svg>
+                  )}
+                </DockIcon>
+                <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -694,13 +775,14 @@ const Profile = () => {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="lucide lucide-mic"
+                    className="lucide lucide-graduation-cap"
                   >
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
+                    <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+                    <path d="M22 10v6" />
+                    <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
                   </svg>
-                ) : (
+                </DockIcon>
+                <DockIcon title="Flash Cards">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -711,84 +793,45 @@ const Profile = () => {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="lucide lucide-mic-off"
+                    className="lucide lucide-book-type"
                   >
-                    <line x1="2" x2="22" y1="2" y2="22" />
-                    <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
-                    <path d="M5 10v2a7 7 0 0 0 12 5" />
-                    <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
-                    <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
+                    <path d="M10 13h4" />
+                    <path d="M12 6v7" />
+                    <path d="M16 8V6H8v2" />
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
                   </svg>
-                )}
-              </DockIcon>
-              <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-graduation-cap"
-                >
-                  <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
-                  <path d="M22 10v6" />
-                  <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
-                </svg>
-              </DockIcon>
-              <DockIcon title="Flash Cards">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-book-type"
-                >
-                  <path d="M10 13h4" />
-                  <path d="M12 6v7" />
-                  <path d="M16 8V6H8v2" />
-                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
-                </svg>
-              </DockIcon>
-              <DockIcon title="Focus Area" onClick={handleFocusArea}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-brain-circuit"
-                >
-                  <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
-                  <path d="M9 13a4.5 4.5 0 0 0 3-4" />
-                  <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
-                  <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
-                  <path d="M6 18a4 4 0 0 1-1.967-.516" />
-                  <path d="M12 13h4" />
-                  <path d="M12 18h6a2 2 0 0 1 2 2v1" />
-                  <path d="M12 8h8" />
-                  <path d="M16 8V5a2 2 0 0 1 2-2" />
-                  <circle cx="16" cy="13" r=".5" />
-                  <circle cx="18" cy="3" r=".5" />
-                  <circle cx="20" cy="21" r=".5" />
-                  <circle cx="20" cy="8" r=".5" />
-                </svg>{" "}
-              </DockIcon>
-              <MusicPlayer /> {/* Added MusicPlayer component */}
-            </Dock>
+                </DockIcon>
+                <DockIcon title="Focus Area" onClick={handleFocusArea}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-brain-circuit"
+                  >
+                    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+                    <path d="M9 13a4.5 4.5 0 0 0 3-4" />
+                    <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
+                    <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
+                    <path d="M6 18a4 4 0 0 1-1.967-.516" />
+                    <path d="M12 13h4" />
+                    <path d="M12 18h6a2 2 0 0 1 2 2v1" />
+                    <path d="M12 8h8" />
+                    <path d="M16 8V5a2 2 0 0 1 2-2" />
+                    <circle cx="16" cy="13" r=".5" />
+                    <circle cx="18" cy="3" r=".5" />
+                    <circle cx="20" cy="21" r=".5" />
+                    <circle cx="20" cy="8" r=".5" />
+                  </svg>{" "}
+                </DockIcon>
+                <MusicPlayer /> {/* Added MusicPlayer component */}
+              </Dock>
+            </div>
           </motion.div>
         </motion.div>
         <QuizPanel

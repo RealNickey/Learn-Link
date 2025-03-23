@@ -4,6 +4,8 @@ const socketIo = require("socket.io");
 function setupVoiceChat(server) {
   // Store connected users and their status
   const socketsStatus = {};
+  // Store shared files
+  const sharedFiles = [];
 
   // Initialize socket.io with CORS settings
   const io = socketIo(server, {
@@ -38,6 +40,11 @@ function setupVoiceChat(server) {
 
     console.log(`[Voice Chat] New connection: ${socketId}`);
 
+    // Send existing shared files to newly connected user
+    if (sharedFiles.length > 0) {
+      socket.emit("initialFiles", sharedFiles);
+    }
+
     // Handle voice data transmission
     socket.on("voice", function (data) {
       // Process audio data
@@ -67,6 +74,35 @@ function setupVoiceChat(server) {
         console.log(
           `[Voice Chat] ${username} speaking to ${receiverCount} users`
         );
+      }
+    });
+
+    // Handle file sharing
+    socket.on("fileShared", function (fileData) {
+      const username = socketsStatus[socketId]?.username || "Unknown User";
+      console.log(`[File Sync] ${username} shared a file: ${fileData.name}`);
+
+      // Add username to file data
+      fileData.sharedBy = username;
+      fileData.sharedAt = new Date().toISOString();
+
+      // Add to shared files list
+      sharedFiles.push(fileData);
+
+      // Limit the number of stored files to prevent memory issues
+      if (sharedFiles.length > 50) {
+        sharedFiles.shift(); // Remove oldest file when exceeding 50 files
+      }
+
+      // Broadcast to all other connected users
+      socket.broadcast.emit("newFile", fileData);
+    });
+
+    // Handle file download request
+    socket.on("requestFile", function (fileId) {
+      const requestedFile = sharedFiles.find((file) => file.id === fileId);
+      if (requestedFile && requestedFile.data) {
+        socket.emit("fileData", requestedFile);
       }
     });
 
