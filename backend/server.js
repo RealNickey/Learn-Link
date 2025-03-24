@@ -10,13 +10,28 @@ const {
   generateQuiz,
 } = require("./aiService");
 const setupVoiceChat = require("./voiceChat");
+const { Server } = require("socket.io");
+const { mkdir, readFile, writeFile } = require("fs/promises");
+const { join } = require("path");
+const { TLSocketRoom } = require("@tldraw/sync-core");
+const {
+  createTLSchema,
+  defaultShapeSchemas,
+  defaultBindingSchemas,
+} = require("@tldraw/tlschema");
 
 const app = express();
 const server = http.createServer(app);
-const port = process.env.PORT || 3000;
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
+const port = process.env.PORT || 5000;
 
 // Initialize voice chat
-const io = setupVoiceChat(server);
+const ioSetup = setupVoiceChat(server);
 
 // Allow requests from all relevant origins
 const allowedOrigins = [
@@ -197,6 +212,112 @@ app.get("/generate-ai-content", async (req, res) => {
       .json({ error: "Failed to generate content: " + error.message });
   }
 });
+
+// Room storage directory
+const DIR = "./.rooms";
+
+// Room state management
+const rooms = new Map();
+
+// Create schema with default shapes
+const schema = createTLSchema({
+  shapes: defaultShapeSchemas,
+  bindings: defaultBindingSchemas,
+});
+
+// Helper functions for file operations
+async function readSnapshotIfExists(roomId) {
+  try {
+    const data = await readFile(join(DIR, roomId));
+    return JSON.parse(data.toString()) ?? undefined;
+  } catch (e) {
+    return undefined;
+  }
+}
+
+async function saveSnapshot(roomId, snapshot) {
+  await mkdir(DIR, { recursive: true });
+  await writeFile(join(DIR, roomId), JSON.stringify(snapshot));
+}
+
+// Room management
+async function makeOrLoadRoom(roomId) {
+  if (rooms.has(roomId)) {
+    const roomState = rooms.get(roomId);
+    if (!roomState.room.isClosed()) {
+      return roomState.room;
+    }
+  }
+
+  console.log("loading room", roomId);
+  const initialSnapshot = await readSnapshotIfExists(roomId);
+
+  const roomState = {
+    needsPersist: false,
+    id: roomId,
+    room: new TLSocketRoom({
+      schema,
+      initialSnapshot,
+      onSessionRemoved(room, args) {
+        console.log("client disconnected", args.sessionId, roomId);
+        if (args.numSessionsRemaining === 0) {
+          console.log("closing room", roomId);
+          room.close();
+        }
+      },
+      onDataChange() {
+        roomState.needsPersist = true;
+      },
+    }),
+  };
+
+  rooms.set(roomId, roomState);
+  return roomState.room;
+}
+
+// Socket.io connection handling
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("join-room", async (roomId) => {
+    try {
+      const room = await makeOrLoadRoom(roomId);
+      socket.join(roomId);
+
+      // Handle room events
+      room.on("event", (event) => {
+        socket.to(roomId).emit("room-event", event);
+      });
+
+      // Handle client events
+      socket.on("client-event", (event) => {
+        room.handleEvent(event);
+      });
+    } catch (error) {
+      console.error("Error joining room:", error);
+      socket.emit("error", { message: "Failed to join room" });
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
+
+// Persistence interval
+setInterval(() => {
+  for (const roomState of rooms.values()) {
+    if (roomState.needsPersist) {
+      roomState.needsPersist = false;
+      console.log("saving snapshot", roomState.id);
+      saveSnapshot(roomState.id, roomState.room.getCurrentSnapshot());
+    }
+    if (roomState.room.isClosed()) {
+      console.log("deleting room", roomState.id);
+      rooms.delete(roomState.id);
+    }
+  }
+}, 2000);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
