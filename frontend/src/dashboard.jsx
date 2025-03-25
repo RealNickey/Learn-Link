@@ -443,7 +443,14 @@ const Profile = () => {
             />
           </div>
           <div className="section div3" style={{ padding: 0 }}>
-            <div style={{ width: "100%", height: "100%", position: "relative", zIndex: 1 }}>
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
               {showPdfPreview && selectedFile ? (
                 <div
                   className="pdf-preview"
@@ -723,9 +730,9 @@ const Profile = () => {
           isOpen={isQuizOpen}
           onClose={() => setIsQuizOpen(false)}
         />
-        <FlashCard 
-          isOpen={isFlashCardOpen} 
-          onClose={() => setIsFlashCardOpen(false)} 
+        <FlashCard
+          isOpen={isFlashCardOpen}
+          onClose={() => setIsFlashCardOpen(false)}
           pdfData={selectedFiles.length > 0 ? selectedFiles[0] : null}
         />
         <VoiceChat user={user} /> {/* Add this component */}
