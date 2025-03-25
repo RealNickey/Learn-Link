@@ -1,0 +1,41 @@
+.perspective {
+  perspective: 1000px;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  text-align: center;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.flashcard-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  background: #1a1a1a;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+.flashcard-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
