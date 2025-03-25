@@ -255,13 +255,13 @@ const Profile = () => {
     );
   };
 
-  const scrollToBottom = (behavior = 'smooth', delay = 0) => {
+  const scrollToBottom = (behavior = "smooth", delay = 0) => {
     setTimeout(() => {
       if (chatContainerRef.current) {
         const scrollHeight = chatContainerRef.current.scrollHeight;
         chatContainerRef.current.scrollTo({
           top: scrollHeight,
-          behavior
+          behavior,
         });
       }
     }, delay);
@@ -269,8 +269,8 @@ const Profile = () => {
 
   const handleFocusArea = async () => {
     // First verify that all selected files still exist in files array
-    const validSelectedFiles = selectedFiles.filter(selected => 
-      files.some(file => file === selected)
+    const validSelectedFiles = selectedFiles.filter((selected) =>
+      files.some((file) => file === selected)
     );
 
     // Update selectedFiles to remove any invalid selections
@@ -289,11 +289,11 @@ const Profile = () => {
     setIsLoadingAiResponse(true);
 
     // Initial scroll to loading animation
-    scrollToBottom('smooth', 100);
+    scrollToBottom("smooth", 100);
 
     try {
-      let allContent = '';
-      
+      let allContent = "";
+
       for (const file of validSelectedFiles) {
         const formData = new FormData();
         formData.append("pdf", file);
@@ -313,30 +313,33 @@ const Profile = () => {
         allContent += focusAreaText;
 
         // Update chat history with loading message
-        setChatHistory(prev => [...prev, {
-          type: "ai",
-          content: "Analyzing document...",
-          status: "loading",
-          id: `loading-${Date.now()}`
-        }]);
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            type: "ai",
+            content: "Analyzing document...",
+            status: "loading",
+            id: `loading-${Date.now()}`,
+          },
+        ]);
 
         // Scroll to show loading message
-        scrollToBottom('smooth', 100);
+        scrollToBottom("smooth", 100);
       }
 
       // Remove any loading messages and add final content
-      setChatHistory(prev => [
-        ...prev.filter(msg => msg.status !== "loading"),
+      setChatHistory((prev) => [
+        ...prev.filter((msg) => msg.status !== "loading"),
         {
           type: "ai",
           content: allContent.trim(),
           status: "success",
-          id: `focus-${Date.now()}`
-        }
+          id: `focus-${Date.now()}`,
+        },
       ]);
 
       // Final scroll after content is added
-      scrollToBottom('smooth', 200);
+      scrollToBottom("smooth", 200);
 
       toast({
         title: "Success",
@@ -435,7 +438,7 @@ const Profile = () => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPdfContent(url);
-      
+
       // Cleanup previous URL when selected file changes or component unmounts
       return () => {
         URL.revokeObjectURL(url);
@@ -450,12 +453,13 @@ const Profile = () => {
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      const shouldScroll = 
-        chatContainerRef.current.scrollTop + chatContainerRef.current.clientHeight >=
+      const shouldScroll =
+        chatContainerRef.current.scrollTop +
+          chatContainerRef.current.clientHeight >=
         chatContainerRef.current.scrollHeight - 100;
-      
+
       if (shouldScroll) {
-        scrollToBottom('smooth', 100);
+        scrollToBottom("smooth", 100);
       }
     }
   }, [chatHistory]);
@@ -679,49 +683,6 @@ const Profile = () => {
           </motion.div>
           <motion.div className="section div7" variants={itemVariants}>
             <Dock>
-              <DockIcon
-                onClick={toggleMic}
-                title={micOn ? "Mic On" : "Mic Off"}
-              >
-                {micOn ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-mic"
-                  >
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
-                  </svg>
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-mic-off"
-                  >
-                    <line x1="2" x2="22" y1="2" y2="22" />
-                    <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
-                    <path d="M5 10v2a7 7 0 0 0 12 5" />
-                    <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
-                    <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
-                  </svg>
-                )}
-              </DockIcon>
               <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
