@@ -560,11 +560,9 @@ const Profile = () => {
             />
           </motion.div>
           <motion.div
-            className="section div5 flex items-center justify-center p-3"
+            className="section div5"
             variants={itemVariants}
-          >
-            <Toolbar userName={user.name} userImage={userImage} />
-          </motion.div>
+          ></motion.div>
           <motion.div className="section div6" variants={itemVariants}>
             <div
               className="h-full overflow-y-auto p-4 flex flex-col space-y-4"
