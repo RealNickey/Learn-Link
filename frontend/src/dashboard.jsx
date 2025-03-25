@@ -44,8 +44,17 @@ const Profile = () => {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [isFlashCardOpen, setIsFlashCardOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
+
+  useEffect(() => {
+    // Short delay to match the page transition
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleFileUpload = (newFiles) => {
     const duplicateFiles = newFiles.filter((newFile) =>
@@ -387,6 +396,28 @@ const Profile = () => {
     return <div>Error: {error.message}</div>;
   }
 
+  const handleOpenFlashCards = () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select a PDF file using the checkboxes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedFiles.length > 1) {
+      toast({
+        title: "Too many files selected",
+        description: "Please select only one PDF file for flashcards",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFlashCardOpen(true);
+  };
+
   return (
     isAuthenticated && (
       <>
@@ -636,7 +667,7 @@ const Profile = () => {
                   <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
                 </svg>
               </DockIcon>
-              <DockIcon title="Flash Cards" onClick={() => setIsFlashCardOpen(true)}>
+              <DockIcon title="Flash Cards" onClick={handleOpenFlashCards}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -695,6 +726,7 @@ const Profile = () => {
         <FlashCard 
           isOpen={isFlashCardOpen} 
           onClose={() => setIsFlashCardOpen(false)} 
+          pdfData={selectedFiles.length > 0 ? selectedFiles[0] : null}
         />
         <VoiceChat user={user} /> {/* Add this component */}
         <Toaster />

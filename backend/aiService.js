@@ -240,9 +240,104 @@ async function generateQuiz(pdfFiles) {
   }
 }
 
+/**
+ * Generates flashcards based on PDF content
+ * @param {Buffer} pdfBuffer - PDF file buffer
+ * @returns {Array} Array of flashcard objects with frontText and backText
+ */
+async function generateFlashcards(pdfBuffer) {
+  try {
+    console.log(`[generateFlashcards] Processing PDF file`);
+    
+    const prompt = `
+      You are an expert teacher creating flashcards based on this PDF document.
+      
+      Create 5 flashcards that highlight key concepts from the document.
+      Each flashcard must:
+      1. Have a front side with a clear, concise question or concept
+      2. Have a back side with a comprehensive answer or explanation
+      3. Be based directly on specific content in this document
+      
+      Format your response as a valid JSON array with this structure:
+      [
+        {
+          "frontText": "Question or concept here?",
+          "backText": "Answer or explanation here."
+        }
+      ]
+      
+      Remember: Create exactly 5 flashcards. Make sure the content is specifically from this document.
+      Only provide the JSON array, no other text.
+    `;
+    
+    try {
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            data: pdfBuffer.toString('base64'),
+            mimeType: "application/pdf",
+          }
+        },
+        prompt
+      ]);
+      
+      const responseText = result.response.text();
+      console.log('[generateFlashcards] Received AI response');
+      
+      // Extract JSON if it's wrapped in markdown code blocks
+      const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, responseText];
+      const jsonStr = jsonMatch[1].trim();
+      
+      try {
+        const parsedFlashcards = JSON.parse(jsonStr);
+        console.log(`[generateFlashcards] Successfully parsed ${parsedFlashcards.length} flashcards`);
+        
+        return parsedFlashcards;
+      } catch (parseError) {
+        console.error('[generateFlashcards] Failed to parse JSON:', parseError);
+        console.log('[generateFlashcards] Raw response:', responseText);
+        
+        // Create fallback flashcards
+        return [
+          {
+            frontText: "What is the main topic of this document?",
+            backText: "The document covers important concepts and information relevant to the subject matter."
+          },
+          {
+            frontText: "How can this information be applied?",
+            backText: "This information can be applied in practical scenarios related to the subject."
+          },
+          {
+            frontText: "What are key terms to remember?",
+            backText: "The document contains several key terms that are important for understanding the subject."
+          }
+        ];
+      }
+    } catch (error) {
+      console.error(`[generateFlashcards] Error generating flashcards:`, error);
+      
+      // Return fallback flashcards
+      return [
+        {
+          frontText: "What is this document about?",
+          backText: "This document contains information on a specific subject matter."
+        },
+        {
+          frontText: "What should I focus on when studying this material?",
+          backText: "Focus on understanding key concepts rather than memorizing details."
+        }
+      ];
+    }
+  } catch (error) {
+    console.error('[generateFlashcards] Error in flashcard generation:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   generateAIContent,
   processPdfContent,
   comparePdfs,
-  generateQuiz
+  generateQuiz,
+  generateFlashcards
 };

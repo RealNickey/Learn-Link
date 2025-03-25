@@ -23,33 +23,45 @@ export function FlashCard({ isOpen, onClose, pdfData }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadQuestions = async () => {
+    const loadFlashcards = async () => {
       if (pdfData && isOpen) {
         setLoading(true);
         try {
-          const response = await fetch('/api/generate-quiz', {
+          const formData = new FormData();
+          formData.append('pdf', pdfData);
+
+          // Use the new endpoint for flashcards
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/generate-flashcards`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pdfFiles: [pdfData] })
+            body: formData,
           });
+          
+          if (!response.ok) {
+            throw new Error(`Error: ${response.statusText}`);
+          }
+          
           const data = await response.json();
           
-          // Transform quiz questions into flashcard format (take first 3)
-          const flashcardData = data.questions.slice(0, 3).map(q => ({
-            frontText: q.question,
-            backText: `Answer: ${q.options[q.correctAnswer]}\n\nExplanation: ${q.explanation}`,
-            isFlipped: false
-          }));
-          
-          setCards(flashcardData);
+          if (data.flashcards && Array.isArray(data.flashcards)) {
+            // Map the flashcards and add isFlipped property
+            const flashcardData = data.flashcards.map(card => ({
+              ...card,
+              isFlipped: false
+            }));
+            
+            setCards(flashcardData);
+          } else {
+            throw new Error('Invalid flashcard data received');
+          }
         } catch (error) {
-          console.error('Error loading questions:', error);
+          console.error('Error loading flashcards:', error);
+          // Keep default flashcards if there's an error
         }
         setLoading(false);
       }
     };
 
-    loadQuestions();
+    loadFlashcards();
   }, [pdfData, isOpen]);
 
   if (!isOpen) return null;

@@ -8,6 +8,7 @@ const {
   processPdfContent,
   comparePdfs,
   generateQuiz,
+  generateFlashcards,
 } = require("./aiService");
 const setupVoiceChat = require("./voiceChat");
 
@@ -195,6 +196,23 @@ app.get("/generate-ai-content", async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to generate content: " + error.message });
+  }
+});
+
+// Add new endpoint for generating flashcards
+app.post("/generate-flashcards", upload.single("pdf"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No PDF file provided" });
+    }
+
+    const pdfBuffer = req.file.buffer;
+    const flashcards = await generateFlashcards(pdfBuffer);
+
+    res.json({ flashcards });
+  } catch (error) {
+    console.error("Error generating flashcards:", error);
+    res.status(500).json({ error: "Failed to generate flashcards" });
   }
 });
 
