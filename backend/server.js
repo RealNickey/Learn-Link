@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const multer = require("multer");
+const { ref, set, get } = require("firebase/database");
+const { database } = require("./firebaseConfig");
 const {
   generateAIContent,
   processPdfContent,
@@ -133,7 +135,15 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
       return res.status(400).json({ error: "No PDF file uploaded" });
     }
 
-    res.json({ message: "File uploaded successfully" });
+    // Store PDF metadata in Firebase
+    const pdfRef = ref(database, `pdfs/${Date.now()}`);
+    await set(pdfRef, {
+      filename: req.file.originalname,
+      uploadedAt: new Date().toISOString(),
+      size: req.file.size
+    });
+
+    res.json({ message: "File uploaded and synced successfully" });
   } catch (error) {
     console.error("Error uploading PDF:", error);
     res.status(500).json({ error: "Failed to upload PDF" });
