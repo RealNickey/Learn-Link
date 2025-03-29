@@ -620,36 +620,39 @@ const Profile = () => {
                 "Which are the layers of OSI model",
               ]}
               onChange={(e) => console.log(e.target.value)}
-              onSubmit={handleInputSubmit} // Updated to use handleInputSubmit
-            />
-            {selectedFiles.length > 0 && (
-              <div className="pdf-context-indicator">
-                <div className="flex items-center gap-2 mt-2 text-sm text-neutral-300 bg-neutral-800 p-2 rounded-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-blue-400"
+              onSubmit={handleInputSubmit}
+              suffix={
+                selectedFiles.length > 0 ? (
+                  <div
+                    className="pdf-context-indicator flex items-center"
+                    title={`AI will respond based on ${
+                      selectedFiles.length
+                    } selected PDF${selectedFiles.length > 1 ? "s" : ""}`}
                   >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <path d="M16 13H8"></path>
-                    <path d="M16 17H8"></path>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                  </svg>
-                  <span>
-                    AI will respond based on {selectedFiles.length} selected PDF
-                    {selectedFiles.length > 1 ? "s" : ""}
-                  </span>
-                </div>
-              </div>
-            )}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-blue-400"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    {selectedFiles.length > 1 && (
+                      <span className="ml-1 text-xs text-blue-400">
+                        {selectedFiles.length}
+                      </span>
+                    )}
+                  </div>
+                ) : null
+              }
+            />
           </motion.div>
           <motion.div className="section div5" variants={itemVariants}>
             <div className="user-profile">
@@ -714,6 +717,11 @@ const Profile = () => {
                     chat.type === "user") && (
                     <ChatBubbleMessage
                       variant={chat.type === "user" ? "sent" : "received"}
+                      className={cn(
+                        chat.type === "ai" &&
+                          selectedFiles.length > 0 &&
+                          "pdf-response"
+                      )}
                     >
                       {chat.content}
                     </ChatBubbleMessage>

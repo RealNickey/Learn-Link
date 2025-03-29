@@ -205,6 +205,17 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
+/* Style for AI responses based on PDF content */
+.pdf-response {
+  border-left: 2px solid rgba(59, 130, 246, 0.5) !important; /* Subtle blue border */
+  background-color: rgba(
+    59,
+    130,
+    246,
+    0.05
+  ) !important; /* Very subtle blue background */
+}
+
 .chat-image {
   width: 32px;
   height: 32px;
@@ -239,7 +250,6 @@
 .chat-bubble p {
   margin: 0;
   line-height: 1.5;
-
 }
 
 /* Loading animation styles */
@@ -360,8 +370,8 @@
   height: 100%;
   backface-visibility: hidden;
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
