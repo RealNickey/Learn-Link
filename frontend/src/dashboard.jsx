@@ -205,6 +205,9 @@ const Profile = () => {
       { type: "user", content: inputValue, image: userImage },
     ]);
 
+    // Scroll to the bottom when user sends a message
+    scrollToBottom("smooth", 100);
+
     setIsAiResponding(true);
     setIsAiError(false);
 
@@ -264,6 +267,9 @@ const Profile = () => {
           status: "success",
         },
       ]);
+
+      // Scroll to the bottom when AI response is received
+      scrollToBottom("smooth", 100);
     } catch (error) {
       console.error("Error fetching AI content:", error);
       setIsAiError(true);
@@ -276,6 +282,9 @@ const Profile = () => {
           status: "error",
         },
       ]);
+
+      // Scroll to the bottom when error message is displayed
+      scrollToBottom("smooth", 100);
     } finally {
       setIsAiResponding(false);
     }
@@ -487,17 +496,10 @@ const Profile = () => {
 
   const chatContainerRef = useRef(null);
 
+  // Auto-scroll to bottom when chat history changes
   useEffect(() => {
-    if (chatContainerRef.current) {
-      const shouldScroll =
-        chatContainerRef.current.scrollTop +
-          chatContainerRef.current.clientHeight >=
-        chatContainerRef.current.scrollHeight - 100;
-
-      if (shouldScroll) {
-        scrollToBottom("smooth", 100);
-      }
-    }
+    // Use a slightly longer delay to ensure rendering is complete
+    scrollToBottom("smooth", 150);
   }, [chatHistory]);
 
   console.log("isLoading:", isLoading);
