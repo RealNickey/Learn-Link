@@ -755,6 +755,41 @@ const Profile = () => {
                   </div>
                 </ChatBubble>
               )}
+              {isAiResponding && chatHistory.length > 0 && (
+                <ChatBubble variant="received">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 ai-avatar-loading">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-white"
+                    >
+                      <path d="M12 8V4H8" />
+                      <rect width="16" height="12" x="4" y="8" rx="2" />
+                      <path d="M2 14h2" />
+                      <path d="M20 14h2" />
+                      <path d="M15 13v2" />
+                      <path d="M9 13v2" />
+                    </svg>
+                  </div>
+                  <ChatBubbleMessage variant="received">
+                    <div className="typing-indicator-container">
+                      <span className="typing-label">AI is thinking</span>
+                      <div className="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                  </ChatBubbleMessage>
+                </ChatBubble>
+              )}
               {isLoadingAiResponse && (
                 <div className="chat-message ai">
                   <div className="chat-bubble ai">
