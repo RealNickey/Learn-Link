@@ -17,7 +17,7 @@ export const ListFiles = ({
     <div className="file-list w-full max-w-xl mx-auto">
       {files.length === 0 ? (
         <div className="text-center py-8 text-neutral-400">
-          <TextShimmer>Click to add files</TextShimmer>
+          <TextShimmer>Add files To Start</TextShimmer>
         </div>
       ) : (
         files.map((file, idx) => (
