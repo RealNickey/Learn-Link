@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/dashboard.css";
 import "./styles/list-files.css"; // Import the new styles
+import { motion } from "framer-motion"; // Import motion
 import { FileUpload } from "./components/ui/file-upload";
 import { ListFiles } from "./components/ui/list-files";
 import { PlaceholdersAndVanishInput } from "./components/ui/placeholders-and-vanish-input";
@@ -24,7 +25,32 @@ import { cn } from "./lib/utils";
 import QuizPanel from "./components/ui/quiz-panel";
 import { FlashCard } from "./components/ui/flash-card";
 
-// Removed ToastDemo component
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      when: "beforeChildren",
+      staggerChildren: 0.1,
+      duration: 0.6,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 10,
+    },
+  },
+};
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error } = useAuth0();
@@ -47,6 +73,14 @@ const Profile = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
+
+  useEffect(() => {
+    // Short delay to match the page transition
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Short delay to match the page transition
@@ -152,6 +186,8 @@ const Profile = () => {
 
   const handleRemoveFile = (fileToRemove) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file !== fileToRemove));
+    // Also remove from selectedFiles if it was selected
+    setSelectedFiles((prev) => prev.filter((file) => file !== fileToRemove));
     // If removing the currently selected file, hide preview
     if (selectedFile === fileToRemove) {
       setSelectedFile(null);
@@ -230,30 +266,46 @@ const Profile = () => {
     );
   };
 
+  const scrollToBottom = (behavior = "smooth", delay = 0) => {
+    setTimeout(() => {
+      if (chatContainerRef.current) {
+        const scrollHeight = chatContainerRef.current.scrollHeight;
+        chatContainerRef.current.scrollTo({
+          top: scrollHeight,
+          behavior,
+        });
+      }
+    }, delay);
+  };
+
   const handleFocusArea = async () => {
-    if (selectedFiles.length === 0) {
+    // First verify that all selected files still exist in files array
+    const validSelectedFiles = selectedFiles.filter((selected) =>
+      files.some((file) => file === selected)
+    );
+
+    // Update selectedFiles to remove any invalid selections
+    setSelectedFiles(validSelectedFiles);
+
+    if (validSelectedFiles.length === 0) {
       toast({
         title: "No files selected",
-        description: "Please select at least one file using the checkboxes",
+        description: "Please select at least one valid PDF file",
         variant: "destructive",
       });
       return;
     }
 
     setIsGeneratingSummary(true);
-    setIsLoadingAiResponse(true); // Start loading animation
-    toast({
-      title: "Generating Focus Area",
-      description: `Analyzing ${selectedFiles.length} document(s)...`,
-      duration: 2000,
-    });
+    setIsLoadingAiResponse(true);
+
+    // Initial scroll to loading animation
+    scrollToBottom("smooth", 100);
 
     try {
-      // Clear previous content
-      setAiContent("");
+      let allContent = "";
 
-      // Process each selected file
-      for (const file of selectedFiles) {
+      for (const file of validSelectedFiles) {
         const formData = new FormData();
         formData.append("pdf", file);
 
@@ -265,22 +317,40 @@ const Profile = () => {
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to generate summary");
-        }
+        if (!response.ok) throw new Error("Failed to generate summary");
 
         const { summary } = await response.json();
-        // Append new summary with file name
-        const focusAreaText = `File: ${file.name}\n\n${summary}`;
-        setAiContent(
-          (prev) => `${prev}${prev ? "\n\n---\n\n" : ""}${focusAreaText}`
-        );
+        const focusAreaText = `📄 File: ${file.name}\n\n${summary}\n\n`;
+        allContent += focusAreaText;
+
+        // Update chat history with loading message
         setChatHistory((prev) => [
           ...prev,
-          { type: "ai", content: focusAreaText },
+          {
+            type: "ai",
+            content: "Analyzing document...",
+            status: "loading",
+            id: `loading-${Date.now()}`,
+          },
         ]);
-        console.log(`Focus Area for ${file.name}:`, summary); // Temporarily show the result in console
+
+        // Scroll to show loading message
+        scrollToBottom("smooth", 100);
       }
+
+      // Remove any loading messages and add final content
+      setChatHistory((prev) => [
+        ...prev.filter((msg) => msg.status !== "loading"),
+        {
+          type: "ai",
+          content: allContent.trim(),
+          status: "success",
+          id: `focus-${Date.now()}`,
+        },
+      ]);
+
+      // Final scroll after content is added
+      scrollToBottom("smooth", 200);
 
       toast({
         title: "Success",
@@ -296,7 +366,7 @@ const Profile = () => {
       });
     } finally {
       setIsGeneratingSummary(false);
-      setIsLoadingAiResponse(false); // Stop loading animation
+      setIsLoadingAiResponse(false);
     }
   };
 
@@ -374,12 +444,34 @@ const Profile = () => {
     return URL.createObjectURL(file);
   };
 
+  useEffect(() => {
+    // Create URL only when selected file changes
+    if (selectedFile) {
+      const url = URL.createObjectURL(selectedFile);
+      setPdfContent(url);
+
+      // Cleanup previous URL when selected file changes or component unmounts
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      // Clear PDF content if no file is selected
+      setPdfContent("");
+    }
+  }, [selectedFile]); // Only re-run when selectedFile changes
+
   const chatContainerRef = useRef(null);
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
+      const shouldScroll =
+        chatContainerRef.current.scrollTop +
+          chatContainerRef.current.clientHeight >=
+        chatContainerRef.current.scrollHeight - 100;
+
+      if (shouldScroll) {
+        scrollToBottom("smooth", 100);
+      }
     }
   }, [chatHistory]);
 
@@ -421,12 +513,18 @@ const Profile = () => {
   return (
     isAuthenticated && (
       <>
-        <div className="dashboard-container" id="dashboard-container">
+        <motion.div
+          className="dashboard-container"
+          id="dashboard-container"
+          variants={containerVariants}
+          initial="hidden"
+          animate={isLoaded ? "visible" : "hidden"}
+        >
           <LiveCursor
             containerId="dashboard-container"
             username={user?.name || user?.email}
           />
-          <div className="section div1">
+          <motion.div className="section div1" variants={itemVariants}>
             <ListFiles
               files={files}
               onSelect={handleSelectFile}
@@ -435,14 +533,21 @@ const Profile = () => {
               onFileSelect={handleFileSelect}
               activeFile={showPdfPreview ? selectedFile : null} // Only show active file when preview is open
             />
-          </div>
-          <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2">
+          </motion.div>
+          <motion.div
+            className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-black border-neutral-800 rounded-lg div2"
+            variants={itemVariants}
+          >
             <FileUpload
               onChange={handleFileUpload}
               onPdfUpload={handlePdfUpload}
             />
-          </div>
-          <div className="section div3" style={{ padding: 0 }}>
+          </motion.div>
+          <motion.div
+            className="section div3"
+            style={{ padding: 0 }}
+            variants={itemVariants}
+          >
             <div
               style={{
                 width: "100%",
@@ -480,22 +585,25 @@ const Profile = () => {
                 />
               )}
             </div>
-          </div>
-          <div className="section div4">
+          </motion.div>
+          <motion.div className="section div4" variants={itemVariants}>
             <PlaceholdersAndVanishInput
               placeholders={[
-                "What is Virutal Reality",
+                "What is Virtual Reality",
                 "Which are the types of CSS",
                 "Which are the layers of OSI model",
               ]}
               onChange={(e) => console.log(e.target.value)}
               onSubmit={handleInputSubmit} // Updated to use handleInputSubmit
             />
-          </div>
-          <div className="section div5 flex items-center justify-center p-3">
+          </motion.div>
+          <motion.div className="section div5" variants={itemVariants}>
+            <div className="user-profile">
+              <img src={user.picture} alt="User Profile" className="user-profile-picture" />
+            </div>
             <Toolbar userName={user.name} userImage={userImage} />
-          </div>
-          <div className="section div6">
+          </motion.div>
+          <motion.div className="section div6" variants={itemVariants}>
             <div
               className="h-full overflow-y-auto p-4 flex flex-col space-y-4"
               ref={chatContainerRef}
@@ -610,52 +718,9 @@ const Profile = () => {
                 </div>
               )}
             </div>
-          </div>
-          <div className="section div7">
+          </motion.div>
+          <motion.div className="section div7" variants={itemVariants}>
             <Dock>
-              <DockIcon
-                onClick={toggleMic}
-                title={micOn ? "Mic On" : "Mic Off"}
-              >
-                {micOn ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-mic"
-                  >
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
-                  </svg>
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-mic-off"
-                  >
-                    <line x1="2" x2="22" y1="2" y2="22" />
-                    <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
-                    <path d="M5 10v2a7 7 0 0 0 12 5" />
-                    <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
-                    <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
-                  </svg>
-                )}
-              </DockIcon>
               <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -723,8 +788,8 @@ const Profile = () => {
               </DockIcon>
               <MusicPlayer /> {/* Added MusicPlayer component */}
             </Dock>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         <QuizPanel
           quiz={currentQuiz}
           isOpen={isQuizOpen}

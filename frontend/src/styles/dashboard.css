@@ -102,6 +102,7 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none;
+  scroll-behavior: smooth;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -161,6 +162,26 @@
 .chat-message {
   display: flex;
   margin-bottom: 1rem;
+}
+
+.chat-message.ai {
+  animation: slideIn 0.3s ease-out forwards;
+  transition: opacity 0.3s ease-out;
+}
+
+.chat-message.ai[data-status="loading"] {
+  opacity: 0.7;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .chat-bubble {
