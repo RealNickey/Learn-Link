@@ -32,12 +32,16 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Configure multer for file uploads - Disk storage for shared files
 const fileStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "uploads"));
+    cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
     // Create a unique filename with original name and timestamp
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + "-" + uniqueSuffix + "-" + file.originalname);
+    const sanitizedOriginalName = file.originalname.replace(
+      /[^a-zA-Z0-9.-]/g,
+      "_"
+    );
+    cb(null, `file-${uniqueSuffix}-${sanitizedOriginalName}`);
   },
 });
 

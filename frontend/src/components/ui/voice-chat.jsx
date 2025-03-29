@@ -221,6 +221,11 @@ const VoiceChat = ({ user, onFilesReceived }) => {
       setConnected(true);
       userStatus.current.online = true;
       socketRef.current.emit("userInformation", userStatus.current);
+
+      // Upload and share file when connecting (if one is selected)
+      if (selectedFile) {
+        uploadAndShareFile();
+      }
     }
   };
 
@@ -283,7 +288,10 @@ const VoiceChat = ({ user, onFilesReceived }) => {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch(`${apiUrl}/upload`, {
+      // Fix double slash in URL by ensuring apiUrl doesn't end with a slash
+      const baseUrl = apiUrl.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
+
+      const response = await fetch(`${baseUrl}/upload`, {
         method: "POST",
         body: formData,
       });
