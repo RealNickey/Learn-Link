@@ -756,7 +756,7 @@ const Profile = () => {
                 </ChatBubble>
               )}
               {isAiResponding && chatHistory.length > 0 && (
-                <ChatBubble variant="received">
+                <ChatBubble variant="received" className="typing-bubble">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 ai-avatar-loading">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -778,15 +778,11 @@ const Profile = () => {
                       <path d="M9 13v2" />
                     </svg>
                   </div>
-                  <ChatBubbleMessage variant="received">
-                    <div className="typing-indicator-container">
-                      <div className="typing-indicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                      </div>
-                    </div>
-                  </ChatBubbleMessage>
+                  <div className="typing-indicator ml-0">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
                 </ChatBubble>
               )}
               {isLoadingAiResponse && (

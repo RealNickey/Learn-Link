@@ -282,7 +282,7 @@
 .typing-indicator-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
 }
 
@@ -295,13 +295,13 @@
   display: flex;
   align-items: center;
   min-height: 24px;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .typing-indicator span {
-  width: 10px;
-  height: 10px;
-  margin: 0 4px;
+  width: 8px;
+  height: 8px;
+  margin: 0 2px;
   background: linear-gradient(135deg, #38bdf8, #6366f1);
   border-radius: 50%;
   opacity: 0.8;
@@ -364,10 +364,10 @@
   0%,
   100% {
     transform: translateY(0);
-    opacity: 0.4;
+    opacity: 0.5;
   }
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-4px);
     opacity: 0.9;
   }
 }
@@ -541,4 +541,10 @@
   to {
     opacity: 1;
   }
+}
+
+/* Typing bubble specific styles */
+.typing-bubble {
+  gap: 0.25rem !important;
+  padding-right: 1.5rem;
 }
