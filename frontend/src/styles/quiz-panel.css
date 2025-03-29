@@ -28,6 +28,7 @@
 .quiz-content {
   padding: 24px;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scroll */
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -43,6 +44,7 @@
   background: rgba(0, 0, 0, 0.7);
   padding: 8px 0;
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 2;
 }
 
@@ -74,6 +76,7 @@
 
 .question-container {
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scroll */
   padding: 0 8px;
   flex-grow: 1;
   display: flex;
@@ -119,13 +122,21 @@
   padding: 16px;
   position: relative;
   transition: all 0.2s;
+  white-space: normal; /* Allow text to wrap */
+  word-wrap: break-word; /* Break words if needed */
+  overflow-wrap: break-word; /* Modern browsers */
+  min-height: 80px; /* Make options longer */
+  display: flex;
+  align-items: center;
+  overflow: hidden; /* Remove scrolling */
 }
 
 .option-button:hover:not([disabled]) {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.check-mark, .cross-mark {
+.check-mark,
+.cross-mark {
   position: absolute;
   right: 16px;
   top: 50%;
@@ -150,10 +161,15 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .quiz-result {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.2),
+    rgba(168, 85, 247, 0.2)
+  );
   padding: 16px;
   border-radius: 8px;
   text-align: center;
@@ -195,6 +211,10 @@
   .options-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .option-button {
+    min-height: 100px; /* Even longer on larger screens */
+  }
 }
 
 /* For mobile devices, use a different animation */
@@ -203,7 +223,7 @@
     width: 95%;
     max-height: 85vh;
   }
-  
+
   /* Keep it centered on mobile too */
   .quiz-panel.open {
     transform: translate(-50%, -50%);
