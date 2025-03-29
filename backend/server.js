@@ -184,16 +184,34 @@ app.post(
 );
 
 // Update AI content endpoint to handle both GET and POST
-app.use("/generate-ai-content", async (req, res) => {
-  let prompt;
+app.get("/generate-ai-content", async (req, res) => {
+  const prompt = req.query.prompt;
 
-  // Handle both GET and POST requests
-  if (req.method === "GET") {
-    prompt = req.query.prompt;
-  } else if (req.method === "POST") {
-    prompt = req.body.prompt;
+  if (!prompt) {
+    return res.status(400).json({
+      error: "Prompt is required",
+      content: "Please provide a question or prompt for me to respond to.",
+    });
   }
 
+  try {
+    console.log(`[AI Content] Generating response for prompt: "${prompt}"`);
+    const content = await generateAIContent(prompt);
+    console.log("[AI Content] Response generated successfully");
+    res.json({ content });
+  } catch (error) {
+    console.error("[AI Content] Error generating content:", error);
+    res.status(500).json({
+      error: "Failed to generate content",
+      details: error.message,
+      content:
+        "I encountered an error while processing your request. Please try again later.",
+    });
+  }
+});
+
+app.post("/generate-ai-content", async (req, res) => {
+  const prompt = req.body.prompt;
   if (!prompt) {
     return res.status(400).json({
       error: "Prompt is required",
