@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const multer = require("multer");
+const firebase = require("./firebaseConfig");
 const {
   generateAIContent,
   processPdfContent,
@@ -14,6 +15,9 @@ const setupVoiceChat = require("./voiceChat");
 const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 3000;
+
+// Initialize Firebase
+firebase.initializeFirebase();
 
 // Initialize voice chat
 const io = setupVoiceChat(server);
@@ -126,6 +130,44 @@ app.post("/generate-quiz", (req, res) => {
   });
 });
 
+// Add Firebase connection status endpoint with detailed information
+app.get("/firebase-status", (req, res) => {
+  res.json(firebase.getConnectionStatus());
+});
+
+// Add Firebase data operation endpoints
+app.post("/firebase/write", async (req, res) => {
+  const { path, data } = req.body;
+
+  if (!path || !data) {
+    return res.status(400).json({ error: "Path and data are required" });
+  }
+
+  const result = await firebase.writeData(path, data);
+
+  if (result.success) {
+    res.status(200).json({ success: true, message: "Data written successfully" });
+  } else {
+    res.status(500).json({ error: result.error || "Failed to write data" });
+  }
+});
+
+app.get("/firebase/read", async (req, res) => {
+  const { path } = req.query;
+
+  if (!path) {
+    return res.status(400).json({ error: "Path parameter is required" });
+  }
+
+  const result = await firebase.readData(path);
+
+  if (result.success) {
+    res.status(200).json({ data: result.data });
+  } else {
+    res.status(500).json({ error: result.error || "Failed to read data" });
+  }
+});
+
 // Routes
 app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
   try {
@@ -218,7 +260,16 @@ if (process.env.VERCEL) {
     console.log("- POST /generate-summary");
     console.log("- POST /compare-pdfs");
     console.log("- GET /generate-ai-content");
+    console.log("- GET /firebase-status");
+    console.log("- POST /firebase/write");
+    console.log("- GET /firebase/read");
     console.log("Voice chat enabled at /socket.io/");
+
+    if (firebase.isConnected()) {
+      console.log("Firebase Realtime Database: Connected ✅");
+    } else {
+      console.log("Firebase Realtime Database: Not connected ❌");
+    }
   });
 }
 

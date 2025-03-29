@@ -1,0 +1,12 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    
+
+    "connectionTest": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
