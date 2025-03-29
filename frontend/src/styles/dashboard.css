@@ -278,27 +278,12 @@
   }
 }
 
-.ai-avatar-loading::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: #3b82f6;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 /* Typing indicator animation */
 .typing-indicator-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  width: 100%;
 }
 
 .typing-label {
@@ -310,19 +295,52 @@
   display: flex;
   align-items: center;
   min-height: 24px;
+  justify-content: center;
 }
 
 .typing-indicator span {
-  width: 8px;
-  height: 8px;
-  margin: 0 2px;
-  background-color: #fff;
+  width: 10px;
+  height: 10px;
+  margin: 0 4px;
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
   border-radius: 50%;
-  opacity: 0.6;
+  opacity: 0.8;
   animation: typing-animation 1.4s infinite ease-in-out both;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+}
+
+.typing-indicator span::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.9),
+    transparent
+  );
+  animation: dot-shimmer 1.2s infinite;
+}
+
+@keyframes dot-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 .typing-indicator span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-indicator span:nth-child(1)::after {
   animation-delay: 0s;
 }
 
@@ -330,8 +348,16 @@
   animation-delay: 0.2s;
 }
 
+.typing-indicator span:nth-child(2)::after {
+  animation-delay: 0.4s;
+}
+
 .typing-indicator span:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+.typing-indicator span:nth-child(3)::after {
+  animation-delay: 0.8s;
 }
 
 @keyframes typing-animation {
@@ -342,7 +368,7 @@
   }
   50% {
     transform: translateY(-6px);
-    opacity: 0.8;
+    opacity: 0.9;
   }
 }
 
@@ -350,6 +376,23 @@
 .ai-avatar-loading {
   position: relative;
   overflow: hidden;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+}
+
+.ai-avatar-loading::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(99, 102, 241, 0.5),
+    transparent
+  );
+  opacity: 0.6;
+  animation: rotate 2s linear infinite;
 }
 
 .ai-avatar-loading::after {
@@ -357,15 +400,24 @@
   position: absolute;
   top: 0;
   left: -100%;
-  width: 100%;
+  width: 200%;
   height: 100%;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.6),
     transparent
   );
-  animation: loading-shimmer 1.5s infinite;
+  animation: loading-shimmer 1s infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes loading-shimmer {

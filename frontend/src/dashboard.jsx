@@ -780,7 +780,6 @@ const Profile = () => {
                   </div>
                   <ChatBubbleMessage variant="received">
                     <div className="typing-indicator-container">
-                      <span className="typing-label">AI is thinking</span>
                       <div className="typing-indicator">
                         <span></span>
                         <span></span>
