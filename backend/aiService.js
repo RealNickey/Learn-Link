@@ -363,10 +363,64 @@ async function generateFlashcards(pdfBuffer) {
   }
 }
 
+/**
+ * Generates AI response based on uploaded PDFs and user prompt
+ * @param {Array} pdfFiles - Array of PDF buffers
+ * @param {String} prompt - User query
+ * @returns {String} AI response based on PDFs content
+ */
+async function generatePdfChatResponse(pdfFiles, prompt) {
+  try {
+    console.log(
+      `[generatePdfChatResponse] Processing ${pdfFiles.length} PDF files with prompt: "${prompt}"`
+    );
+
+    // Prepare parts for the model
+    const parts = [];
+
+    // Add all PDF files as parts
+    for (let i = 0; i < pdfFiles.length; i++) {
+      const buffer = pdfFiles[i].buffer;
+      const filename = pdfFiles[i].filename || `Document ${i + 1}`;
+
+      console.log(
+        `[generatePdfChatResponse] Adding file ${i + 1}: ${filename}`
+      );
+
+      parts.push({
+        inlineData: {
+          data: buffer.toString("base64"),
+          mimeType: "application/pdf",
+        },
+      });
+    }
+
+    // Add the prompt as the final part
+    const enhancedPrompt = `
+      Based on the content of the PDF documents provided, please answer the following query:
+      
+      "${prompt}"
+      
+      Use specific information from the documents to provide a detailed and accurate response.
+      If the information to answer the query is not in the documents, state this clearly.
+    `;
+
+    parts.push(enhancedPrompt);
+
+    // Generate response
+    const result = await model.generateContent(parts);
+    return result.response.text();
+  } catch (error) {
+    console.error("[generatePdfChatResponse] Error:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   generateAIContent,
   processPdfContent,
   comparePdfs,
   generateQuiz,
   generateFlashcards,
+  generatePdfChatResponse,
 };

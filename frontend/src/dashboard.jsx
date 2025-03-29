@@ -25,7 +25,6 @@ import { cn } from "./lib/utils";
 import QuizPanel from "./components/ui/quiz-panel";
 import { FlashCard } from "./components/ui/flash-card";
 
-
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -206,25 +205,54 @@ const Profile = () => {
       { type: "user", content: inputValue, image: userImage },
     ]);
 
+    // Scroll to the bottom when user sends a message
+    scrollToBottom("smooth", 100);
+
     setIsAiResponding(true);
     setIsAiError(false);
 
     try {
-      const response = await fetch(
-        `${
+      // Create form data to send the selected PDFs along with the prompt
+      const formData = new FormData();
+      formData.append("prompt", inputValue);
+
+      // Check if there are selected PDFs and append them to the request
+      const hasSelectedPdfs = selectedFiles.length > 0;
+
+      let url, method, body;
+
+      if (hasSelectedPdfs) {
+        // PDF-based chat
+        url = `${import.meta.env.VITE_API_URL}/pdf-chat`;
+        method = "POST";
+        selectedFiles.forEach((file) => {
+          formData.append("pdfs", file);
+        });
+        body = formData;
+        console.log(
+          `Sending request to ${url} with ${selectedFiles.length} PDFs`
+        );
+      } else {
+        // Regular chat
+        url = `${
           import.meta.env.VITE_API_URL
-        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`,
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          // Using credentials: "same-origin" is safer for this type of request
-          // It only sends credentials if the request is to the same origin
-          credentials: "same-origin",
-        }
-      );
+        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`;
+        method = "GET";
+        body = null;
+        console.log(`Sending request to ${url}`);
+      }
+
+      const response = await fetch(url, {
+        method,
+        body,
+        headers: hasSelectedPdfs
+          ? undefined
+          : {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+        credentials: "same-origin",
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -239,6 +267,9 @@ const Profile = () => {
           status: "success",
         },
       ]);
+
+      // Scroll to the bottom when AI response is received
+      scrollToBottom("smooth", 100);
     } catch (error) {
       console.error("Error fetching AI content:", error);
       setIsAiError(true);
@@ -251,6 +282,9 @@ const Profile = () => {
           status: "error",
         },
       ]);
+
+      // Scroll to the bottom when error message is displayed
+      scrollToBottom("smooth", 100);
     } finally {
       setIsAiResponding(false);
     }
@@ -462,17 +496,10 @@ const Profile = () => {
 
   const chatContainerRef = useRef(null);
 
+  // Auto-scroll to bottom when chat history changes
   useEffect(() => {
-    if (chatContainerRef.current) {
-      const shouldScroll =
-        chatContainerRef.current.scrollTop +
-          chatContainerRef.current.clientHeight >=
-        chatContainerRef.current.scrollHeight - 100;
-
-      if (shouldScroll) {
-        scrollToBottom("smooth", 100);
-      }
-    }
+    // Use a slightly longer delay to ensure rendering is complete
+    scrollToBottom("smooth", 150);
   }, [chatHistory]);
 
   console.log("isLoading:", isLoading);
@@ -581,6 +608,7 @@ const Profile = () => {
                 <Tldraw
                   onMount={(editor) => {
                     editor.user.updateUserPreferences({ colorScheme: "dark" });
+                    editor.setCurrentTool("draw");
                   }}
                 />
               )}
@@ -594,12 +622,47 @@ const Profile = () => {
                 "Which are the layers of OSI model",
               ]}
               onChange={(e) => console.log(e.target.value)}
-              onSubmit={handleInputSubmit} // Updated to use handleInputSubmit
+              onSubmit={handleInputSubmit}
+              suffix={
+                selectedFiles.length > 0 ? (
+                  <div
+                    className="pdf-context-indicator flex items-center"
+                    title={`AI will respond based on ${
+                      selectedFiles.length
+                    } selected PDF${selectedFiles.length > 1 ? "s" : ""}`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-blue-400"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    {selectedFiles.length > 1 && (
+                      <span className="ml-1 text-xs text-blue-400">
+                        {selectedFiles.length}
+                      </span>
+                    )}
+                  </div>
+                ) : null
+              }
             />
           </motion.div>
           <motion.div className="section div5" variants={itemVariants}>
             <div className="user-profile">
-              <img src={user.picture} alt="User Profile" className="user-profile-picture" />
+              <img
+                src={user.picture}
+                alt="User Profile"
+                className="user-profile-picture"
+              />
             </div>
             <Toolbar userName={user.name} userImage={userImage} />
           </motion.div>
@@ -656,6 +719,11 @@ const Profile = () => {
                     chat.type === "user") && (
                     <ChatBubbleMessage
                       variant={chat.type === "user" ? "sent" : "received"}
+                      className={cn(
+                        chat.type === "ai" &&
+                          selectedFiles.length > 0 &&
+                          "pdf-response"
+                      )}
                     >
                       {chat.content}
                     </ChatBubbleMessage>
@@ -684,6 +752,36 @@ const Profile = () => {
                       <path d="M15 13v2" />
                       <path d="M9 13v2" />
                     </svg>
+                  </div>
+                </ChatBubble>
+              )}
+              {isAiResponding && chatHistory.length > 0 && (
+                <ChatBubble variant="received" className="typing-bubble">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 ai-avatar-loading">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-white"
+                    >
+                      <path d="M12 8V4H8" />
+                      <rect width="16" height="12" x="4" y="8" rx="2" />
+                      <path d="M2 14h2" />
+                      <path d="M20 14h2" />
+                      <path d="M15 13v2" />
+                      <path d="M9 13v2" />
+                    </svg>
+                  </div>
+                  <div className="typing-indicator ml-0">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                   </div>
                 </ChatBubble>
               )}
