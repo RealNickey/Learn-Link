@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import { Button } from "./button";
 import "./../../styles/voice-chat.css";
 
-const VoiceChat = ({ user }) => {
+const VoiceChat = ({ user, onFilesReceived }) => {
   const [connected, setConnected] = useState(false);
   const [micEnabled, setMicEnabled] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -12,12 +12,17 @@ const VoiceChat = ({ user }) => {
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
   const [customUsername, setCustomUsername] = useState("");
   const [editingName, setEditingName] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [sharedFiles, setSharedFiles] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const socketRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const downloadLinkRef = useRef(null);
 
   // Default username from Auth0 user or generate random one
   const defaultUsername =
@@ -73,6 +78,23 @@ const VoiceChat = ({ user }) => {
       if (!userStatus.current.mute) {
         const audio = new Audio(data);
         audio.play();
+      }
+    });
+
+    // Listen for shared files
+    socketRef.current.on("filesShared", (files) => {
+      console.log("Received shared files:", files);
+      setSharedFiles(files);
+
+      // Auto-download the latest shared file
+      if (files.length > 0) {
+        const latestFile = files[files.length - 1];
+        autoDownloadFile(latestFile);
+      }
+
+      // Update parent component with the files
+      if (typeof onFilesReceived === "function") {
+        onFilesReceived(files);
       }
     });
 
@@ -240,6 +262,71 @@ const VoiceChat = ({ user }) => {
     }
   };
 
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === "application/pdf") {
+      setSelectedFile(file);
+    } else if (file) {
+      alert("Only PDF files are supported");
+      e.target.value = null;
+    }
+  };
+
+  // Upload file when user connects to voice chat
+  const uploadAndShareFile = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await fetch(`${apiUrl}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      console.log("File uploaded:", data.file);
+
+      // Share the file with other users via socket
+      socketRef.current.emit("voice-chat-connect", data.file);
+
+      // Reset file selection
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = null;
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Failed to upload file. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Auto-download a file
+  const autoDownloadFile = (fileData) => {
+    if (!fileData || !fileData.url) return;
+
+    // Create a hidden link and trigger download
+    const link = document.createElement("a");
+    link.href = fileData.url;
+    link.download = fileData.originalName || "downloaded-file.pdf";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    console.log(`Auto-downloading file: ${fileData.originalName}`);
+  };
+
   // Count online users
   const onlineUsersCount = Object.values(users).filter(
     (user) => user.online
@@ -365,6 +452,22 @@ const VoiceChat = ({ user }) => {
             ) : (
               <p className="no-users">No participants yet</p>
             )}
+          </div>
+
+          <div className="file-sharing">
+            <h4>Share a file</h4>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              disabled={!connected}
+            />
+            <Button
+              onClick={uploadAndShareFile}
+              disabled={!selectedFile || isUploading}
+            >
+              {isUploading ? "Uploading..." : "Upload"}
+            </Button>
           </div>
 
           <div className="voice-chat-footer">

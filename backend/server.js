@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const multer = require("multer");
+const path = require("path"); // Add path module for file path handling
+const fs = require("fs"); // Add fs module for directory creation
 const {
   generateAIContent,
   processPdfContent,
@@ -17,7 +19,48 @@ const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 3000;
 
-// Initialize voice chat
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log("Created uploads directory:", uploadsDir);
+}
+
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Configure multer for file uploads - Disk storage for shared files
+const fileStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "uploads"));
+  },
+  filename: function (req, file, cb) {
+    // Create a unique filename with original name and timestamp
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + "-" + uniqueSuffix + "-" + file.originalname);
+  },
+});
+
+// Configure multer for PDF uploads
+const uploadPDF = multer({
+  storage: fileStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit per file
+  },
+  fileFilter: function (req, file, cb) {
+    // Accept only PDFs
+    if (file.mimetype !== "application/pdf") {
+      return cb(new Error("Only PDF files are allowed"), false);
+    }
+    cb(null, true);
+  },
+});
+
+// Configure multer for memory storage (for AI processing)
+const memStorage = multer.memoryStorage();
+const upload = multer({ storage: memStorage });
+
+// Initialize voice chat with file sharing capabilities
 const io = setupVoiceChat(server);
 
 // Allow requests from all relevant origins
@@ -59,16 +102,6 @@ app.use(
 
 // Parse JSON bodies
 app.use(express.json());
-
-// Configure multer for file uploads
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit per file
-    files: 3, // Maximum 3 files
-  },
-});
 
 // Add OPTIONS handling for preflight requests
 app.options("*", cors());
@@ -129,7 +162,7 @@ app.post("/generate-quiz", (req, res) => {
 });
 
 // Routes
-app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
+app.post("/upload-pdf", uploadPDF.single("pdf"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No PDF file uploaded" });
@@ -142,7 +175,7 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
   }
 });
 
-app.post("/generate-summary", upload.single("pdf"), async (req, res) => {
+app.post("/generate-summary", uploadPDF.single("pdf"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No PDF file provided" });
@@ -162,8 +195,14 @@ app.post("/generate-summary", upload.single("pdf"), async (req, res) => {
 app.post(
   "/compare-pdfs",
   upload.fields([
-    { name: "pdf1", maxCount: 1 },
-    { name: "pdf2", maxCount: 1 },
+    {
+      name: "pdf1",
+      maxCount: 1,
+    },
+    {
+      name: "pdf2",
+      maxCount: 1,
+    },
   ]),
   async (req, res) => {
     try {
@@ -304,6 +343,46 @@ app.post("/pdf-chat", upload.array("pdfs", 3), async (req, res) => {
       details: error.message,
       content:
         "I encountered an error while processing your request. Please try again later.",
+    });
+  }
+});
+
+// File sharing endpoint for voice chat
+app.post("/upload", uploadPDF.single("file"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Create file URL for client access
+    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${
+      req.file.filename
+    }`;
+    const fileDetails = {
+      url: fileUrl,
+      originalName: req.file.originalname,
+      filename: req.file.filename,
+      size: req.file.size,
+      mimeType: req.file.mimetype,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    console.log(
+      `[File Upload] File uploaded successfully: ${fileDetails.originalName}`
+    );
+
+    // Return file details to the client
+    res.json({
+      success: true,
+      message: "File uploaded successfully",
+      file: fileDetails,
+    });
+  } catch (error) {
+    console.error("[File Upload] Error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to upload file",
+      message: error.message,
     });
   }
 });

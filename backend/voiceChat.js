@@ -4,6 +4,8 @@ const socketIo = require("socket.io");
 function setupVoiceChat(server) {
   // Store connected users and their status
   const socketsStatus = {};
+  // Store shared files
+  const sharedFiles = [];
 
   // Initialize socket.io with CORS settings
   const io = socketIo(server, {
@@ -25,6 +27,7 @@ function setupVoiceChat(server) {
   // Print server information on startup
   console.log("[Voice Chat] Server initialized");
   console.log("[Voice Chat] Users can connect via websockets");
+  console.log("[Voice Chat] File sharing enabled");
 
   // Handle socket connections
   io.on("connection", function (socket) {
@@ -37,6 +40,26 @@ function setupVoiceChat(server) {
     };
 
     console.log(`[Voice Chat] New connection: ${socketId}`);
+
+    // Handle file sharing when a user connects to voice chat
+    socket.on("voice-chat-connect", function (fileData) {
+      if (fileData && fileData.url) {
+        // Add file to shared files array
+        sharedFiles.push({
+          ...fileData,
+          sharedBy: socketId,
+          sharedByUsername: socketsStatus[socketId]?.username || "Unknown User",
+          sharedAt: new Date().toISOString(),
+        });
+
+        console.log(
+          `[Voice Chat] File shared by ${socketsStatus[socketId]?.username}: ${fileData.originalName}`
+        );
+
+        // Broadcast the file to all connected clients
+        io.sockets.emit("filesShared", sharedFiles);
+      }
+    });
 
     // Handle voice data transmission
     socket.on("voice", function (data) {

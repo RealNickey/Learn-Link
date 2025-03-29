@@ -68,6 +68,7 @@ const Profile = () => {
   const [isAiError, setIsAiError] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
+  const [sharedFiles, setSharedFiles] = useState([]);
   const [isFlashCardOpen, setIsFlashCardOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -559,6 +560,7 @@ const Profile = () => {
               selectedFiles={selectedFiles}
               onFileSelect={handleFileSelect}
               activeFile={showPdfPreview ? selectedFile : null} // Only show active file when preview is open
+              sharedFiles={sharedFiles} // Pass shared files
             />
           </motion.div>
           <motion.div
@@ -898,7 +900,8 @@ const Profile = () => {
           onClose={() => setIsFlashCardOpen(false)}
           pdfData={selectedFiles.length > 0 ? selectedFiles[0] : null}
         />
-        <VoiceChat user={user} /> {/* Add this component */}
+        <VoiceChat user={user} onFilesReceived={setSharedFiles} />{" "}
+        {/* Updated to handle file sharing */}
         <Toaster />
       </>
     )
