@@ -581,6 +581,7 @@ const Profile = () => {
                 <Tldraw
                   onMount={(editor) => {
                     editor.user.updateUserPreferences({ colorScheme: "dark" });
+                    editor.setCurrentTool('draw')
                   }}
                 />
               )}
