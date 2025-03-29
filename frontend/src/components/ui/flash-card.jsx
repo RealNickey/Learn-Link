@@ -3,26 +3,7 @@ import { Button } from "./button";
 import { X } from "lucide-react";
 
 export function FlashCard({ isOpen, onClose, pdfData }) {
-  const [cards, setCards] = useState([
-    {
-      frontText: "What is a Flash Card?",
-      backText:
-        "A learning tool for memorization using cards with questions on one side and answers on the other.",
-      isFlipped: false,
-    },
-    {
-      frontText: "How to use Flash Cards?",
-      backText:
-        "Click the button below to flip the card and reveal the answer!",
-      isFlipped: false,
-    },
-    {
-      frontText: "Upload a PDF to begin",
-      backText:
-        "Select a PDF file to generate custom flash cards based on the content.",
-      isFlipped: false,
-    },
-  ]);
+  const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -113,63 +94,106 @@ export function FlashCard({ isOpen, onClose, pdfData }) {
           white-space: pre-wrap;
           overflow-y: auto;
         }
+        .flashcard-loading-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100px;
+        }
+        .flashcard-loading {
+          position: relative;
+          width: 80px;
+          height: 80px;
+          animation: spin 1.5s linear infinite;
+        }
+        .flashcard-loading-inner {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background: #333;
+          border-radius: 8px;
+        }
+        .flashcard-loading-inner.front {
+          transform: rotateY(0deg);
+        }
+        .flashcard-loading-inner.back {
+          transform: rotateY(180deg);
+        }
+        @keyframes spin {
+          0% {
+            transform: rotateY(0deg);
+          }
+          100% {
+            transform: rotateY(360deg);
+          }
+        }
       `}</style>
 
-      <div className="bg-background p-8 rounded-lg shadow-xl relative max-w-[90vw] overflow-x-auto">
+      <div className="bg-background rounded-lg shadow-xl relative w-full max-w-[90vw] min-h-[600px] overflow-hidden">
         <Button
           variant="ghost"
-          className="absolute right-2 top-2 hover:bg-muted"
+          className="absolute right-2 top-2 hover:bg-muted z-10"
           onClick={onClose}
         >
           <X className="h-4 w-4" />
         </Button>
 
-        <h2 className="text-xl font-bold mb-6 text-center">Flashcards</h2>
+        <h2 className="text-xl font-bold mb-6 text-center pt-8">Flashcards</h2>
 
         {loading ? (
-          <div className="flex justify-center items-center min-h-[500px]">
-            <span>Loading questions...</span>
+          <div className="flex flex-col items-center justify-center h-[500px]">
+            <div className="flashcard-loading-container">
+              <div className="flashcard-loading">
+                <div className="flashcard-loading-inner front"></div>
+                <div className="flashcard-loading-inner back"></div>
+              </div>
+            </div>
+            <p className="text-neutral-400 animate-pulse mt-4">
+              Creating your flashcards...
+            </p>
           </div>
         ) : (
-          <div className="flex gap-6 items-start min-h-[500px] p-4 justify-center">
-            {cards.map((card, index) => (
-              <div key={index} className="flex-shrink-0 w-[400px] relative">
-                <div className="perspective">
-                  <div
-                    className={`flashcard-inner relative ${
-                      card.isFlipped ? "flipped" : ""
-                    }`}
-                  >
-                    <div className="flashcard-front absolute w-full">
-                      <textarea
-                        className="w-full h-[400px] p-6 rounded-lg bg-neutral-900 resize-none border border-neutral-800
-                                  text-center flex items-center justify-center text-lg focus:ring-2 focus:ring-primary/50
-                                  flashcard-text"
-                        value={card.frontText}
-                        readOnly
-                      />
-                    </div>
-                    <div className="flashcard-back absolute w-full">
-                      <textarea
-                        className="w-full h-[400px] p-6 rounded-lg bg-neutral-900 resize-none border border-neutral-800
-                                  text-center flex items-center justify-center text-lg focus:ring-2 focus:ring-primary/50
-                                  flashcard-text"
-                        value={card.backText}
-                        readOnly
-                      />
+          <div className="overflow-x-auto">
+            <div className="flex gap-6 items-start min-h-[500px] p-4 justify-center min-w-max">
+              {cards.map((card, index) => (
+                <div key={index} className="flex-shrink-0 w-[400px] relative">
+                  <div className="perspective">
+                    <div
+                      className={`flashcard-inner relative ${
+                        card.isFlipped ? "flipped" : ""
+                      }`}
+                    >
+                      <div className="flashcard-front absolute w-full">
+                        <textarea
+                          className="w-full h-[400px] p-6 rounded-lg bg-neutral-900 resize-none border border-neutral-800
+                                    text-center flex items-center justify-center text-lg focus:ring-2 focus:ring-primary/50
+                                    flashcard-text"
+                          value={card.frontText}
+                          readOnly
+                        />
+                      </div>
+                      <div className="flashcard-back absolute w-full">
+                        <textarea
+                          className="w-full h-[400px] p-6 rounded-lg bg-neutral-900 resize-none border border-neutral-800
+                                    text-center flex items-center justify-center text-lg focus:ring-2 focus:ring-primary/50
+                                    flashcard-text"
+                          value={card.backText}
+                          readOnly
+                        />
+                      </div>
                     </div>
                   </div>
+                  <div className="mt-6 flex justify-center">
+                    <Button
+                      onClick={() => handleFlip(index)}
+                      className="px-6 py-2 text-sm font-medium"
+                    >
+                      {card.isFlipped ? "Show Question" : "Show Answer"}
+                    </Button>
+                  </div>
                 </div>
-                <div className="mt-6 flex justify-center">
-                  <Button
-                    onClick={() => handleFlip(index)}
-                    className="px-6 py-2 text-sm font-medium"
-                  >
-                    {card.isFlipped ? "Show Question" : "Show Answer"}
-                  </Button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>
