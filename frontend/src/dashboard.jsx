@@ -23,6 +23,8 @@ import {
 } from "./components/ui/chat-bubble";
 import { cn } from "./lib/utils";
 import QuizPanel from "./components/ui/quiz-panel";
+import { FlashCard } from "./components/ui/flash-card";
+
 
 // Animation variants
 const containerVariants = {
@@ -67,9 +69,18 @@ const Profile = () => {
   const [isAiError, setIsAiError] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
+  const [isFlashCardOpen, setIsFlashCardOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const userImage = user.picture; // Store user image in a variable
+
+  useEffect(() => {
+    // Short delay to match the page transition
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Short delay to match the page transition
@@ -477,6 +488,28 @@ const Profile = () => {
     return <div>Error: {error.message}</div>;
   }
 
+  const handleOpenFlashCards = () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select a PDF file using the checkboxes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedFiles.length > 1) {
+      toast({
+        title: "Too many files selected",
+        description: "Please select only one PDF file for flashcards",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFlashCardOpen(true);
+  };
+
   return (
     isAuthenticated && (
       <>
@@ -516,7 +549,12 @@ const Profile = () => {
             variants={itemVariants}
           >
             <div
-              style={{ width: "100%", height: "100%", position: "relative" }}
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "relative",
+                zIndex: 1,
+              }}
             >
               {showPdfPreview && selectedFile ? (
                 <div
@@ -701,7 +739,7 @@ const Profile = () => {
                   <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
                 </svg>
               </DockIcon>
-              <DockIcon title="Flash Cards">
+              <DockIcon title="Flash Cards" onClick={handleOpenFlashCards}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -756,6 +794,11 @@ const Profile = () => {
           quiz={currentQuiz}
           isOpen={isQuizOpen}
           onClose={() => setIsQuizOpen(false)}
+        />
+        <FlashCard
+          isOpen={isFlashCardOpen}
+          onClose={() => setIsFlashCardOpen(false)}
+          pdfData={selectedFiles.length > 0 ? selectedFiles[0] : null}
         />
         <VoiceChat user={user} /> {/* Add this component */}
         <Toaster />
