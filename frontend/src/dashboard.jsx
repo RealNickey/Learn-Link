@@ -25,7 +25,6 @@ import { cn } from "./lib/utils";
 import QuizPanel from "./components/ui/quiz-panel";
 import { FlashCard } from "./components/ui/flash-card";
 
-
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -210,21 +209,47 @@ const Profile = () => {
     setIsAiError(false);
 
     try {
-      const response = await fetch(
-        `${
+      // Create form data to send the selected PDFs along with the prompt
+      const formData = new FormData();
+      formData.append("prompt", inputValue);
+
+      // Check if there are selected PDFs and append them to the request
+      const hasSelectedPdfs = selectedFiles.length > 0;
+
+      let url, method, body;
+
+      if (hasSelectedPdfs) {
+        // PDF-based chat
+        url = `${import.meta.env.VITE_API_URL}/pdf-chat`;
+        method = "POST";
+        selectedFiles.forEach((file) => {
+          formData.append("pdfs", file);
+        });
+        body = formData;
+        console.log(
+          `Sending request to ${url} with ${selectedFiles.length} PDFs`
+        );
+      } else {
+        // Regular chat
+        url = `${
           import.meta.env.VITE_API_URL
-        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`,
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          // Using credentials: "same-origin" is safer for this type of request
-          // It only sends credentials if the request is to the same origin
-          credentials: "same-origin",
-        }
-      );
+        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`;
+        method = "GET";
+        body = null;
+        console.log(`Sending request to ${url}`);
+      }
+
+      const response = await fetch(url, {
+        method,
+        body,
+        headers: hasSelectedPdfs
+          ? undefined
+          : {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+        credentials: "same-origin",
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -581,7 +606,7 @@ const Profile = () => {
                 <Tldraw
                   onMount={(editor) => {
                     editor.user.updateUserPreferences({ colorScheme: "dark" });
-                    editor.setCurrentTool('draw')
+                    editor.setCurrentTool("draw");
                   }}
                 />
               )}
@@ -597,10 +622,42 @@ const Profile = () => {
               onChange={(e) => console.log(e.target.value)}
               onSubmit={handleInputSubmit} // Updated to use handleInputSubmit
             />
+            {selectedFiles.length > 0 && (
+              <div className="pdf-context-indicator">
+                <div className="flex items-center gap-2 mt-2 text-sm text-neutral-300 bg-neutral-800 p-2 rounded-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-blue-400"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <path d="M16 13H8"></path>
+                    <path d="M16 17H8"></path>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  <span>
+                    AI will respond based on {selectedFiles.length} selected PDF
+                    {selectedFiles.length > 1 ? "s" : ""}
+                  </span>
+                </div>
+              </div>
+            )}
           </motion.div>
           <motion.div className="section div5" variants={itemVariants}>
             <div className="user-profile">
-              <img src={user.picture} alt="User Profile" className="user-profile-picture" />
+              <img
+                src={user.picture}
+                alt="User Profile"
+                className="user-profile-picture"
+              />
             </div>
             <Toolbar userName={user.name} userImage={userImage} />
           </motion.div>
