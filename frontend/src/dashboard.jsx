@@ -70,6 +70,7 @@ const Profile = () => {
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [isFlashCardOpen, setIsFlashCardOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showVoiceChat, setShowVoiceChat] = useState(false); // Added state for voice chat visibility
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -196,6 +197,10 @@ const Profile = () => {
 
   const toggleMic = () => {
     setMicOn(!micOn);
+  };
+
+  const handleMicSettings = () => {
+    setShowVoiceChat(!showVoiceChat);
   };
 
   const handleInputSubmit = async (inputValue) => {
@@ -819,6 +824,17 @@ const Profile = () => {
           </motion.div>
           <motion.div className="section div7" variants={itemVariants}>
             <Dock>
+              <DockIcon 
+                title="Mic Settings" 
+                className="font-bold scale-110 hover:scale-125 transition-transform"
+                onClick={handleMicSettings}
+              >
+                <img 
+                  src="/src/components/ui/micsettings.svg" 
+                  alt="Mic Settings"
+                  className="w-7 h-7 invert" // Increased size from w-6 h-6 to w-7 h-7
+                />
+              </DockIcon>
               <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -898,7 +914,7 @@ const Profile = () => {
           onClose={() => setIsFlashCardOpen(false)}
           pdfData={selectedFiles.length > 0 ? selectedFiles[0] : null}
         />
-        <VoiceChat user={user} /> {/* Add this component */}
+        {showVoiceChat && <VoiceChat user={user} />} {/* Add this component */}
         <Toaster />
       </>
     )

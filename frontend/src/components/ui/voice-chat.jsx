@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { Button } from "./button";
 import "./../../styles/voice-chat.css";
-
 const VoiceChat = ({ user }) => {
   const [connected, setConnected] = useState(false);
   const [micEnabled, setMicEnabled] = useState(false);
@@ -287,7 +286,8 @@ const VoiceChat = ({ user }) => {
                 <span className="display-name">
                   {userStatus.current.username} {connected && "(You)"}
                 </span>
-                <span className="edit-icon">✏️</span>
+                <span className="edit-icon">ㅤ</span> {/* ✏️ */}
+
               </div>
             )}
             <div className="connection-status">
