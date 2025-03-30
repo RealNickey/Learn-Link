@@ -28,22 +28,16 @@ export function useMultiplayerState(roomId, userId) {
   const [presence, setPresence] = useState({});
 
   useEffect(() => {
-    // Skip setup if userId is not available yet
     if (!userId) return;
     
     try {
-      // Initialize Yjs document and tldraw store
       const doc = new Y.Doc();
-      
-      // Create a Y.Map to store our data
       const ymap = doc.getMap('tldraw');
       
-      // Create a tldraw store
       const tldrawStore = createTLStore({
         shapeUtils: defaultShapeUtils,
       });
 
-      // Setup WebSocket connection to our synchronization server
       const wsUrl = import.meta.env.VITE_WS_SERVER_URL || 'ws://localhost:1234';
       const roomName = `learn-link-canvas-${roomId}`;
       
@@ -51,123 +45,145 @@ export function useMultiplayerState(roomId, userId) {
       
       let wsProvider;
       try {
-        wsProvider = new WebsocketProvider(wsUrl, roomName, doc);
+        wsProvider = new WebsocketProvider(wsUrl, roomName, doc, {
+          connect: true,
+          maxBackoffTime: 2000,
+        });
+        
+        // Get awareness from provider
+        const awarenessInstance = wsProvider.awareness;
+        setAwareness(awarenessInstance);
+        
+        // Set up connection status handling
+        wsProvider.on('status', ({ status }) => {
+          console.log('WebSocket status:', status);
+          setConnectionStatus(status === 'connected' ? 'connected' : 'connecting');
+        });
+        
+        wsProvider.on('connection-error', (error) => {
+          console.error('WebSocket connection error:', error);
+          setConnectionStatus('failed');
+        });
+        
+        wsProvider.on('connection-close', () => {
+          console.log('WebSocket connection closed');
+          setConnectionStatus('connecting');
+        });
+        
       } catch (err) {
         console.error('Failed to create WebSocketProvider:', err);
         setConnectionStatus('failed');
         wsProvider = null;
       }
 
-      // Only setup awareness if we have a valid provider
-      let awareness = null;
-      if (wsProvider) {
-        // Handle connection status
-        wsProvider.on('status', (event) => {
-          console.log('WebSocket status:', event.status);
-          setConnectionStatus(event.status === 'connected' ? 'connected' : 'connecting');
-        });
+      // Improve sync frequency for continuous updates
+      const syncStoreChanges = (update) => {
+        const { source } = update;
+        if (source === 'user') {
+          try {
+            const changes = update.changes;
+            if (!changes) return;
 
-        // Setup awareness (presence) for the document
-        awareness = wsProvider.awareness;
-        setAwareness(awareness);
-      }
-
-      // Listen for changes in the tldraw store and sync to Yjs
-      // Fix for the changes.records structure
-      tldrawStore.listen(
-        throttle((update) => {
-          // Only sync changes that resulted from user actions
-          const { source } = update;
-          if (source === 'user') {
-            // Safe way to extract changed records
-            if (update.changes) {
-              // Handle different types of changes structure in different versions
-              const addedRecords = [];
-              const updatedRecords = [];
-              const removedIds = [];
-              
-              // Check if we have the old structure (records)
-              if (update.changes.records) {
-                const { added, updated, removed } = update.changes.records;
-                
-                if (added) Object.values(added).forEach(record => addedRecords.push(record));
-                if (updated) Object.values(updated).forEach(record => updatedRecords.push(record));
-                if (removed) Object.values(removed).forEach(record => removedIds.push(record.id));
-              } 
-              // Check if we have the new structure (added, updated, removed)
-              else if (update.changes.added) {
-                // Handle added - could be array or object
-                if (Array.isArray(update.changes.added)) {
-                  update.changes.added.forEach(record => addedRecords.push(record));
-                } else if (typeof update.changes.added === 'object') {
-                  Object.values(update.changes.added).forEach(record => addedRecords.push(record));
+            // Handle added/updated records
+            const recordsToSync = [];
+            
+            if (changes.added) {
+              Object.values(changes.added).forEach(record => {
+                // Handle binary data (like images) specially
+                if (record.type === 'image') {
+                  // Ensure asset data is properly encoded
+                  if (record.props?.src) {
+                    ymap.set(`asset:${record.id}`, record);
+                  }
                 }
-                
-                // Handle updated - could be array or object
-                if (Array.isArray(update.changes.updated)) {
-                  update.changes.updated.forEach(record => updatedRecords.push(record));
-                } else if (update.changes.updated && typeof update.changes.updated === 'object') {
-                  Object.values(update.changes.updated).forEach(record => updatedRecords.push(record));
-                }
-                
-                // Handle removed - could be array of ids or object with id property
-                if (Array.isArray(update.changes.removed)) {
-                  update.changes.removed.forEach(id => removedIds.push(id));
-                } else if (update.changes.removed && typeof update.changes.removed === 'object') {
-                  Object.values(update.changes.removed).forEach(record => {
-                    // Handle both cases: when record is the ID itself or when it has an id property
-                    removedIds.push(typeof record === 'object' ? record.id : record);
-                  });
-                }
-              }
-              
-              // Process removed records
-              removedIds.forEach(id => {
-                if (id) ymap.delete(id);
-              });
-              
-              // Process added and updated records
-              [...addedRecords, ...updatedRecords].forEach(record => {
-                if (record && record.id) ymap.set(record.id, record);
+                recordsToSync.push(record);
               });
             }
-          }
-        }, 50)
-      );
 
-      // Observer Yjs changes and update tldraw store
+            if (changes.updated) {
+              Object.values(changes.updated).forEach(record => {
+                recordsToSync.push(record);
+              });
+            }
+
+            // Batch sync records
+            if (recordsToSync.length > 0) {
+              recordsToSync.forEach(record => {
+                if (record && record.id) {
+                  ymap.set(record.id, record);
+                }
+              });
+            }
+
+            // Handle deleted records
+            if (changes.removed) {
+              Object.values(changes.removed).forEach(record => {
+                if (record?.id) {
+                  ymap.delete(record.id);
+                  // Also clean up any associated assets
+                  ymap.delete(`asset:${record.id}`);
+                }
+              });
+            }
+          } catch (err) {
+            console.error('Error syncing changes:', err);
+          }
+        }
+      };
+
+      // Use requestAnimationFrame for smoother updates
+      let rafId;
+      const throttledSync = (update) => {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          syncStoreChanges(update);
+        });
+      };
+
+      // Listen to store changes with improved handling
+      const unsubscribeStore = tldrawStore.listen(throttledSync);
+
+      // Improve Yjs observer for better real-time sync
       ymap.observe(event => {
-        // Create arrays to track what to add and remove from the store
         const toRemove = [];
         const toPut = [];
 
-        // Handle each key that changed
         event.keysChanged.forEach(key => {
           const value = ymap.get(key);
+          
           if (value === undefined) {
-            // This key was deleted
             toRemove.push(key);
           } else {
-            // This key was added or updated
-            toPut.push(value);
+            // Handle special cases like assets
+            if (key.startsWith('asset:')) {
+              // Ensure asset data is properly handled
+              if (value.type === 'image') {
+                toPut.push(value);
+              }
+            } else {
+              toPut.push(value);
+            }
           }
         });
 
-        // Apply changes to the tldraw store
-        if (toRemove.length) {
-          tldrawStore.remove(toRemove);
-        }
-        
-        if (toPut.length) {
-          tldrawStore.put(toPut);
-        }
+        // Batch updates to the store
+        requestAnimationFrame(() => {
+          if (toRemove.length) tldrawStore.remove(toRemove);
+          if (toPut.length) tldrawStore.put(toPut);
+        });
       });
 
-      // Load initial state
-      // Get all existing values from the Y.Map and put them in the tldraw store
+      // Initial state loading with asset handling
       for (const [key, value] of ymap.entries()) {
         if (value) {
-          tldrawStore.put([value]);
+          if (key.startsWith('asset:')) {
+            // Handle assets specially
+            if (value.type === 'image') {
+              tldrawStore.put([value]);
+            }
+          } else {
+            tldrawStore.put([value]);
+          }
         }
       }
 
@@ -189,47 +205,36 @@ export function useMultiplayerState(roomId, userId) {
       });
 
       // Subscribe to presence changes
-      // Fix the presenceDerivation.get is not a function error
       const unsubscribePresence = tldrawStore.listen(({ source }) => {
         if (source !== 'user') return;
         
         try {
-          // Handle different versions of the presence API
           let currentPresence;
           
-          // Try to use the .get() method first (newer versions)
           if (typeof presenceDerivation.get === 'function') {
             currentPresence = presenceDerivation.get();
-          } 
-          // Fall back to accessing .value property (older versions)
-          else if (presenceDerivation.value !== undefined) {
+          } else if (presenceDerivation.value !== undefined) {
             currentPresence = presenceDerivation.value;
-          }
-          // Direct access as a last resort
-          else {
+          } else {
             currentPresence = presenceDerivation;
           }
           
-          if (currentPresence) {
+          if (currentPresence && wsProvider && wsProvider.awareness) {
             setPresence(currentPresence);
-            
-            // Only update awareness if it exists
-            if (awareness) {
-              awareness.setLocalStateField('presence', currentPresence);
-            }
+            wsProvider.awareness.setLocalState({ presence: currentPresence });
           }
         } catch (err) {
           console.error('Error handling presence:', err);
         }
       });
 
-      // Update our store state
       setStore(tldrawStore);
       setYDoc(doc);
       setProvider(wsProvider);
 
-      // Cleanup
       return () => {
+        cancelAnimationFrame(rafId);
+        unsubscribeStore();
         unsubscribePresence();
         if (wsProvider) {
           wsProvider.disconnect();
@@ -239,7 +244,7 @@ export function useMultiplayerState(roomId, userId) {
     } catch (error) {
       console.error('Error setting up multiplayer state:', error);
       setConnectionStatus('failed');
-      return () => {}; // Return empty cleanup function
+      return () => {};
     }
   }, [roomId, userId]);
 

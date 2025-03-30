@@ -36,7 +36,7 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
 
         // Subscribe to cursor updates
         space.cursors.subscribe('update', (cursorUpdate) => {
-          console.log('Cursor update received:', cursorUpdate);
+          // console.log('Cursor update received:', cursorUpdate);
           setCursors(prev => ({
             ...prev,
             [cursorUpdate.connectionId]: cursorUpdate
