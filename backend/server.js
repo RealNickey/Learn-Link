@@ -19,6 +19,10 @@ const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 3000;
 
+// Define base URL for file access - use environment variable or fallback
+const BASE_URL = process.env.BASE_URL || `http://localhost:${port}`;
+console.log(`Using base URL for file sharing: ${BASE_URL}`);
+
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
@@ -360,10 +364,8 @@ app.post("/upload", uploadPDF.single("file"), (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // Create file URL for client access
-    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${
-      req.file.filename
-    }`;
+    // Create file URL for client access using the BASE_URL instead of request info
+    const fileUrl = `${BASE_URL}/uploads/${req.file.filename}`;
     const fileDetails = {
       url: fileUrl,
       originalName: req.file.originalname,
