@@ -73,6 +73,7 @@ const allowedOrigins = [
   "https://learn-link-frontend.vercel.app",
   "https://learn-link.vercel.app",
   "https://learn-link-git-main-realnickeys.vercel.app",
+  "https://ppsrz1l3-3000.inc1.devtunnels.ms", // Add your port forwarded URL
 ];
 
 // Configure CORS
@@ -84,7 +85,8 @@ app.use(
 
       if (
         allowedOrigins.indexOf(origin) !== -1 ||
-        origin.includes("localhost")
+        origin.includes("localhost") ||
+        origin.includes("devtunnels.ms") // Allow all devtunnels URLs
       ) {
         callback(null, origin);
       } else {

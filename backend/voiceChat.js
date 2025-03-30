@@ -13,6 +13,8 @@ function setupVoiceChat(server) {
       origin: [
         "http://localhost:5173", // Local development URL
         "https://learn-link.vercel.app", // Production frontend URL
+        "https://learn-link-frontend.vercel.app",
+        "https://ppsrz1l3-3000.inc1.devtunnels.ms", // Add your port forwarded URL
         process.env.FRONTEND_URL, // Additional URL from environment variable (if set)
       ].filter(Boolean), // Remove any undefined/null values
       methods: ["GET", "POST", "OPTIONS"],
