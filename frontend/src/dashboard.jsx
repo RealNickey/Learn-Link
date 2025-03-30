@@ -12,6 +12,7 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+import { useMultiplayerState } from "./hooks/use-multiplayer-state"; // Import our custom hook
 
 import Toolbar from "./components/ui/toolbar";
 import VoiceChat from "./components/ui/voice-chat"; // Add this import
@@ -70,6 +71,24 @@ const Profile = () => {
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [isFlashCardOpen, setIsFlashCardOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Get multiplayer state for tldraw
+  const { store, presence, awareness, connectionStatus, userId } = useMultiplayerState(
+    'canvas', // Room ID - could be dynamic based on session/course
+    user?.sub || 'anonymous' // Use Auth0 user ID if available
+  );
+
+  // Add connection status indicator
+  useEffect(() => {
+    if (connectionStatus === 'failed') {
+      toast({
+        title: "Connection Issue",
+        description: "Could not connect to the collaborative drawing server.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  }, [connectionStatus, toast]);
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -605,12 +624,29 @@ const Profile = () => {
                   />
                 </div>
               ) : (
-                <Tldraw
-                  onMount={(editor) => {
-                    editor.user.updateUserPreferences({ colorScheme: "dark" });
-                    editor.setCurrentTool("draw");
-                  }}
-                />
+                <div className="relative w-full h-full">
+                  {connectionStatus && (
+                    <div className={`absolute top-2 right-2 px-2 py-1 rounded-md text-xs z-10 
+                      ${connectionStatus === 'connected' ? 'bg-green-600/70' : 
+                        connectionStatus === 'connecting' ? 'bg-yellow-600/70' : 'bg-red-600/70'}`}>
+                      {connectionStatus === 'connected' ? 'Connected' : 
+                       connectionStatus === 'connecting' ? 'Connecting...' : 'Connection Failed'}
+                      {connectionStatus === 'connected' && awareness && 
+                        <span className="ml-1 text-xs">({awareness.getStates().size || 1} user{(awareness.getStates().size || 1) > 1 ? 's' : ''})</span>
+                      }
+                    </div>
+                  )}
+                  {store && (
+                    <Tldraw
+                      store={store}
+                      userId={userId}
+                      onMount={(editor) => {
+                        editor.user.updateUserPreferences({ colorScheme: "dark" });
+                        editor.setCurrentTool("draw");
+                      }}
+                    />
+                  )}
+                </div>
               )}
             </div>
           </motion.div>

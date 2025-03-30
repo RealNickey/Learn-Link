@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const multer = require("multer");
+const WebSocket = require("ws");
+const { setupWSConnection } = require("y-websocket/bin/utils");
 const {
   generateAIContent,
   processPdfContent,
@@ -308,6 +310,20 @@ app.post("/pdf-chat", upload.array("pdfs", 3), async (req, res) => {
   }
 });
 
+// Setup WebSocket server
+const wss = new WebSocket.Server({ server });
+
+// Handle WebSocket connections
+wss.on("connection", (ws, req) => {
+  setupWSConnection(ws, req, { gc: true });
+
+  console.log("New WebSocket connection");
+
+  ws.on("close", () => {
+    console.log("WebSocket connection closed");
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Global error handler:", err.stack);
@@ -322,6 +338,7 @@ if (process.env.VERCEL) {
   // For local development and other environments, start the HTTP server
   server.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+    console.log(`WebSocket server is available at ws://localhost:${port}`);
 
     console.log("Available routes:");
     console.log("- POST /generate-quiz");
