@@ -81,7 +81,17 @@
   grid-column: span 2 / span 2;
   grid-column-start: 8;
   grid-row-start: 1;
-  padding: 0.75rem !important;
+  padding: 0.5rem !important;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.div5 > div {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .div6 {
@@ -554,4 +564,29 @@
 button.logout-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+button.logout-button {
+  white-space: nowrap;
+  z-index: 5; /* Ensure button is always clickable */
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  /* Ensure the grid layout maintains structure on smaller screens */
+  .dashboard-container {
+    gap: 4px;
+  }
+  
+  /* Toolbar needs special attention for very small screens */
+  .div5 {
+    min-height: 80px; /* Allow extra space for stacked layout */
+  }
+}
+
+/* Fix for extremely small screens */
+@media (max-width: 400px) {
+  .div5 {
+    min-height: 90px;
+  }
 }

@@ -660,11 +660,20 @@ const Profile = () => {
               }
             />
           </motion.div>
-          <motion.div className="section div5" variants={itemVariants}>
-            <Toolbar 
-              userName={user.name || user.email} 
-              userImage={userImage} 
-              onLogout={handleLogout} 
+          <motion.div
+            className="section div5"
+            variants={itemVariants}
+            style={{
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Toolbar
+              userName={user.name || user.email}
+              userImage={userImage}
+              onLogout={handleLogout}
             />
           </motion.div>
           <motion.div className="section div6" variants={itemVariants}>
