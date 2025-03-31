@@ -16,8 +16,6 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [processedFiles, setProcessedFiles] = useState([]);
 
-  const apiUrl = import.meta.env.VITE_API_URL;
-
   const socketRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -62,10 +60,8 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
         const formData = new FormData();
         formData.append('file', file);
         
-        // Fix double slash in URL by ensuring apiUrl doesn't end with a slash
-        const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
-        
-        const response = await fetch(`${baseUrl}/upload`, {
+        // Use relative URL to ensure it works both locally and through port forwarding
+        const response = await fetch(`/upload`, {
           method: 'POST',
           body: formData,
         });
@@ -92,8 +88,12 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
 
   // Initialize socket connection
   useEffect(() => {
+    // Use relative URL for socket connection to ensure it works with port forwarding
+    // Either use a relative path or window.location.origin
+    const socketUrl = window.location.origin;
+    
     // Create socket connection with improved configuration
-    socketRef.current = io(apiUrl, {
+    socketRef.current = io(socketUrl, {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       autoConnect: false, // Don't connect automatically
@@ -351,10 +351,8 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
       const formData = new FormData();
       formData.append("file", files[0]);
 
-      // Fix double slash in URL by ensuring apiUrl doesn't end with a slash
-      const baseUrl = apiUrl.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
-
-      const response = await fetch(`${baseUrl}/upload`, {
+      // Use relative URL to ensure it works both locally and through port forwarding
+      const response = await fetch(`/upload`, {
         method: "POST",
         body: formData,
       });

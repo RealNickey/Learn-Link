@@ -115,14 +115,11 @@ export const FileUpload = ({ onChange }) => {
 
   const handleFileUpload = async (formData) => {
     try {
-      // Changed from /upload-pdf to /upload to match the endpoint used in voice-chat.jsx
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      // Use relative URL to ensure it works both locally and through port forwarding
+      const response = await fetch(`/upload`, {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
