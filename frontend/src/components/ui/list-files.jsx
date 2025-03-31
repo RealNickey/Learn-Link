@@ -102,6 +102,7 @@ export const ListFiles = ({
           {/* Shared Files Section */}
           {sharedFiles.length > 0 && (
             <div className="shared-files-section mt-6">
+              <h4 className="text-sm font-medium text-neutral-300 mb-2">Shared Files</h4>
               {sharedFiles.map((file, idx) => (
                 <motion.div
                   key={`shared-${file.filename || idx}`}
@@ -122,7 +123,7 @@ export const ListFiles = ({
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="text-blue-400"
+                        className="text-blue-400 flex-shrink-0"
                       >
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -140,7 +141,7 @@ export const ListFiles = ({
                         {file.originalName || "Shared file"}
                       </a>
                     </div>
-                    <div className="text-sm text-neutral-500">
+                    <div className="text-sm text-neutral-500 flex-shrink-0 ml-auto">
                       {file.sharedByUsername &&
                         `From: ${file.sharedByUsername}`}
                     </div>
