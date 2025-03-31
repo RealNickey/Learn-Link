@@ -8,26 +8,6 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
   const spaceRef = useRef(null);
   const lastUpdateRef = useRef({});
 
-  const getZoomLevel = () => {
-    return window.devicePixelRatio || 1;
-  };
-
-  const getRelativePosition = (clientX, clientY) => {
-    const container = document.getElementById(containerId);
-    if (!container) return null;
-
-    const boundingBox = container.getBoundingClientRect();
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-    // Calculate position considering scroll and zoom
-    const zoomLevel = getZoomLevel();
-    const x = ((clientX + scrollLeft) / zoomLevel - boundingBox.left) / boundingBox.width;
-    const y = ((clientY + scrollTop) / zoomLevel - boundingBox.top) / boundingBox.height;
-
-    return { x, y, containerWidth: boundingBox.width, containerHeight: boundingBox.height };
-  };
-
   useEffect(() => {
     const setupAbly = async () => {
       try {
@@ -111,49 +91,36 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        // Enhanced mouse move handler with debouncing
+        // Track user's cursor with debouncing
         let timeoutId;
         const handleMouseMove = (event) => {
           if (!spaceRef.current || document.hidden) return;
 
+          const { clientX, clientY } = event;
+          const container = document.getElementById(containerId);
+          const boundingBox = container?.getBoundingClientRect();
+          
+          if (!boundingBox) return;
+
           clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
-            const position = getRelativePosition(event.clientX, event.clientY);
-            if (!position) return;
+            const x = (clientX - boundingBox.left) / boundingBox.width;
+            const y = (clientY - boundingBox.top) / boundingBox.height;
 
+            // Send cursor position as percentage values
             spaceRef.current.cursors.set({
-              position,
-              data: {
+              position: { x, y },
+              data: { 
                 color: '#FF5733',
                 containerId,
                 username,
-                timestamp: Date.now(),
-                viewport: {
-                  width: window.innerWidth,
-                  height: window.innerHeight,
-                  zoom: getZoomLevel()
-                }
+                timestamp: Date.now()
               }
             }).catch(console.error);
-          }, 16);
+          }, 16); // ~60fps throttling
         };
-
-        // Handle scroll events
-        const handleScroll = () => {
-          setCursors({}); // Clear cursors on scroll
-        };
-
-        // Periodic position updates
-        const updateInterval = setInterval(() => {
-          const event = new MouseEvent('mousemove', {
-            clientX: window.mouseX,
-            clientY: window.mouseY
-          });
-          handleMouseMove(event);
-        }, 1000);
 
         window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('scroll', handleScroll);
 
         return () => {
           window.removeEventListener('mousemove', handleMouseMove);
@@ -161,8 +128,6 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
           document.removeEventListener('visibilitychange', handleVisibilityChange);
           clearTimeout(timeoutId);
           clearInterval(cleanupInterval);
-          clearInterval(updateInterval);
-          window.removeEventListener('scroll', handleScroll);
           if (spaceRef.current) {
             spaceRef.current.cursors.unsubscribe();
             spaceRef.current.leave();
@@ -188,22 +153,21 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
         if (!cursor?.position || cursor?.data?.containerId !== containerId) return null;
 
         const container = document.getElementById(containerId);
-        if (!container) return null;
+        const boundingBox = container?.getBoundingClientRect();
+        
+        if (!boundingBox) return null;
 
-        const boundingBox = container.getBoundingClientRect();
-        const zoomLevel = getZoomLevel();
-
-        // Convert percentage values back to pixels with zoom consideration
-        const x = cursor.position.x * boundingBox.width * zoomLevel;
-        const y = cursor.position.y * boundingBox.height * zoomLevel;
+        // Convert percentage values back to pixels
+        const x = cursor.position.x * boundingBox.width;
+        const y = cursor.position.y * boundingBox.height;
 
         return (
           <div
             key={cursor.connectionId}
             style={{
-              position: 'fixed',
-              left: x + boundingBox.left,
-              top: y + boundingBox.top,
+              position: 'absolute',
+              left: x,
+              top: y,
               transform: 'translate(-50%, -50%)',
               pointerEvents: 'none',
               transition: 'all 0.1s ease',
