@@ -81,6 +81,8 @@ const allowedOrigins = [
   "https://learn-link-git-main-realnickeys.vercel.app",
   "https://ppsrz1l3-3000.inc1.devtunnels.ms", // Your port forwarded URL
   "https://*.devtunnels.ms", // Allow all devtunnels URLs
+  // Add wildcard to allow any origin in development
+  "*",
 ];
 
 // Configure CORS with proper handling for preflight requests
@@ -90,28 +92,8 @@ app.use(
       // Allow requests with no origin (like mobile apps, curl requests)
       if (!origin) return callback(null, true);
 
-      // Check if origin is in allowed list
-      if (
-        allowedOrigins.some((allowedOrigin) => {
-          // Handle wildcard matching
-          if (allowedOrigin.includes("*")) {
-            const pattern = new RegExp(
-              "^" + allowedOrigin.replace(/\*/g, ".*") + "$"
-            );
-            return pattern.test(origin);
-          }
-          // Direct match
-          return origin === allowedOrigin;
-        }) ||
-        origin.includes("localhost") ||
-        origin.includes("devtunnels.ms") // Allow all devtunnels URLs
-      ) {
-        callback(null, true); // Return true to allow the origin
-      } else {
-        console.log(`CORS blocked request from: ${origin}`);
-        // If the origin is not in the allowed list, we still allow but without credentials
-        callback(null, true);
-      }
+      // Allow all origins in development mode for easier collaboration
+      callback(null, true);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

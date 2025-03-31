@@ -10,15 +10,7 @@ function setupVoiceChat(server) {
   // Initialize socket.io with CORS settings
   const io = socketIo(server, {
     cors: {
-      origin: [
-        "http://localhost:5173", // Local development URL
-        "http://localhost:*", // Any local port
-        "https://learn-link.vercel.app", // Production frontend URL
-        "https://learn-link-frontend.vercel.app",
-        "https://ppsrz1l3-3000.inc1.devtunnels.ms", // Add your port forwarded URL
-        "https://*.devtunnels.ms", // Allow all devtunnels URLs
-        process.env.FRONTEND_URL, // Additional URL from environment variable (if set)
-      ].filter(Boolean), // Remove any undefined/null values
+      origin: "*", // Allow all origins
       methods: ["GET", "POST", "OPTIONS"],
       allowedHeaders: [
         "Content-Type",
