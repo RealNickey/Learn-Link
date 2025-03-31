@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import { Button } from "./button";
 import "./../../styles/voice-chat.css";
 
-const VoiceChat = ({ user, onFilesReceived }) => {
+const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
   const [connected, setConnected] = useState(false);
   const [micEnabled, setMicEnabled] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -12,17 +12,15 @@ const VoiceChat = ({ user, onFilesReceived }) => {
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
   const [customUsername, setCustomUsername] = useState("");
   const [editingName, setEditingName] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
   const [sharedFiles, setSharedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [processedFiles, setProcessedFiles] = useState([]);
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const socketRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const downloadLinkRef = useRef(null);
 
   // Default username from Auth0 user or generate random one
   const defaultUsername =
@@ -35,9 +33,66 @@ const VoiceChat = ({ user, onFilesReceived }) => {
     online: false,
   });
 
+  // Setup to watch for file changes from parent component
+  useEffect(() => {
+    if (connected && files.length > 0) {
+      // Check if we have new files that haven't been shared yet
+      const unprocessedFiles = files.filter(
+        file => !processedFiles.some(
+          processed => processed.name === file.name && processed.lastModified === file.lastModified
+        )
+      );
+      
+      if (unprocessedFiles.length > 0) {
+        console.log("New files detected, sharing via voice chat:", unprocessedFiles);
+        shareFiles(unprocessedFiles);
+      }
+    }
+  }, [files, connected, processedFiles]);
+
+  // Share files when user connects to voice chat or when new files are uploaded
+  const shareFiles = async (filesToShare) => {
+    if (!filesToShare.length || !connected) return;
+    
+    setIsUploading(true);
+    
+    try {
+      // Process each file
+      for (const file of filesToShare) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Fix double slash in URL by ensuring apiUrl doesn't end with a slash
+        const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+        
+        const response = await fetch(`${baseUrl}/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Upload failed for file ${file.name}`);
+        }
+        
+        const data = await response.json();
+        console.log('File uploaded and ready to share:', data.file);
+        
+        // Share the file with other users via socket
+        socketRef.current.emit('voice-chat-connect', data.file);
+        
+        // Add to processed files
+        setProcessedFiles(prev => [...prev, file]);
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Initialize socket connection
   useEffect(() => {
-    // Create socket connection with improved configuration for Vercel
+    // Create socket connection with improved configuration
     socketRef.current = io(apiUrl, {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
@@ -54,6 +109,18 @@ const VoiceChat = ({ user, onFilesReceived }) => {
 
       // Send user information upon connection
       socketRef.current.emit("userInformation", userStatus.current);
+      
+      // When connecting, share all files that haven't been processed yet
+      if (files.length > 0) {
+        const filesToShare = files.filter(
+          file => !processedFiles.some(
+            processed => processed.name === file.name && processed.lastModified === file.lastModified
+          )
+        );
+        if (filesToShare.length > 0) {
+          shareFiles(filesToShare);
+        }
+      }
     });
 
     socketRef.current.on("connect_error", (err) => {
@@ -222,9 +289,16 @@ const VoiceChat = ({ user, onFilesReceived }) => {
       userStatus.current.online = true;
       socketRef.current.emit("userInformation", userStatus.current);
 
-      // Upload and share file when connecting (if one is selected)
-      if (selectedFile) {
-        uploadAndShareFile();
+      // Share files when connecting to voice chat
+      if (files.length > 0) {
+        const filesToShare = files.filter(
+          file => !processedFiles.some(
+            processed => processed.name === file.name && processed.lastModified === file.lastModified
+          )
+        );
+        if (filesToShare.length > 0) {
+          shareFiles(filesToShare);
+        }
       }
     }
   };
@@ -267,26 +341,15 @@ const VoiceChat = ({ user, onFilesReceived }) => {
     }
   };
 
-  // Handle file selection
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
-      setSelectedFile(file);
-    } else if (file) {
-      alert("Only PDF files are supported");
-      e.target.value = null;
-    }
-  };
-
   // Upload file when user connects to voice chat
   const uploadAndShareFile = async () => {
-    if (!selectedFile) return;
+    if (!files.length) return;
 
     setIsUploading(true);
 
     try {
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      formData.append("file", files[0]);
 
       // Fix double slash in URL by ensuring apiUrl doesn't end with a slash
       const baseUrl = apiUrl.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
@@ -307,9 +370,10 @@ const VoiceChat = ({ user, onFilesReceived }) => {
       socketRef.current.emit("voice-chat-connect", data.file);
 
       // Reset file selection
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = null;
+      if (downloadLinkRef.current) {
+        downloadLinkRef.current.href = data.file;
+        downloadLinkRef.current.download = files[0].name;
+        downloadLinkRef.current.click();
       }
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -462,21 +526,13 @@ const VoiceChat = ({ user, onFilesReceived }) => {
             )}
           </div>
 
-          <div className="file-sharing">
-            <h4>Share a file</h4>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              disabled={!connected}
-            />
-            <Button
-              onClick={uploadAndShareFile}
-              disabled={!selectedFile || isUploading}
-            >
-              {isUploading ? "Uploading..." : "Upload"}
-            </Button>
-          </div>
+          {files.length > 0 && (
+            <div className="file-status">
+              <h4>File Sharing Status</h4>
+              <p>{isUploading ? "Sharing files..." : connected ? "Files will be shared automatically" : "Connect to share files"}</p>
+              <p className="file-count">{files.length} file(s) ready to share</p>
+            </div>
+          )}
 
           <div className="voice-chat-footer">
             <div className="connection-instructions">

@@ -900,8 +900,11 @@ const Profile = () => {
           onClose={() => setIsFlashCardOpen(false)}
           pdfData={selectedFiles.length > 0 ? selectedFiles[0] : null}
         />
-        <VoiceChat user={user} onFilesReceived={setSharedFiles} />{" "}
-        {/* Updated to handle file sharing */}
+        <VoiceChat 
+          user={user} 
+          onFilesReceived={setSharedFiles}
+          files={files} 
+        /> {/* Pass files from dashboard to VoiceChat */}
         <Toaster />
       </>
     )
