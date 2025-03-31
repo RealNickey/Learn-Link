@@ -115,10 +115,11 @@ export const FileUpload = ({ onChange }) => {
 
   const handleFileUpload = async (formData) => {
     try {
-      // Use relative URL to ensure it works both locally and through port forwarding
+      // Use the proxy endpoint which will be forwarded to the backend
       const response = await fetch(`/upload`, {
         method: "POST",
         body: formData,
+        credentials: "include", // Include credentials for CORS
       });
 
       if (!response.ok) {

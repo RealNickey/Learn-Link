@@ -88,8 +88,8 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
 
   // Initialize socket connection
   useEffect(() => {
-    // Use relative URL for socket connection to ensure it works with port forwarding
-    // Either use a relative path or window.location.origin
+    // Use the proxy that we set up in vite.config.js
+    // This will automatically route to the devtunnel through the proxy
     const socketUrl = window.location.origin;
     
     // Create socket connection with improved configuration

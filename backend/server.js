@@ -74,10 +74,12 @@ const io = setupVoiceChat(server);
 // Allow requests from all relevant origins
 const allowedOrigins = [
   "http://localhost:5173", // Local development
+  "http://localhost:*", // Any local port
   "https://learn-link-frontend.vercel.app",
   "https://learn-link.vercel.app",
   "https://learn-link-git-main-realnickeys.vercel.app",
   "https://ppsrz1l3-3000.inc1.devtunnels.ms", // Add your port forwarded URL
+  "https://*.devtunnels.ms", // Allow all devtunnels URLs
 ];
 
 // Configure CORS
@@ -88,13 +90,22 @@ app.use(
       if (!origin) return callback(null, true);
 
       if (
-        allowedOrigins.indexOf(origin) !== -1 ||
+        allowedOrigins.some(allowedOrigin => {
+          // Handle wildcard matching
+          if (allowedOrigin.includes('*')) {
+            const pattern = new RegExp('^' + allowedOrigin.replace(/\*/g, '.*') + '$');
+            return pattern.test(origin);
+          }
+          // Direct match
+          return origin === allowedOrigin;
+        }) ||
         origin.includes("localhost") ||
         origin.includes("devtunnels.ms") // Allow all devtunnels URLs
       ) {
-        callback(null, origin);
+        callback(null, true); // Return true instead of origin for wildcard support
       } else {
-        // If the origin is not in the allowed list, we don't send credentials
+        console.log(`CORS blocked request from: ${origin}`);
+        // If the origin is not in the allowed list, we still allow but without credentials
         callback(null, false);
       }
     },
