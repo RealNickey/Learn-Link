@@ -386,17 +386,34 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
   // Auto-download a file
   const autoDownloadFile = (fileData) => {
     if (!fileData || !fileData.url) return;
-
-    // Create a hidden link and trigger download
-    const link = document.createElement("a");
-    link.href = fileData.url;
-    link.download = fileData.originalName || "downloaded-file.pdf";
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    console.log(`Auto-downloading file: ${fileData.originalName}`);
+    
+    // Download the file and convert it to a File object
+    const convertToFile = async () => {
+      try {
+        // Fetch the file from the URL
+        const response = await fetch(fileData.url);
+        if (!response.ok) throw new Error('Failed to download file');
+        
+        const blob = await response.blob();
+        
+        // Create a File object with the same properties expected by the dashboard
+        const file = new File([blob], fileData.originalName, {
+          type: fileData.mimeType || 'application/pdf',
+          lastModified: new Date(fileData.uploadedAt || Date.now()).getTime()
+        });
+        
+        // Store in browser memory by passing to parent component
+        if (typeof onFilesReceived === 'function') {
+          console.log(`File downloaded and stored in memory: ${fileData.originalName}`);
+          onFilesReceived([file]);
+        }
+      } catch (error) {
+        console.error('Error downloading shared file:', error);
+      }
+    };
+    
+    // Process the file
+    convertToFile();
   };
 
   // Count online users

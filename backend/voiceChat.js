@@ -51,15 +51,17 @@ function setupVoiceChat(server) {
           ...fileData,
           sharedBy: socketId,
           sharedByUsername: socketsStatus[socketId]?.username || "Unknown User",
-          sharedAt: new Date().toISOString()
+          sharedAt: new Date().toISOString(),
         };
-        
+
         sharedFiles.push(sharedFileData);
-        
-        console.log(`[Voice Chat] File shared by ${socketsStatus[socketId]?.username}: ${fileData.originalName}`);
-        
+
+        console.log(
+          `[Voice Chat] File shared by ${socketsStatus[socketId]?.username}: ${fileData.originalName}`
+        );
+
         // Broadcast the file to all connected clients EXCEPT the sender
-        Object.keys(socketsStatus).forEach(clientSocketId => {
+        Object.keys(socketsStatus).forEach((clientSocketId) => {
           if (clientSocketId !== socketId) {
             // Send only to other users, not back to the sender
             io.to(clientSocketId).emit("filesShared", [sharedFileData]);
