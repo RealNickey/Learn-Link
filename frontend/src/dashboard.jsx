@@ -145,14 +145,24 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("pdf", file);
 
-      const response = await fetch(`/generate-summary`, {
+      // Use the full URL instead of a relative path to ensure proper routing
+      const backendUrl = import.meta.env.VITE_API_URL || window.location.origin;
+      const summaryUrl = `${backendUrl}/generate-summary`;
+
+      console.log(`Sending request to: ${summaryUrl}`);
+
+      const response = await fetch(summaryUrl, {
         method: "POST",
         body: formData,
         credentials: "include",
+        headers: {
+          // Don't set Content-Type header - browser will set it with proper boundary for FormData
+        },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate summary");
+        console.error(`Server responded with status: ${response.status}`);
+        throw new Error(`Failed to generate summary: ${response.statusText}`);
       }
 
       const { summary } = await response.json();
@@ -161,7 +171,7 @@ const Profile = () => {
       console.error("Error generating summary:", error);
       toast({
         title: "Error",
-        description: "Failed to generate summary",
+        description: "Failed to generate summary: " + error.message,
         variant: "destructive",
         duration: 3000,
       });

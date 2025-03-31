@@ -113,23 +113,30 @@ export const FileUpload = ({ onChange }) => {
     handleFileChange(files);
   };
 
+  const getBackendUrl = () => {
+    return import.meta.env.VITE_API_URL || window.location.origin;
+  };
+
   const handleFileUpload = async (formData) => {
     try {
       // Use the proxy endpoint which will be forwarded to the backend
-      const response = await fetch(`/upload`, {
+      const url = `${getBackendUrl()}/generate-summary`;
+      console.log(`Uploading file to: ${url}`);
+      const response = await fetch(url, {
         method: "POST",
         body: formData,
-        credentials: "include", // Include credentials for CORS
+        credentials: "include", // Important for CORS
+        // Don't set Content-Type - browser will set it with proper boundary
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Server responded with status: ${response.status}`);
       }
 
-      const result = await response.json();
-      return result;
+      const data = await response.json();
+      return data.summary;
     } catch (error) {
-      console.error("Error uploading PDF:", error);
+      console.error("Error uploading file:", error);
       throw error;
     }
   };
