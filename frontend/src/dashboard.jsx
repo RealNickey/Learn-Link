@@ -661,14 +661,11 @@ const Profile = () => {
             />
           </motion.div>
           <motion.div className="section div5" variants={itemVariants}>
-            <div className="user-profile">
-              <img
-                src={user.picture}
-                alt="User Profile"
-                className="user-profile-picture"
-              />
-            </div>
-            <Toolbar userName={user.name} userImage={userImage} onLogout={handleLogout} />
+            <Toolbar 
+              userName={user.name || user.email} 
+              userImage={userImage} 
+              onLogout={handleLogout} 
+            />
           </motion.div>
           <motion.div className="section div6" variants={itemVariants}>
             <div

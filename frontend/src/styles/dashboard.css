@@ -81,6 +81,7 @@
   grid-column: span 2 / span 2;
   grid-column-start: 8;
   grid-row-start: 1;
+  padding: 0.75rem !important;
 }
 
 .div6 {
@@ -547,4 +548,10 @@
 .typing-bubble {
   gap: 0.25rem !important;
   padding-right: 1.5rem;
+}
+
+/* Logout button hover effect */
+button.logout-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
