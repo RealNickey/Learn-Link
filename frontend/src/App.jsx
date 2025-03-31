@@ -5,7 +5,9 @@ import {
   Route,
   useLocation,
   useNavigate,
+  Navigate,
 } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react"; // Add Auth0 hook import
 import PageTransition from "./components/PageTransition";
 import { AnimatePresence } from "framer-motion";
 
@@ -22,6 +24,25 @@ const DashboardLoader = ({ isPreloaded }) => {
   );
 };
 
+// Auth protected route component
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth0();
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+
 // Wrapped component with transition logic
 const AppContent = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -29,6 +50,7 @@ const AppContent = () => {
   const [isDashboardPreloaded, setIsDashboardPreloaded] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, loginWithRedirect } = useAuth0(); // Add Auth0 hooks
 
   // Preload the dashboard component
   useEffect(() => {
@@ -49,6 +71,14 @@ const AppContent = () => {
 
   // Handle transition between routes
   const handleTransition = (targetPath) => {
+    // If trying to access dashboard but not authenticated, redirect to login
+    if (targetPath === "/dashboard" && !isAuthenticated) {
+      loginWithRedirect({
+        appState: { returnTo: "/dashboard" }
+      });
+      return;
+    }
+    
     setTransitionTarget(targetPath);
     setIsTransitioning(true);
 
@@ -87,11 +117,13 @@ const AppContent = () => {
         <Route
           path="/dashboard"
           element={
-            <Suspense
-              fallback={<DashboardLoader isPreloaded={isDashboardPreloaded} />}
-            >
-              <Profile onNavigate={handleClick} />
-            </Suspense>
+            <ProtectedRoute>
+              <Suspense
+                fallback={<DashboardLoader isPreloaded={isDashboardPreloaded} />}
+              >
+                <Profile onNavigate={handleClick} />
+              </Suspense>
+            </ProtectedRoute>
           }
         />
       </Routes>
