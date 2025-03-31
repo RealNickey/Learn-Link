@@ -35,7 +35,8 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
     }));
   };
 
-  const isQuizComplete = Object.keys(userAnswers).length === quiz.questions.length;
+  const isQuizComplete =
+    Object.keys(userAnswers).length === quiz.questions.length;
 
   const evaluateQuiz = () => {
     const totalQuestions = quiz.questions.length;
@@ -56,7 +57,8 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
   const getButtonStyle = (questionIndex, optionIndex) => {
     if (!isSubmitted) return {};
 
-    const isCorrectAnswer = quiz.questions[questionIndex].correctAnswer === optionIndex;
+    const isCorrectAnswer =
+      quiz.questions[questionIndex].correctAnswer === optionIndex;
     const isUserAnswer = userAnswers[questionIndex] === optionIndex;
 
     if (isCorrectAnswer) {
@@ -78,7 +80,11 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
 
   // Function to handle source display
   const getSourceInfo = (question) => {
-    if (!question?.source || question.source === 'undefined' || question.source === 'General') {
+    if (
+      !question?.source ||
+      question.source === "undefined" ||
+      question.source === "General"
+    ) {
       return null;
     }
     return <p className="source-file">From: {question.source}</p>;
@@ -88,6 +94,9 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
   const getQuestionCountText = (index, total) => {
     return `Question ${index + 1} of ${total}`;
   };
+
+  // Check if the current question has been answered
+  const hasAnsweredCurrent = userAnswers.hasOwnProperty(currentQuestion);
 
   return (
     <div className={`quiz-panel ${isOpen ? "open" : ""}`}>
@@ -122,22 +131,29 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
                       disabled
                       style={getButtonStyle(qIndex, index)}
                       className={`option-button ${
-                        question.correctAnswer === index ? "correct" : 
-                        userAnswers[qIndex] === index ? "incorrect" : ""
+                        question.correctAnswer === index
+                          ? "correct"
+                          : userAnswers[qIndex] === index
+                          ? "incorrect"
+                          : ""
                       }`}
                     >
                       {option}
-                      {question.correctAnswer === index && 
-                        <span className="check-mark">✓</span>}
-                      {userAnswers[qIndex] === index && 
-                      question.correctAnswer !== index && 
-                        <span className="cross-mark">✗</span>}
+                      {question.correctAnswer === index && (
+                        <span className="check-mark">✓</span>
+                      )}
+                      {userAnswers[qIndex] === index &&
+                        question.correctAnswer !== index && (
+                          <span className="cross-mark">✗</span>
+                        )}
                     </Button>
                   ))}
                 </div>
                 {question.explanation && (
                   <div className="explanation">
-                    <p><strong>Explanation:</strong> {question.explanation}</p>
+                    <p>
+                      <strong>Explanation:</strong> {question.explanation}
+                    </p>
                   </div>
                 )}
               </div>
@@ -145,9 +161,13 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
           ) : (
             // Show current question before submission
             <div className="question">
-              <h3>{getQuestionCountText(currentQuestion, quiz.questions.length)}</h3>
+              <h3>
+                {getQuestionCountText(currentQuestion, quiz.questions.length)}
+              </h3>
               {getSourceInfo(quiz.questions[currentQuestion])}
-              <p className="question-text">{quiz.questions[currentQuestion].question}</p>
+              <p className="question-text">
+                {quiz.questions[currentQuestion].question}
+              </p>
               <div className="options-grid">
                 {quiz.questions[currentQuestion].options.map(
                   (option, index) => (
@@ -174,7 +194,9 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
             <>
               <Button
                 variant="outline"
-                onClick={() => setCurrentQuestion((prev) => Math.max(0, prev - 1))}
+                onClick={() =>
+                  setCurrentQuestion((prev) => Math.max(0, prev - 1))
+                }
                 disabled={currentQuestion === 0}
               >
                 Previous
@@ -185,9 +207,11 @@ const QuizPanel = ({ quiz, isOpen, onClose }) => {
                     ? evaluateQuiz
                     : () => setCurrentQuestion((prev) => prev + 1)
                 }
-                disabled={currentQuestion === quiz.questions.length - 1 && !isQuizComplete}
+                disabled={!hasAnsweredCurrent}
               >
-                {currentQuestion === quiz.questions.length - 1 ? "Submit" : "Next"}
+                {currentQuestion === quiz.questions.length - 1
+                  ? "Submit"
+                  : "Next"}
               </Button>
             </>
           ) : (

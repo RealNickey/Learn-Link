@@ -8,6 +8,8 @@ const {
   processPdfContent,
   comparePdfs,
   generateQuiz,
+  generateFlashcards,
+  generatePdfChatResponse,
 } = require("./aiService");
 const setupVoiceChat = require("./voiceChat");
 
@@ -181,20 +183,128 @@ app.post(
   }
 );
 
+// Update AI content endpoint to handle both GET and POST
 app.get("/generate-ai-content", async (req, res) => {
   const prompt = req.query.prompt;
+
   if (!prompt) {
-    return res.status(400).json({ error: "Prompt is required" });
+    return res.status(400).json({
+      error: "Prompt is required",
+      content: "Please provide a question or prompt for me to respond to.",
+    });
   }
 
   try {
+    console.log(`[AI Content] Generating response for prompt: "${prompt}"`);
     const content = await generateAIContent(prompt);
+    console.log("[AI Content] Response generated successfully");
     res.json({ content });
   } catch (error) {
-    console.error("Error generating content:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to generate content: " + error.message });
+    console.error("[AI Content] Error generating content:", error);
+    res.status(500).json({
+      error: "Failed to generate content",
+      details: error.message,
+      content:
+        "I encountered an error while processing your request. Please try again later.",
+    });
+  }
+});
+
+app.post("/generate-ai-content", async (req, res) => {
+  const prompt = req.body.prompt;
+  if (!prompt) {
+    return res.status(400).json({
+      error: "Prompt is required",
+      content: "Please provide a question or prompt for me to respond to.",
+    });
+  }
+
+  try {
+    console.log(`[AI Content] Generating response for prompt: "${prompt}"`);
+    const content = await generateAIContent(prompt);
+    console.log("[AI Content] Response generated successfully");
+    res.json({ content });
+  } catch (error) {
+    console.error("[AI Content] Error generating content:", error);
+    res.status(500).json({
+      error: "Failed to generate content",
+      details: error.message,
+      content:
+        "I encountered an error while processing your request. Please try again later.",
+    });
+  }
+});
+
+// Add new endpoint for generating flashcards
+app.post("/generate-flashcards", upload.single("pdf"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No PDF file provided" });
+    }
+
+    const pdfBuffer = req.file.buffer;
+    const flashcards = await generateFlashcards(pdfBuffer);
+
+    res.json({ flashcards });
+  } catch (error) {
+    console.error("Error generating flashcards:", error);
+    res.status(500).json({ error: "Failed to generate flashcards" });
+  }
+});
+
+// Add new endpoint for PDF-based chat
+app.post("/pdf-chat", upload.array("pdfs", 3), async (req, res) => {
+  try {
+    console.log("[PDF Chat] Request received");
+
+    if (!req.files || req.files.length === 0) {
+      console.error("[PDF Chat] Error: No PDF files provided in request");
+      return res.status(400).json({
+        error: "No PDF files provided",
+        content:
+          "I couldn't find any PDF files in your request. Please try again with valid PDF files.",
+      });
+    }
+
+    console.log(`[PDF Chat] Received ${req.files.length} files:`);
+    req.files.forEach((file, i) => {
+      console.log(
+        `  ${i + 1}. ${file.originalname} (${Math.round(file.size / 1024)}KB)`
+      );
+    });
+
+    const prompt = req.body.prompt;
+    if (!prompt) {
+      console.error("[PDF Chat] Error: No prompt provided in request");
+      return res.status(400).json({
+        error: "Prompt is required",
+        content:
+          "I need a question to answer based on your PDF files. Please include a prompt with your request.",
+      });
+    }
+
+    console.log(`[PDF Chat] Prompt: "${prompt}"`);
+
+    // Create structured PDF data objects with buffer and filename
+    const pdfData = req.files.map((file) => ({
+      buffer: file.buffer,
+      filename: file.originalname,
+    }));
+
+    // Generate response based on PDFs and prompt
+    console.log("[PDF Chat] Generating response...");
+    const content = await generatePdfChatResponse(pdfData, prompt);
+    console.log("[PDF Chat] Response generated successfully");
+
+    res.json({ content });
+  } catch (error) {
+    console.error("[PDF Chat] Error generating response:", error);
+    res.status(500).json({
+      error: "Failed to generate response",
+      details: error.message,
+      content:
+        "I encountered an error while processing your request. Please try again later.",
+    });
   }
 });
 

@@ -81,6 +81,17 @@
   grid-column: span 2 / span 2;
   grid-column-start: 8;
   grid-row-start: 1;
+  padding: 0.5rem !important;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.div5 > div {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .div6 {
@@ -205,6 +216,17 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
+/* Style for AI responses based on PDF content */
+.pdf-response {
+  border-left: 2px solid rgba(59, 130, 246, 0.5) !important; /* Subtle blue border */
+  background-color: rgba(
+    59,
+    130,
+    246,
+    0.05
+  ) !important; /* Very subtle blue background */
+}
+
 .chat-image {
   width: 32px;
   height: 32px;
@@ -239,7 +261,6 @@
 .chat-bubble p {
   margin: 0;
   line-height: 1.5;
-
 }
 
 /* Loading animation styles */
@@ -268,19 +289,154 @@
   }
 }
 
+/* Typing indicator animation */
+.typing-indicator-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.typing-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  justify-content: flex-start;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  margin: 0 2px;
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: typing-animation 1.4s infinite ease-in-out both;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+}
+
+.typing-indicator span::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.9),
+    transparent
+  );
+  animation: dot-shimmer 1.2s infinite;
+}
+
+@keyframes dot-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.typing-indicator span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-indicator span:nth-child(1)::after {
+  animation-delay: 0s;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(2)::after {
+  animation-delay: 0.4s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.typing-indicator span:nth-child(3)::after {
+  animation-delay: 0.8s;
+}
+
+@keyframes typing-animation {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 0.9;
+  }
+}
+
+/* AI avatar loading animation */
+.ai-avatar-loading {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+}
+
 .ai-avatar-loading::before {
   content: "";
   position: absolute;
-  inset: -2px;
+  inset: -1px;
   border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: #3b82f6;
-  animation: spin 1s linear infinite;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(99, 102, 241, 0.5),
+    transparent
+  );
+  opacity: 0.6;
+  animation: rotate 2s linear infinite;
 }
 
-@keyframes spin {
+.ai-avatar-loading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: loading-shimmer 1s infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
   }
 }
 
@@ -329,5 +485,148 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Flashcard styles */
+.perspective {
+  perspective: 2000px;
+  height: 400px;
+  perspective-origin: center;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+  transform-origin: center;
+}
+
+.flashcard-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flashcard-front {
+  background: linear-gradient(to right, #1a1a1a, #0f0f0f);
+  transform: rotateY(0deg);
+}
+
+.flashcard-back {
+  background: linear-gradient(to right, #1a1a1a, #0f0f0f);
+  transform: rotateY(180deg);
+}
+
+.flashcard-text {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.flipped .flashcard-front .flashcard-text {
+  opacity: 0;
+}
+
+/* Animation utilities */
+.animate-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Typing bubble specific styles */
+.typing-bubble {
+  gap: 0.25rem !important;
+  padding-right: 1.5rem;
+}
+
+/* Logout button hover effect */
+button.logout-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+button.logout-button {
+  white-space: nowrap;
+  z-index: 5; /* Ensure button is always clickable */
+}
+
+/* Logout toast styling */
+.logout-toast {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 500 !important;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3) !important;
+  animation: fadeSlideUp 0.3s ease-out forwards !important;
+}
+
+.logout-toast[data-state="open"] {
+  animation: fadeSlideUp 0.3s ease-out forwards !important;
+}
+
+.logout-toast[data-state="closed"] {
+  animation: fadeSlideDown 0.2s ease-out forwards !important;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeSlideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  /* Ensure the grid layout maintains structure on smaller screens */
+  .dashboard-container {
+    gap: 4px;
+  }
+  
+  /* Toolbar needs special attention for very small screens */
+  .div5 {
+    min-height: 80px; /* Allow extra space for stacked layout */
+  }
+}
+
+/* Fix for extremely small screens */
+@media (max-width: 400px) {
+  .div5 {
+    min-height: 90px;
   }
 }
