@@ -6,6 +6,7 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
   const [cursors, setCursors] = useState({});
   const clientRef = useRef(null);
   const spaceRef = useRef(null);
+  const lastUpdateRef = useRef({});
 
   useEffect(() => {
     const setupAbly = async () => {
@@ -34,19 +35,66 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
         await space.enter();
         console.log('Entered space successfully');
 
-        // Subscribe to cursor updates
+        // Subscribe to cursor updates with timestamp tracking
         space.cursors.subscribe('update', (cursorUpdate) => {
-          console.log('Cursor update received:', cursorUpdate);
+          const now = Date.now();
+          lastUpdateRef.current[cursorUpdate.connectionId] = now;
+
           setCursors(prev => ({
             ...prev,
-            [cursorUpdate.connectionId]: cursorUpdate
+            [cursorUpdate.connectionId]: {
+              ...cursorUpdate,
+              lastUpdate: now
+            }
           }));
         });
+
+        // Handle cursor cleanup
+        space.cursors.subscribe('leave', (member) => {
+          console.log('Member left:', member);
+          setCursors(prev => {
+            const newCursors = { ...prev };
+            delete newCursors[member.connectionId];
+            return newCursors;
+          });
+        });
+
+        // Clean up stale cursors every 5 seconds
+        const cleanupInterval = setInterval(() => {
+          const now = Date.now();
+          setCursors(prev => {
+            const newCursors = { ...prev };
+            Object.entries(newCursors).forEach(([id, cursor]) => {
+              if (now - cursor.lastUpdate > 5000) { // Remove cursors older than 5 seconds
+                delete newCursors[id];
+              }
+            });
+            return newCursors;
+          });
+        }, 5000);
+
+        // Handle window resize
+        const handleResize = () => {
+          // Clear all cursors on resize to prevent position mismatches
+          setCursors({});
+        };
+
+        window.addEventListener('resize', handleResize);
+        
+        // Handle visibility change
+        const handleVisibilityChange = () => {
+          if (document.hidden) {
+            // Clear cursors when tab becomes inactive
+            setCursors({});
+          }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         // Track user's cursor with debouncing
         let timeoutId;
         const handleMouseMove = (event) => {
-          if (!spaceRef.current) return;
+          if (!spaceRef.current || document.hidden) return;
 
           const { clientX, clientY } = event;
           const container = document.getElementById(containerId);
@@ -56,26 +104,30 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
 
           clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
-            const x = clientX - boundingBox.left;
-            const y = clientY - boundingBox.top;
+            const x = (clientX - boundingBox.left) / boundingBox.width;
+            const y = (clientY - boundingBox.top) / boundingBox.height;
 
-            // Send cursor position relative to container
+            // Send cursor position as percentage values
             spaceRef.current.cursors.set({
               position: { x, y },
               data: { 
                 color: '#FF5733',
                 containerId,
-                username // Add username to cursor data
+                username,
+                timestamp: Date.now()
               }
             }).catch(console.error);
-          }, 0);
+          }, 16); // ~60fps throttling
         };
 
         window.addEventListener('mousemove', handleMouseMove);
 
         return () => {
           window.removeEventListener('mousemove', handleMouseMove);
+          window.removeEventListener('resize', handleResize);
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
           clearTimeout(timeoutId);
+          clearInterval(cleanupInterval);
           if (spaceRef.current) {
             spaceRef.current.cursors.unsubscribe();
             spaceRef.current.leave();
@@ -93,18 +145,29 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
         clientRef.current.close();
       }
     };
-  }, [containerId, username]); // Add username to dependency array
+  }, [containerId, username]);
 
   return (
     <>
-      {Object.values(cursors).map((cursor) => (
-        cursor?.position && cursor?.data?.containerId === containerId && (
+      {Object.values(cursors).map((cursor) => {
+        if (!cursor?.position || cursor?.data?.containerId !== containerId) return null;
+
+        const container = document.getElementById(containerId);
+        const boundingBox = container?.getBoundingClientRect();
+        
+        if (!boundingBox) return null;
+
+        // Convert percentage values back to pixels
+        const x = cursor.position.x * boundingBox.width;
+        const y = cursor.position.y * boundingBox.height;
+
+        return (
           <div
             key={cursor.connectionId}
             style={{
-              position: 'fixed',
-              left: cursor.position.x,
-              top: cursor.position.y,
+              position: 'absolute',
+              left: x,
+              top: y,
               transform: 'translate(-50%, -50%)',
               pointerEvents: 'none',
               transition: 'all 0.1s ease',
@@ -141,8 +204,8 @@ const LiveCursor = ({ containerId = 'dashboard-container', username = 'Anonymous
               {cursor.data?.username || 'Anonymous'}
             </div>
           </div>
-        )
-      ))}
+        );
+      })}
     </>
   );
 };
