@@ -202,13 +202,23 @@ app.post("/upload-pdf", uploadPDF.single("pdf"), async (req, res) => {
 
 app.post("/generate-summary", upload.single("pdf"), async (req, res) => {
   try {
+    console.log("[Summary] Request received");
+
     if (!req.file) {
+      console.error("[Summary] Error: No PDF file in request");
       return res.status(400).json({ error: "No PDF file provided" });
     }
+
+    console.log(
+      `[Summary] Processing file: ${req.file.originalname} (${Math.round(
+        req.file.size / 1024
+      )}KB)`
+    );
 
     const pdfBuffer = req.file.buffer;
     const summary = await processPdfContent(pdfBuffer);
 
+    console.log("[Summary] Generated successfully");
     res.json({ summary });
   } catch (error) {
     console.error("Error generating summary:", error);

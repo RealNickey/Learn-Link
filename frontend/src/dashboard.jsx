@@ -138,15 +138,19 @@ const Profile = () => {
     const toastId = toast({
       title: "Generating Summary",
       description: "Please wait while we analyze your document...",
-      duration: 2000, // Auto-close after 2 seconds
+      duration: 2000,
     });
 
     try {
       const formData = new FormData();
       formData.append("pdf", file);
 
-      // Use the full URL instead of a relative path to ensure proper routing
-      const backendUrl = import.meta.env.VITE_API_URL || window.location.origin;
+      // For local development, use a direct URL to localhost
+      const backendUrl =
+        window.location.hostname === "localhost"
+          ? "http://localhost:3000"
+          : import.meta.env.VITE_API_URL || window.location.origin;
+
       const summaryUrl = `${backendUrl}/generate-summary`;
 
       console.log(`Sending request to: ${summaryUrl}`);
@@ -155,9 +159,7 @@ const Profile = () => {
         method: "POST",
         body: formData,
         credentials: "include",
-        headers: {
-          // Don't set Content-Type header - browser will set it with proper boundary for FormData
-        },
+        // No need to set Content-Type header for FormData
       });
 
       if (!response.ok) {

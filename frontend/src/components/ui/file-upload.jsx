@@ -62,8 +62,8 @@ export const FileUpload = ({ onChange }) => {
       // Process each file
       for (const file of validFiles) {
         const formData = new FormData();
-        // Changed from "pdf" to "file" to match the expected parameter in the backend
-        formData.append("file", file);
+        // Change to "pdf" to match the expected parameter in the backend
+        formData.append("pdf", file);
 
         try {
           await handleFileUpload(formData);
