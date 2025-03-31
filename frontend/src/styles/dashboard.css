@@ -571,6 +571,46 @@ button.logout-button {
   z-index: 5; /* Ensure button is always clickable */
 }
 
+/* Logout toast styling */
+.logout-toast {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 500 !important;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3) !important;
+  animation: fadeSlideUp 0.3s ease-out forwards !important;
+}
+
+.logout-toast[data-state="open"] {
+  animation: fadeSlideUp 0.3s ease-out forwards !important;
+}
+
+.logout-toast[data-state="closed"] {
+  animation: fadeSlideDown 0.2s ease-out forwards !important;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeSlideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
 /* Media queries for responsive design */
 @media (max-width: 768px) {
   /* Ensure the grid layout maintains structure on smaller screens */

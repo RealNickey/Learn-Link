@@ -503,7 +503,19 @@ const Profile = () => {
   }, [chatHistory]);
 
   const handleLogout = () => {
-    logout({ returnTo: window.location.origin });
+    // Show a toast notification before logout
+    toast({
+      title: "Goodbye!",
+      description: "You've been successfully logged out",
+      variant: "default",
+      duration: 2000,
+      className: "logout-toast",
+    });
+    
+    // Short delay to allow toast to be visible before redirecting
+    setTimeout(() => {
+      logout({ returnTo: window.location.origin });
+    }, 800);
   };
 
   console.log("isLoading:", isLoading);
