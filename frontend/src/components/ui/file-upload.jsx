@@ -62,7 +62,8 @@ export const FileUpload = ({ onChange }) => {
       // Process each file
       for (const file of validFiles) {
         const formData = new FormData();
-        formData.append("pdf", file);
+        // Changed from "pdf" to "file" to match the expected parameter in the backend
+        formData.append("file", file);
 
         try {
           await handleFileUpload(formData);
@@ -114,8 +115,9 @@ export const FileUpload = ({ onChange }) => {
 
   const handleFileUpload = async (formData) => {
     try {
+      // Changed from /upload-pdf to /upload to match the endpoint used in voice-chat.jsx
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/upload-pdf`,
+        `${import.meta.env.VITE_API_URL}/upload`,
         {
           method: "POST",
           body: formData,
