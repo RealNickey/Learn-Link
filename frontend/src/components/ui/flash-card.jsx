@@ -33,14 +33,12 @@ export function FlashCard({ isOpen, onClose, pdfData }) {
           const formData = new FormData();
           formData.append("pdf", pdfData);
 
-          // Use the new endpoint for flashcards
-          const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/generate-flashcards`,
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
+          // Use the proxied endpoint for flashcards
+          const response = await fetch(`/generate-flashcards`, {
+            method: "POST",
+            body: formData,
+            credentials: "include",
+          });
 
           if (!response.ok) {
             throw new Error(`Error: ${response.statusText}`);

@@ -25,7 +25,9 @@ export const ListFiles = ({
           {/* Local Files Section */}
           {files.length > 0 && (
             <div className="files-section">
-              <h4 className="text-sm font-medium text-neutral-300 mb-2">Your Files</h4>
+              <h4 className="text-sm font-medium text-neutral-300 mb-2">
+                Your Files
+              </h4>
               {files.map((file, idx) => (
                 <motion.div
                   key={file.name + file.lastModified}
@@ -53,16 +55,16 @@ export const ListFiles = ({
                       </div>
                       <div className="flex items-center gap-2">
                         {file.isShared && (
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            width="16" 
-                            height="16" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                             className="text-blue-400"
                             title="Shared file"
                           >
@@ -102,7 +104,9 @@ export const ListFiles = ({
           {/* Shared Files Section */}
           {sharedFiles.length > 0 && (
             <div className="shared-files-section mt-6">
-              <h4 className="text-sm font-medium text-neutral-300 mb-2">Shared Files</h4>
+              <h4 className="text-sm font-medium text-neutral-300 mb-2">
+                Shared Files
+              </h4>
               {sharedFiles.map((file, idx) => (
                 <motion.div
                   key={`shared-${file.filename || idx}`}

@@ -36,13 +36,19 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
     if (connected && files.length > 0) {
       // Check if we have new files that haven't been shared yet
       const unprocessedFiles = files.filter(
-        file => !processedFiles.some(
-          processed => processed.name === file.name && processed.lastModified === file.lastModified
-        )
+        (file) =>
+          !processedFiles.some(
+            (processed) =>
+              processed.name === file.name &&
+              processed.lastModified === file.lastModified
+          )
       );
-      
+
       if (unprocessedFiles.length > 0) {
-        console.log("New files detected, sharing via voice chat:", unprocessedFiles);
+        console.log(
+          "New files detected, sharing via voice chat:",
+          unprocessedFiles
+        );
         shareFiles(unprocessedFiles);
       }
     }
@@ -51,36 +57,36 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
   // Share files when user connects to voice chat or when new files are uploaded
   const shareFiles = async (filesToShare) => {
     if (!filesToShare.length || !connected) return;
-    
+
     setIsUploading(true);
-    
+
     try {
       // Process each file
       for (const file of filesToShare) {
         const formData = new FormData();
-        formData.append('file', file);
-        
+        formData.append("file", file);
+
         // Use relative URL to ensure it works both locally and through port forwarding
         const response = await fetch(`/upload`, {
-          method: 'POST',
+          method: "POST",
           body: formData,
         });
-        
+
         if (!response.ok) {
           throw new Error(`Upload failed for file ${file.name}`);
         }
-        
+
         const data = await response.json();
-        console.log('File uploaded and ready to share:', data.file);
-        
+        console.log("File uploaded and ready to share:", data.file);
+
         // Share the file with other users via socket
-        socketRef.current.emit('voice-chat-connect', data.file);
-        
+        socketRef.current.emit("voice-chat-connect", data.file);
+
         // Add to processed files
-        setProcessedFiles(prev => [...prev, file]);
+        setProcessedFiles((prev) => [...prev, file]);
       }
     } catch (error) {
-      console.error('Error uploading files:', error);
+      console.error("Error uploading files:", error);
     } finally {
       setIsUploading(false);
     }
@@ -91,7 +97,7 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
     // Use the proxy that we set up in vite.config.js
     // This will automatically route to the devtunnel through the proxy
     const socketUrl = window.location.origin;
-    
+
     // Create socket connection with improved configuration
     socketRef.current = io(socketUrl, {
       reconnectionAttempts: 5,
@@ -109,13 +115,16 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
 
       // Send user information upon connection
       socketRef.current.emit("userInformation", userStatus.current);
-      
+
       // When connecting, share all files that haven't been processed yet
       if (files.length > 0) {
         const filesToShare = files.filter(
-          file => !processedFiles.some(
-            processed => processed.name === file.name && processed.lastModified === file.lastModified
-          )
+          (file) =>
+            !processedFiles.some(
+              (processed) =>
+                processed.name === file.name &&
+                processed.lastModified === file.lastModified
+            )
         );
         if (filesToShare.length > 0) {
           shareFiles(filesToShare);
@@ -292,9 +301,12 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
       // Share files when connecting to voice chat
       if (files.length > 0) {
         const filesToShare = files.filter(
-          file => !processedFiles.some(
-            processed => processed.name === file.name && processed.lastModified === file.lastModified
-          )
+          (file) =>
+            !processedFiles.some(
+              (processed) =>
+                processed.name === file.name &&
+                processed.lastModified === file.lastModified
+            )
         );
         if (filesToShare.length > 0) {
           shareFiles(filesToShare);
@@ -384,32 +396,34 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
   // Auto-download a file
   const autoDownloadFile = (fileData) => {
     if (!fileData || !fileData.url) return;
-    
+
     // Download the file and convert it to a File object
     const convertToFile = async () => {
       try {
         // Fetch the file from the URL
         const response = await fetch(fileData.url);
-        if (!response.ok) throw new Error('Failed to download file');
-        
+        if (!response.ok) throw new Error("Failed to download file");
+
         const blob = await response.blob();
-        
+
         // Create a File object with the same properties expected by the dashboard
         const file = new File([blob], fileData.originalName, {
-          type: fileData.mimeType || 'application/pdf',
-          lastModified: new Date(fileData.uploadedAt || Date.now()).getTime()
+          type: fileData.mimeType || "application/pdf",
+          lastModified: new Date(fileData.uploadedAt || Date.now()).getTime(),
         });
-        
+
         // Store in browser memory by passing to parent component
-        if (typeof onFilesReceived === 'function') {
-          console.log(`File downloaded and stored in memory: ${fileData.originalName}`);
+        if (typeof onFilesReceived === "function") {
+          console.log(
+            `File downloaded and stored in memory: ${fileData.originalName}`
+          );
           onFilesReceived([file]);
         }
       } catch (error) {
-        console.error('Error downloading shared file:', error);
+        console.error("Error downloading shared file:", error);
       }
     };
-    
+
     // Process the file
     convertToFile();
   };
@@ -544,8 +558,16 @@ const VoiceChat = ({ user, onFilesReceived, files = [] }) => {
           {files.length > 0 && (
             <div className="file-status">
               <h4>File Sharing Status</h4>
-              <p>{isUploading ? "Sharing files..." : connected ? "Files will be shared automatically" : "Connect to share files"}</p>
-              <p className="file-count">{files.length} file(s) ready to share</p>
+              <p>
+                {isUploading
+                  ? "Sharing files..."
+                  : connected
+                  ? "Files will be shared automatically"
+                  : "Connect to share files"}
+              </p>
+              <p className="file-count">
+                {files.length} file(s) ready to share
+              </p>
             </div>
           )}
 

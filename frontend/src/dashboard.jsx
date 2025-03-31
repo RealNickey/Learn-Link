@@ -145,13 +145,11 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("pdf", file);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/generate-summary`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(`/generate-summary`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to generate summary");
@@ -224,7 +222,7 @@ const Profile = () => {
 
       if (hasSelectedPdfs) {
         // PDF-based chat
-        url = `${import.meta.env.VITE_API_URL}/pdf-chat`;
+        url = `/pdf-chat`; // Use relative URL for proxy to work
         method = "POST";
         selectedFiles.forEach((file) => {
           formData.append("pdfs", file);
@@ -235,9 +233,7 @@ const Profile = () => {
         );
       } else {
         // Regular chat
-        url = `${
-          import.meta.env.VITE_API_URL
-        }/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`;
+        url = `/generate-ai-content?prompt=${encodeURIComponent(inputValue)}`; // Use relative URL for proxy to work
         method = "GET";
         body = null;
         console.log(`Sending request to ${url}`);
@@ -252,7 +248,7 @@ const Profile = () => {
               Accept: "application/json",
               "Content-Type": "application/json",
             },
-        credentials: "same-origin",
+        credentials: "include", // Important for CORS with cookies
       });
 
       if (!response.ok) {
@@ -344,13 +340,11 @@ const Profile = () => {
         const formData = new FormData();
         formData.append("pdf", file);
 
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/generate-summary`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+        const response = await fetch(`/generate-summary`, {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
 
         if (!response.ok) throw new Error("Failed to generate summary");
 
@@ -428,16 +422,14 @@ const Profile = () => {
         formData.append("pdfs", file);
       });
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/generate-quiz`,
-        {
-          method: "POST",
-          body: formData,
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
+      const response = await fetch(`/generate-quiz`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Accept: "application/json",
+        },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error(
@@ -900,11 +892,8 @@ const Profile = () => {
           onClose={() => setIsFlashCardOpen(false)}
           pdfData={selectedFiles.length > 0 ? selectedFiles[0] : null}
         />
-        <VoiceChat 
-          user={user} 
-          onFilesReceived={setSharedFiles}
-          files={files} 
-        /> {/* Pass files from dashboard to VoiceChat */}
+        <VoiceChat user={user} onFilesReceived={setSharedFiles} files={files} />{" "}
+        {/* Pass files from dashboard to VoiceChat */}
         <Toaster />
       </>
     )

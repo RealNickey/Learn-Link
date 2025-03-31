@@ -90,10 +90,12 @@ app.use(
       if (!origin) return callback(null, true);
 
       if (
-        allowedOrigins.some(allowedOrigin => {
+        allowedOrigins.some((allowedOrigin) => {
           // Handle wildcard matching
-          if (allowedOrigin.includes('*')) {
-            const pattern = new RegExp('^' + allowedOrigin.replace(/\*/g, '.*') + '$');
+          if (allowedOrigin.includes("*")) {
+            const pattern = new RegExp(
+              "^" + allowedOrigin.replace(/\*/g, ".*") + "$"
+            );
             return pattern.test(origin);
           }
           // Direct match

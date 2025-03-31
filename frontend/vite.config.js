@@ -22,22 +22,59 @@ export default defineConfig({
   },
   define: {
     "process.env": {
-      VITE_API_URL: JSON.stringify(process.env.VITE_API_URL || "https://ppsrz1l3-3000.inc1.devtunnels.ms"),
+      VITE_API_URL: JSON.stringify(
+        process.env.VITE_API_URL || "https://ppsrz1l3-3000.inc1.devtunnels.ms"
+      ),
     },
   },
   server: {
     proxy: {
-      '/upload': {
-        target: 'https://ppsrz1l3-3000.inc1.devtunnels.ms',
+      "/upload": {
+        target: "https://ppsrz1l3-3000.inc1.devtunnels.ms",
         changeOrigin: true,
         secure: false,
       },
-      '/socket.io': {
-        target: 'https://ppsrz1l3-3000.inc1.devtunnels.ms',
+      "/socket.io": {
+        target: "https://ppsrz1l3-3000.inc1.devtunnels.ms",
         ws: true,
         changeOrigin: true,
         secure: false,
-      }
-    }
-  }
+      },
+      "/generate-quiz": {
+        target: "https://ppsrz1l3-3000.inc1.devtunnels.ms",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/generate-summary": {
+        target: "https://ppsrz1l3-3000.inc1.devtunnels.ms",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/compare-pdfs": {
+        target: "https://ppsrz1l3-3000.inc1.devtunnels.ms",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/generate-ai-content": {
+        target: "https://ppsrz1l3-3000.inc1.devtunnels.ms",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/generate-flashcards": {
+        target: "https://ppsrz1l3-3000.inc1.devtunnels.ms",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/pdf-chat": {
+        target: "https://ppsrz1l3-3000.inc1.devtunnels.ms",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/uploads/": {
+        target: "https://ppsrz1l3-3000.inc1.devtunnels.ms",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

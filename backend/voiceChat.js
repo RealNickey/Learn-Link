@@ -20,7 +20,13 @@ function setupVoiceChat(server) {
         process.env.FRONTEND_URL, // Additional URL from environment variable (if set)
       ].filter(Boolean), // Remove any undefined/null values
       methods: ["GET", "POST", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Origin", "X-Requested-With", "Accept", "Authorization"],
+      allowedHeaders: [
+        "Content-Type",
+        "Origin",
+        "X-Requested-With",
+        "Accept",
+        "Authorization",
+      ],
       credentials: true,
     },
   });
