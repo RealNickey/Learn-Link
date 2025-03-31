@@ -52,7 +52,7 @@ const itemVariants = {
 };
 
 const Profile = () => {
-  const { user, isAuthenticated, isLoading, error } = useAuth0();
+  const { user, isAuthenticated, isLoading, error, logout } = useAuth0();
   const [files, setFiles] = useState([]);
   const [micOn, setMicOn] = useState(true); // Added state for mic
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
@@ -502,6 +502,10 @@ const Profile = () => {
     scrollToBottom("smooth", 150);
   }, [chatHistory]);
 
+  const handleLogout = () => {
+    logout({ returnTo: window.location.origin });
+  };
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -664,7 +668,7 @@ const Profile = () => {
                 className="user-profile-picture"
               />
             </div>
-            <Toolbar userName={user.name} userImage={userImage} />
+            <Toolbar userName={user.name} userImage={userImage} onLogout={handleLogout} />
           </motion.div>
           <motion.div className="section div6" variants={itemVariants}>
             <div

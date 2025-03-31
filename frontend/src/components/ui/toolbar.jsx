@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { Star, Clock, Share2, Crown } from "lucide-react";
+import { Star, Clock, LogOut, Crown } from "lucide-react"; // Import LogOut icon instead of Share icon
 import { Button } from "./button";
 import ShareBoardModal from "./share-board-modal";
 
-export default function Toolbar({ userName, userImage }) {
+export default function Toolbar({ userName, userImage, onLogout }) { // Update the prop types to include onLogout
   const [time] = useState("03:00");
-  const [showShareModal, setShowShareModal] = useState(false);
-
-  const toggleShareModal = () => setShowShareModal(prev => !prev);
 
   return (
     <>
@@ -44,21 +41,17 @@ export default function Toolbar({ userName, userImage }) {
             </div>
           </div>
           
-          <Button 
-            size="sm" 
-            variant="default" 
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white border-none hover:opacity-90 px-4"
-            onClick={toggleShareModal}
+          {/* Replace share button with logout button */}
+          <button 
+            className="toolbar-button logout-button bg-gradient-to-r from-purple-600 to-blue-600 text-white border-none hover:opacity-90 px-4" 
+            onClick={onLogout}
+            title="Logout"
           >
-            <Share2 className="w-3.5 h-3.5 mr-1" />
-            Share
-          </Button>
+            <LogOut className="w-3.5 h-3.5 mr-1" />
+            <span className="button-label">Logout</span>
+          </button>
         </div>
       </div>
-
-      {showShareModal && (
-        <ShareBoardModal onClose={toggleShareModal} userName={userName} />
-      )}
     </>
   );
 }
