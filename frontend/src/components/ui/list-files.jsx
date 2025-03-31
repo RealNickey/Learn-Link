@@ -25,9 +25,7 @@ export const ListFiles = ({
           {/* Local Files Section */}
           {files.length > 0 && (
             <div className="files-section">
-              <h4 className="text-sm font-medium text-neutral-300 mb-2">
-                Your Files
-              </h4>
+              <h4 className="text-sm font-medium text-neutral-300 mb-2">Your Files</h4>
               {files.map((file, idx) => (
                 <motion.div
                   key={file.name + file.lastModified}
@@ -53,15 +51,36 @@ export const ListFiles = ({
                           className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-900"
                         />
                       </div>
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        layout
-                        title={file.name}
-                        className="text-base text-neutral-300 max-w-[135px] truncate"
-                      >
-                        {file.name}
-                      </motion.p>
+                      <div className="flex items-center gap-2">
+                        {file.isShared && (
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="16" 
+                            height="16" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            className="text-blue-400"
+                            title="Shared file"
+                          >
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <polyline points="16 6 12 2 8 6"></polyline>
+                            <line x1="12" y1="2" x2="12" y2="15"></line>
+                          </svg>
+                        )}
+                        <motion.p
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          layout
+                          title={file.name}
+                          className="text-base text-neutral-300 max-w-[135px] truncate"
+                        >
+                          {file.name}
+                        </motion.p>
+                      </div>
                     </div>
                     <Button
                       onClick={(e) => {
@@ -83,9 +102,6 @@ export const ListFiles = ({
           {/* Shared Files Section */}
           {sharedFiles.length > 0 && (
             <div className="shared-files-section mt-6">
-              <h4 className="text-sm font-medium text-neutral-300 mb-2">
-                Shared Files
-              </h4>
               {sharedFiles.map((file, idx) => (
                 <motion.div
                   key={`shared-${file.filename || idx}`}
