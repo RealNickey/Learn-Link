@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { Button } from "./button";
 import "./../../styles/voice-chat.css";
-const VoiceChat = ({ user }) => {
+
+const VoiceChat = ({ user, expanded, onExpand }) => {
   const [connected, setConnected] = useState(false);
   const [micEnabled, setMicEnabled] = useState(false);
   const [muted, setMuted] = useState(false);
   const [users, setUsers] = useState({});
-  const [expanded, setExpanded] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
   const [customUsername, setCustomUsername] = useState("");
   const [editingName, setEditingName] = useState(false);
@@ -18,7 +18,6 @@ const VoiceChat = ({ user }) => {
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
 
-  // Default username from Auth0 user or generate random one
   const defaultUsername =
     user?.name || user?.email || `user#${Math.floor(Math.random() * 999999)}`;
 
@@ -29,24 +28,19 @@ const VoiceChat = ({ user }) => {
     online: false,
   });
 
-  // Initialize socket connection
   useEffect(() => {
-    // Create socket connection with improved configuration for Vercel
     socketRef.current = io(apiUrl, {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      autoConnect: false, // Don't connect automatically
-      transports: ["websocket", "polling"], // Try WebSocket first, fallback to polling
-      timeout: 10000, // Increase timeout to 10 seconds
-      path: "/socket.io/", // Explicitly set the path
+      autoConnect: false,
+      transports: ["websocket", "polling"],
+      timeout: 10000,
+      path: "/socket.io/",
     });
 
-    // Socket connection events
     socketRef.current.on("connect", () => {
       setConnectionStatus("connected");
       console.log("Connected to voice chat server!");
-
-      // Send user information upon connection
       socketRef.current.emit("userInformation", userStatus.current);
     });
 
@@ -62,12 +56,10 @@ const VoiceChat = ({ user }) => {
       setConnected(false);
     });
 
-    // Listen for user updates
     socketRef.current.on("usersUpdate", (data) => {
       setUsers(data);
     });
 
-    // Listen for incoming audio
     socketRef.current.on("send", (data) => {
       if (!userStatus.current.mute) {
         const audio = new Audio(data);
@@ -75,7 +67,6 @@ const VoiceChat = ({ user }) => {
       }
     });
 
-    // Clean up on unmount
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -86,21 +77,18 @@ const VoiceChat = ({ user }) => {
     };
   }, []);
 
-  // Update username when user prop changes
   useEffect(() => {
     if (!editingName) {
       const newUsername = user?.name || user?.email || defaultUsername;
       userStatus.current.username = newUsername;
       setCustomUsername(newUsername);
 
-      // If already connected, update username
       if (socketRef.current && socketRef.current.connected) {
         socketRef.current.emit("userInformation", userStatus.current);
       }
     }
   }, [user?.name, user?.email, defaultUsername, editingName]);
 
-  // Setup audio recording
   useEffect(() => {
     if (micEnabled && connected) {
       setupAudioRecording();
@@ -109,30 +97,24 @@ const VoiceChat = ({ user }) => {
     }
   }, [micEnabled, connected]);
 
-  // Setup audio recording and transmission
   const setupAudioRecording = async () => {
     try {
-      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      // Create media recorder
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
       let audioChunks = [];
 
-      // Handle data available event
       mediaRecorder.addEventListener("dataavailable", (event) => {
         audioChunks.push(event.data);
       });
 
-      // Handle stop event
       mediaRecorder.addEventListener("stop", () => {
         const audioBlob = new Blob(audioChunks);
         audioChunks = [];
 
-        // Convert blob to base64
         const fileReader = new FileReader();
         fileReader.readAsDataURL(audioBlob);
         fileReader.onloadend = () => {
@@ -143,7 +125,6 @@ const VoiceChat = ({ user }) => {
           socketRef.current.emit("voice", base64String);
         };
 
-        // Restart recording
         if (micEnabled && connected) {
           mediaRecorder.start();
           setTimeout(() => {
@@ -154,7 +135,6 @@ const VoiceChat = ({ user }) => {
         }
       });
 
-      // Start recording
       mediaRecorder.start();
       setTimeout(() => {
         if (mediaRecorder.state === "recording") {
@@ -167,7 +147,6 @@ const VoiceChat = ({ user }) => {
     }
   };
 
-  // Stop audio recording
   const stopAudioRecording = () => {
     if (
       mediaRecorderRef.current &&
@@ -182,10 +161,8 @@ const VoiceChat = ({ user }) => {
     }
   };
 
-  // Toggle connection
   const toggleConnection = () => {
     if (connected) {
-      // Disconnect
       socketRef.current.disconnect();
       setConnected(false);
       userStatus.current.online = false;
@@ -193,7 +170,6 @@ const VoiceChat = ({ user }) => {
       userStatus.current.microphone = false;
       stopAudioRecording();
     } else {
-      // Connect
       socketRef.current.connect();
       setConnected(true);
       userStatus.current.online = true;
@@ -201,7 +177,6 @@ const VoiceChat = ({ user }) => {
     }
   };
 
-  // Toggle microphone
   const toggleMicrophone = () => {
     if (!connected) return;
 
@@ -212,7 +187,6 @@ const VoiceChat = ({ user }) => {
     socketRef.current.emit("userInformation", userStatus.current);
   };
 
-  // Toggle mute
   const toggleMute = () => {
     if (!connected) return;
 
@@ -223,12 +197,10 @@ const VoiceChat = ({ user }) => {
     socketRef.current.emit("userInformation", userStatus.current);
   };
 
-  // Handle username change
   const handleUsernameChange = (e) => {
     setCustomUsername(e.target.value);
   };
 
-  // Save username
   const saveUsername = () => {
     if (customUsername.trim()) {
       userStatus.current.username = customUsername.trim();
@@ -239,29 +211,26 @@ const VoiceChat = ({ user }) => {
     }
   };
 
-  // Count online users
   const onlineUsersCount = Object.values(users).filter(
     (user) => user.online
   ).length;
 
-  // Check if current user is in the participants list
   const isUserListed = Object.values(users).some(
     (u) => u.username === userStatus.current.username
   );
 
-  // Find current user's socket ID
   const currentUserSocketId = Object.keys(users).find(
     (key) => users[key].username === userStatus.current.username
   );
 
   return (
-    <div
-      className={`voice-chat-container ${expanded ? "expanded" : "collapsed"}`}
-    >
-      <div className="voice-chat-header" onClick={() => setExpanded(!expanded)}>
+    <div className={`voice-chat-container ${expanded ? "expanded" : "collapsed"}`}>
+      <div className="voice-chat-header" onClick={() => onExpand(!expanded)}>
         <h3>Voice Chat {connected ? "🟢" : "🔴"}</h3>
         <div className="online-indicator">
-          {onlineUsersCount} online {expanded ? "▼" : "▲"}
+          {/* {onlineUsersCount} online {expanded ? "▼" : "▲"} ▼,▲ up and down pointing 
+          triangle replace with empty text */}
+          {onlineUsersCount} online {expanded ? "‎ " : "‎ "} 
         </div>
       </div>
 
@@ -286,8 +255,7 @@ const VoiceChat = ({ user }) => {
                 <span className="display-name">
                   {userStatus.current.username} {connected && "(You)"}
                 </span>
-                <span className="edit-icon">ㅤ</span> {/* ✏️ */}
-
+                <span className="edit-icon">ㅤ</span>
               </div>
             )}
             <div className="connection-status">

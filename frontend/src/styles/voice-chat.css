@@ -1,20 +1,23 @@
-.voice-chat-container {
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
+.voice-chat-embedded {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
   width: 300px;
   background-color: rgba(15, 15, 44, 0.95);
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   color: white;
-  z-index: 1000;
+  margin-bottom: 10px;
   transition: all 0.3s ease;
   overflow: hidden;
-  max-height: 500px;
 }
 
-.voice-chat-container.collapsed {
-  max-height: 60px;
+.voice-chat-embedded.collapsed {
+  height: 60px;
+}
+
+.voice-chat-embedded.expanded {
+  height: 500px;
 }
 
 .voice-chat-header {
@@ -239,7 +242,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .voice-chat-container {
+  .voice-chat-embedded {
     width: 90%;
     right: 5%;
     left: 5%;

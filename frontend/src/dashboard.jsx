@@ -70,7 +70,8 @@ const Profile = () => {
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [isFlashCardOpen, setIsFlashCardOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [showVoiceChat, setShowVoiceChat] = useState(false); // Added state for voice chat visibility
+  const [micSettings, setMicSettings] = useState(false); // Add this state
+  const [voiceChatExpanded, setVoiceChatExpanded] = useState(false); // Added state for voice chat expanded
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -200,7 +201,10 @@ const Profile = () => {
   };
 
   const handleMicSettings = () => {
-    setShowVoiceChat(!showVoiceChat);
+    setMicSettings(!micSettings);
+    if (!micSettings) {
+      setVoiceChatExpanded(true);
+    }
   };
 
   const handleInputSubmit = async (inputValue) => {
@@ -826,15 +830,25 @@ const Profile = () => {
             <Dock>
               <DockIcon 
                 title="Mic Settings" 
-                className="font-bold scale-110 hover:scale-125 transition-transform"
+                className={`font-bold scale-110 hover:scale-125 transition-transform ${micSettings ? 'active' : ''}`}
                 onClick={handleMicSettings}
               >
                 <img 
                   src="/src/components/ui/micsettings.svg" 
                   alt="Mic Settings"
-                  className="w-7 h-7 invert" // Increased size from w-6 h-6 to w-7 h-7
+                  className="w-7 h-7 invert"
                 />
               </DockIcon>
+              {/* Embed VoiceChat component here */}
+              {micSettings && (
+                <div className="voice-chat-embedded">
+                  <VoiceChat
+                    user={user}
+                    expanded={voiceChatExpanded}
+                    onExpand={setVoiceChatExpanded}
+                  />
+                </div>
+              )}
               <DockIcon title="AI Quiz" onClick={handleGenerateQuiz}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -914,7 +928,6 @@ const Profile = () => {
           onClose={() => setIsFlashCardOpen(false)}
           pdfData={selectedFiles.length > 0 ? selectedFiles[0] : null}
         />
-        {showVoiceChat && <VoiceChat user={user} />} {/* Add this component */}
         <Toaster />
       </>
     )
