@@ -1,64 +1,50 @@
 import { useState } from "react";
-import { Star, Clock, Share2, Crown } from "lucide-react";
-import { Button } from "./button";
-import ShareBoardModal from "./share-board-modal";
+import { LogOut } from "lucide-react";
 
-export default function Toolbar({ userName, userImage }) {
-  const [time] = useState("03:00");
-  const [showShareModal, setShowShareModal] = useState(false);
-
-  const toggleShareModal = () => setShowShareModal(prev => !prev);
-
+export default function Toolbar({ userName, userImage, onLogout }) {
   return (
-    <>
-      <div className="flex items-center justify-between w-full p-3 rounded-xl bg-black/40 backdrop-blur-sm shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-purple-500 ring-offset-1 ring-offset-black">
-              {userImage ? (
-                <img src={userImage} alt={userName} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">
-                    {userName?.charAt(0) || "U"}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-black">
-              <Crown className="w-3 h-3 text-white" />
-            </div>
+    <div className="flex flex-col sm:flex-row items-center w-full p-2 sm:p-3 rounded-xl bg-black/40 backdrop-blur-sm shadow-md gap-2">
+      {/* User profile section - simplified and responsive */}
+      <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="relative">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden ring-2 ring-purple-500 ring-offset-1 ring-offset-black flex-shrink-0">
+            {userImage ? (
+              <img 
+                src={userImage} 
+                alt={userName} 
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
+                <span className="text-white text-sm sm:text-lg font-bold">
+                  {userName?.charAt(0) || "U"}
+                </span>
+              </div>
+            )}
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-white">{userName}</span>
-          </div>
+          {/* Online indicator */}
+          <div className="absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-black"></div>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center bg-neutral-900/60 cursor-pointer hover:bg-neutral-800">
-              <div className="w-3 h-3 bg-purple-500 rounded-sm"></div>
-            </div>
-            <div className="w-6 h-6 rounded-full flex items-center justify-center bg-neutral-900/60 cursor-pointer hover:bg-neutral-800">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-            </div>
-          </div>
-          
-          <Button 
-            size="sm" 
-            variant="default" 
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white border-none hover:opacity-90 px-4"
-            onClick={toggleShareModal}
-          >
-            <Share2 className="w-3.5 h-3.5 mr-1" />
-            Share
-          </Button>
+        <div className="flex flex-col">
+          <span className="text-xs sm:text-sm font-medium text-white truncate max-w-[100px] sm:max-w-[150px]">
+            {userName}
+          </span>
+          <span className="text-xs text-purple-400 hidden sm:block">Online</span>
         </div>
       </div>
-
-      {showShareModal && (
-        <ShareBoardModal onClose={toggleShareModal} userName={userName} />
-      )}
-    </>
+      
+      {/* Spacer for small screens */}
+      <div className="flex-grow sm:flex-grow-0"></div>
+      
+      {/* Logout button - responsive and mobile-friendly */}
+      <button 
+        onClick={onLogout}
+        className="flex items-center gap-1 sm:gap-2 px-3 py-1 sm:px-4 sm:py-2 bg-gradient-to-r from-red-600/80 to-red-700/80 hover:from-red-600 hover:to-red-700 rounded-lg text-white text-xs sm:text-sm font-medium transition-all duration-200 shadow-lg w-full sm:w-auto justify-center sm:justify-start"
+      >
+        <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+        <span>Logout</span>
+      </button>
+    </div>
   );
 }

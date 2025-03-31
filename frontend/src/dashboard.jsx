@@ -52,7 +52,7 @@ const itemVariants = {
 };
 
 const Profile = () => {
-  const { user, isAuthenticated, isLoading, error } = useAuth0();
+  const { user, isAuthenticated, isLoading, error, logout } = useAuth0();
   const [files, setFiles] = useState([]);
   const [micOn, setMicOn] = useState(true); // Added state for mic
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
@@ -502,6 +502,22 @@ const Profile = () => {
     scrollToBottom("smooth", 150);
   }, [chatHistory]);
 
+  const handleLogout = () => {
+    // Show a toast notification before logout
+    toast({
+      title: "Goodbye!",
+      description: "You've been successfully logged out",
+      variant: "default",
+      duration: 2000,
+      className: "logout-toast",
+    });
+    
+    // Short delay to allow toast to be visible before redirecting
+    setTimeout(() => {
+      logout({ returnTo: window.location.origin });
+    }, 800);
+  };
+
   console.log("isLoading:", isLoading);
   console.log("isAuthenticated:", isAuthenticated);
   console.log("user:", user);
@@ -656,15 +672,21 @@ const Profile = () => {
               }
             />
           </motion.div>
-          <motion.div className="section div5" variants={itemVariants}>
-            <div className="user-profile">
-              <img
-                src={user.picture}
-                alt="User Profile"
-                className="user-profile-picture"
-              />
-            </div>
-            <Toolbar userName={user.name} userImage={userImage} />
+          <motion.div
+            className="section div5"
+            variants={itemVariants}
+            style={{
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Toolbar
+              userName={user.name || user.email}
+              userImage={userImage}
+              onLogout={handleLogout}
+            />
           </motion.div>
           <motion.div className="section div6" variants={itemVariants}>
             <div
