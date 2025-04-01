@@ -1,113 +1,68 @@
-Based on the information gathered, here is a more detailed README for the Learn-Link repository:
+# Learn Link Collaborative Whiteboard
 
-# Learn-Link
-
-**B.Tech Computer Science and Design mini project**
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Environment Variables
-
-This project uses the following environment variables:
-
-### Frontend
-
-- `VITE_DOMAIN`: The domain for authentication.
-- `VITE_CLIENT_ID`: The client ID for authentication.
-
-### Backend
-
-- `LANGSMITH_TRACING`: Enables tracing.
-- `LANGSMITH_API_KEY`: API key for Langsmith.
-- `GOOGLE_APPLICATION_CREDENTIALS`: Credentials for Google application.
-- `LANGCHAIN_CALLBACKS_BACKGROUND`: (Optional) Reduce tracing latency if not in a serverless environment.
-=======
-## Overview
-
-Learn-Link is a web application designed as a mini project for the B.Tech Computer Science and Design course. The application serves as a platform for students and educators to connect, share resources, and collaborate on various educational activities.
-
-## Technologies Used
-
-- **JavaScript**: 88.4%
-- **CSS**: 10.8%
-- **HTML**: 0.8%
-- **Backend**: Node.js, Express, Mongoose
-- **Frontend**: React, Vite, Tailwind CSS
+A real-time collaborative whiteboard application built with tldraw and socket.io.
 
 ## Features
 
-- User authentication and authorization
-- Real-time chat and voice communication
-- Resource sharing and management
-- Interactive dashboard with customizable widgets
+- Real-time collaborative drawing
+- Multiple rooms support
+- Persistent storage of drawings
+- Default shape tools (rectangles, arrows, etc.)
 
-## Project Structure
+## Prerequisites
 
-- **backend**: Contains the server-side code, including API endpoints and database models.
-- **frontend**: Contains the client-side code, including React components and styles.
+- Node.js (v14 or higher)
+- npm or yarn
 
 ## Setup
 
-### Prerequisites
+1. Clone the repository
+2. Install backend dependencies:
+```bash
+cd backend
+npm install
+```
 
-- Node.js (>=16.20.1)
-- npm
+3. Install frontend dependencies:
+```bash
+cd frontend
+npm install
+```
 
-### Installation
-
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/RealNickey/Learn-Link.git
-   cd Learn-Link
-   ```
-
-2. Install dependencies:
-
-   **Backend**:
-   ```sh
-   cd backend
-   npm install
-   ```
-
-   **Frontend**:
-   ```sh
-   cd frontend
-   npm install
-   ```
-
-### Running the Application
+## Running the Application
 
 1. Start the backend server:
-   ```sh
-   cd backend
-   npm start
-   ```
+```bash
+cd backend
+npm run dev
+```
 
-2. Start the frontend development server:
-   ```sh
-   cd frontend
-   npm run dev
-   ```
+2. In a new terminal, start the frontend development server:
+```bash
+cd frontend
+npm start
+```
 
-3. Open your browser and navigate to `http://localhost:3000`.
+3. Open your browser and navigate to `http://localhost:3000`
 
-## Contributing
+## How to Use
 
-Contributions are welcome! Please follow these steps:
+1. The application will automatically connect to the default room
+2. Use the drawing tools on the left sidebar to create shapes and drawings
+3. All changes will be synchronized in real-time with other users in the same room
+4. Drawings are automatically saved every 2 seconds
 
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes.
-4. Commit your changes (`git commit -m 'Add new feature'`).
-5. Push to the branch (`git push origin feature-branch`).
-6. Create a Pull Request.
+## Technologies Used
 
-## License
+- Frontend:
+  - React
+  - tldraw
+  - socket.io-client
+  - @tldraw/sync
 
-This project is licensed under the ISC License.
-
-## Authors
-
-- **Aswin Jim Thuruthippilly** - [RealNickey](https://github.com/RealNickey)
-- **Christin Jose Biju** - [freebooter1052](https://github.com/freebooter1052)
+- Backend:
+  - Node.js
+  - Express
+  - socket.io
+  - @tldraw/sync-core
+  - @tldraw/tlschema

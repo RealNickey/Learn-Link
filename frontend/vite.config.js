@@ -19,10 +19,20 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ["react", "react-dom"],
+    esbuildOptions: {
+      loader: {
+        ".js": "jsx",
+      },
+    },
   },
   define: {
     "process.env": {
       VITE_API_URL: JSON.stringify("https://learn-link-backend.vercel.app"),
     },
+  },
+  esbuild: {
+    loader: "jsx",
+    include: /src\/.*\.[tj]sx?$/,
+    exclude: [],
   },
 });
