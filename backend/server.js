@@ -14,6 +14,7 @@ const {
   generatePdfChatResponse,
 } = require("./aiService");
 const setupVoiceChat = require("./voiceChat");
+const setupDrawingSync = require("./drawingSync");
 
 const app = express();
 const server = http.createServer(app);
@@ -68,8 +69,9 @@ const uploadPDF = multer({
 const memStorage = multer.memoryStorage();
 const upload = multer({ storage: memStorage });
 
-// Initialize voice chat with file sharing capabilities
+// Initialize voice chat and drawing sync
 const io = setupVoiceChat(server);
+const drawingSpace = setupDrawingSync(io);
 
 // Allow requests from all relevant origins
 const allowedOrigins = [

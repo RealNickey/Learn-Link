@@ -12,6 +12,7 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+import { DrawingSyncProvider } from "./components/ui/drawing-sync-provider"; // Import DrawingSyncProvider
 
 import Toolbar from "./components/ui/toolbar";
 import VoiceChat from "./components/ui/voice-chat"; // Add this import
@@ -71,6 +72,7 @@ const Profile = () => {
   const [sharedFiles, setSharedFiles] = useState([]);
   const [isFlashCardOpen, setIsFlashCardOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [editor, setEditor] = useState(null); // Added state for editor
 
   const userImage = user.picture; // Store user image in a variable
 
@@ -619,8 +621,17 @@ const Profile = () => {
                   onMount={(editor) => {
                     editor.user.updateUserPreferences({ colorScheme: "dark" });
                     editor.setCurrentTool("draw");
+                    setEditor(editor);
                   }}
-                />
+                >
+                  {editor && (
+                    <DrawingSyncProvider
+                      roomId={`${user.sub}-drawing`}
+                      editor={editor}
+                      user={user}
+                    />
+                  )}
+                </Tldraw>
               )}
             </div>
           </motion.div>
