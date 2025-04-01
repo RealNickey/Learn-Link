@@ -4,17 +4,29 @@ const socketIo = require("socket.io");
 function setupVoiceChat(server) {
   // Store connected users and their status
   const socketsStatus = {};
+  // Store shared files
+  const sharedFiles = [];
 
   // Initialize socket.io with CORS settings
   const io = socketIo(server, {
     cors: {
       origin: [
         "http://localhost:5173", // Local development URL
+        "http://localhost:*", // Any local port
         "https://learn-link.vercel.app", // Production frontend URL
+        "https://learn-link-frontend.vercel.app",
+        "https://ppsrz1l3-3000.inc1.devtunnels.ms", // Add your port forwarded URL
+        "https://*.devtunnels.ms", // Allow all devtunnels URLs
         process.env.FRONTEND_URL, // Additional URL from environment variable (if set)
       ].filter(Boolean), // Remove any undefined/null values
       methods: ["GET", "POST", "OPTIONS"],
-      allowedHeaders: ["Content-Type"],
+      allowedHeaders: [
+        "Content-Type",
+        "Origin",
+        "X-Requested-With",
+        "Accept",
+        "Authorization",
+      ],
       credentials: true,
     },
   });
@@ -25,6 +37,7 @@ function setupVoiceChat(server) {
   // Print server information on startup
   console.log("[Voice Chat] Server initialized");
   console.log("[Voice Chat] Users can connect via websockets");
+  console.log("[Voice Chat] File sharing enabled");
 
   // Handle socket connections
   io.on("connection", function (socket) {
@@ -37,6 +50,33 @@ function setupVoiceChat(server) {
     };
 
     console.log(`[Voice Chat] New connection: ${socketId}`);
+
+    // Handle file sharing when a user connects to voice chat
+    socket.on("voice-chat-connect", function (fileData) {
+      if (fileData && fileData.url) {
+        // Add file to shared files array
+        const sharedFileData = {
+          ...fileData,
+          sharedBy: socketId,
+          sharedByUsername: socketsStatus[socketId]?.username || "Unknown User",
+          sharedAt: new Date().toISOString(),
+        };
+
+        sharedFiles.push(sharedFileData);
+
+        console.log(
+          `[Voice Chat] File shared by ${socketsStatus[socketId]?.username}: ${fileData.originalName}`
+        );
+
+        // Broadcast the file to all connected clients EXCEPT the sender
+        Object.keys(socketsStatus).forEach((clientSocketId) => {
+          if (clientSocketId !== socketId) {
+            // Send only to other users, not back to the sender
+            io.to(clientSocketId).emit("filesShared", [sharedFileData]);
+          }
+        });
+      }
+    });
 
     // Handle voice data transmission
     socket.on("voice", function (data) {

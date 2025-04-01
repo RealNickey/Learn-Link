@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const multer = require("multer");
+const path = require("path"); // Add path module for file path handling
+const fs = require("fs"); // Add fs module for directory creation
 const {
   generateAIContent,
   processPdfContent,
@@ -17,15 +19,67 @@ const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 3000;
 
-// Initialize voice chat
+// Define base URL for file access - use environment variable or fallback
+const BASE_URL = process.env.BASE_URL || `http://localhost:${port}`;
+console.log(`Using base URL for file sharing: ${BASE_URL}`);
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log("Created uploads directory:", uploadsDir);
+}
+
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Configure multer for file uploads - Disk storage for shared files
+const fileStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    // Create a unique filename with original name and timestamp
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const sanitizedOriginalName = file.originalname.replace(
+      /[^a-zA-Z0-9.-]/g,
+      "_"
+    );
+    cb(null, `file-${uniqueSuffix}-${sanitizedOriginalName}`);
+  },
+});
+
+// Configure multer for PDF uploads
+const uploadPDF = multer({
+  storage: fileStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit per file
+  },
+  fileFilter: function (req, file, cb) {
+    // Accept only PDFs
+    if (file.mimetype !== "application/pdf") {
+      return cb(new Error("Only PDF files are allowed"), false);
+    }
+    cb(null, true);
+  },
+});
+
+// Configure multer for memory storage (for AI processing)
+const memStorage = multer.memoryStorage();
+const upload = multer({ storage: memStorage });
+
+// Initialize voice chat with file sharing capabilities
 const io = setupVoiceChat(server);
 
 // Allow requests from all relevant origins
 const allowedOrigins = [
   "http://localhost:5173", // Local development
+  "http://localhost:*", // Any local port
   "https://learn-link-frontend.vercel.app",
   "https://learn-link.vercel.app",
   "https://learn-link-git-main-realnickeys.vercel.app",
+  "https://ppsrz1l3-3000.inc1.devtunnels.ms", // Add your port forwarded URL
+  "https://*.devtunnels.ms", // Allow all devtunnels URLs
 ];
 
 // Configure CORS
@@ -36,12 +90,24 @@ app.use(
       if (!origin) return callback(null, true);
 
       if (
-        allowedOrigins.indexOf(origin) !== -1 ||
-        origin.includes("localhost")
+        allowedOrigins.some((allowedOrigin) => {
+          // Handle wildcard matching
+          if (allowedOrigin.includes("*")) {
+            const pattern = new RegExp(
+              "^" + allowedOrigin.replace(/\*/g, ".*") + "$"
+            );
+            return pattern.test(origin);
+          }
+          // Direct match
+          return origin === allowedOrigin;
+        }) ||
+        origin.includes("localhost") ||
+        origin.includes("devtunnels.ms") // Allow all devtunnels URLs
       ) {
-        callback(null, origin);
+        callback(null, true); // Return true instead of origin for wildcard support
       } else {
-        // If the origin is not in the allowed list, we don't send credentials
+        console.log(`CORS blocked request from: ${origin}`);
+        // If the origin is not in the allowed list, we still allow but without credentials
         callback(null, false);
       }
     },
@@ -59,16 +125,6 @@ app.use(
 
 // Parse JSON bodies
 app.use(express.json());
-
-// Configure multer for file uploads
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit per file
-    files: 3, // Maximum 3 files
-  },
-});
 
 // Add OPTIONS handling for preflight requests
 app.options("*", cors());
@@ -129,7 +185,7 @@ app.post("/generate-quiz", (req, res) => {
 });
 
 // Routes
-app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
+app.post("/upload-pdf", uploadPDF.single("pdf"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No PDF file uploaded" });
@@ -142,14 +198,29 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
   }
 });
 
-app.post("/generate-summary", upload.single("pdf"), async (req, res) => {
+app.post("/generate-summary", uploadPDF.single("pdf"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No PDF file provided" });
     }
 
-    const pdfBuffer = req.file.buffer;
+    // Read the file from disk since it was stored using fileStorage
+    const filePath = req.file.path;
+    console.log(`[Summary] Processing PDF from path: ${filePath}`);
+    
+    let pdfBuffer;
+    try {
+      // Use fs.promises.readFile instead of fs.readFile
+      const fs = require('fs').promises;
+      pdfBuffer = await fs.readFile(filePath);
+      console.log(`[Summary] Successfully read ${pdfBuffer.length} bytes from file`);
+    } catch (readError) {
+      console.error(`[Summary] Error reading file: ${readError.message}`);
+      throw new Error("Failed to read uploaded PDF file");
+    }
+
     const summary = await processPdfContent(pdfBuffer);
+    console.log(`[Summary] Successfully generated summary`);
 
     res.json({ summary });
   } catch (error) {
@@ -162,8 +233,14 @@ app.post("/generate-summary", upload.single("pdf"), async (req, res) => {
 app.post(
   "/compare-pdfs",
   upload.fields([
-    { name: "pdf1", maxCount: 1 },
-    { name: "pdf2", maxCount: 1 },
+    {
+      name: "pdf1",
+      maxCount: 1,
+    },
+    {
+      name: "pdf2",
+      maxCount: 1,
+    },
   ]),
   async (req, res) => {
     try {
@@ -304,6 +381,44 @@ app.post("/pdf-chat", upload.array("pdfs", 3), async (req, res) => {
       details: error.message,
       content:
         "I encountered an error while processing your request. Please try again later.",
+    });
+  }
+});
+
+// File sharing endpoint for voice chat
+app.post("/upload", uploadPDF.single("file"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Create file URL for client access using the BASE_URL instead of request info
+    const fileUrl = `${BASE_URL}/uploads/${req.file.filename}`;
+    const fileDetails = {
+      url: fileUrl,
+      originalName: req.file.originalname,
+      filename: req.file.filename,
+      size: req.file.size,
+      mimeType: req.file.mimetype,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    console.log(
+      `[File Upload] File uploaded successfully: ${fileDetails.originalName}`
+    );
+
+    // Return file details to the client
+    res.json({
+      success: true,
+      message: "File uploaded successfully",
+      file: fileDetails,
+    });
+  } catch (error) {
+    console.error("[File Upload] Error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to upload file",
+      message: error.message,
     });
   }
 });
