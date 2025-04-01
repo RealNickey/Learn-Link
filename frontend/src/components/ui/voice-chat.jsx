@@ -260,10 +260,43 @@ const VoiceChat = ({ user }) => {
       className={`voice-chat-container ${expanded ? "expanded" : "collapsed"}`}
     >
       <div className="voice-chat-header" onClick={() => setExpanded(!expanded)}>
-        <h3>Voice Chat {connected ? "🟢" : "🔴"}</h3>
-        <div className="online-indicator">
-          {onlineUsersCount} online {expanded ? "▼" : "▲"}
-        </div>
+        {!expanded && (
+          <div className="collapsed-view">
+            {connected ? (
+              <>
+                <button className="voice-chat-icon">
+                  <span>🎙️</span>
+                </button>
+                <div className="avatar-stack">
+                  {Object.values(users)
+                    .filter((user) => user.online)
+                    .slice(0, 4)
+                    .map((userData, index) => (
+                      <img
+                        key={index}
+                        src={getAvatarUrl(userData.username)}
+                        alt={userData.username}
+                        className="avatar"
+                      />
+                    ))}
+                  {onlineUsersCount > 4 && (
+                    <div className="more-indicator">+{onlineUsersCount - 4}</div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="user-info-collapsed">
+                <img
+                  src={user?.picture || getDefaultAvatarUrl()}
+                  alt={user?.name || "User"}
+                  className="avatar"
+                />
+                <span className="user-name">{user?.name || "Guest"}</span>
+              </div>
+            )}
+          </div>
+        )}
+        <div className="toggle-indicator">{expanded ? "▼" : "▲"}</div>
       </div>
 
       {expanded && (
