@@ -204,8 +204,23 @@ app.post("/generate-summary", uploadPDF.single("pdf"), async (req, res) => {
       return res.status(400).json({ error: "No PDF file provided" });
     }
 
-    const pdfBuffer = req.file.buffer;
+    // Read the file from disk since it was stored using fileStorage
+    const filePath = req.file.path;
+    console.log(`[Summary] Processing PDF from path: ${filePath}`);
+
+    let pdfBuffer;
+    try {
+      pdfBuffer = await fs.readFile(filePath);
+      console.log(
+        `[Summary] Successfully read ${pdfBuffer.length} bytes from file`
+      );
+    } catch (readError) {
+      console.error(`[Summary] Error reading file: ${readError.message}`);
+      throw new Error("Failed to read uploaded PDF file");
+    }
+
     const summary = await processPdfContent(pdfBuffer);
+    console.log(`[Summary] Successfully generated summary`);
 
     res.json({ summary });
   } catch (error) {
