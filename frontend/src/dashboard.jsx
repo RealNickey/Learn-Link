@@ -12,6 +12,7 @@ import { Toaster } from "./components/ui/toaster";
 import { Dock, DockIcon, MusicPlayer } from "./components/ui/dock"; // Updated import to include MusicPlayer
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+import { useSyncDemo } from "@tldraw/sync";
 
 import Toolbar from "./components/ui/toolbar";
 import VoiceChat from "./components/ui/voice-chat"; // Add this import
@@ -53,6 +54,7 @@ const itemVariants = {
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading, error, logout } = useAuth0();
+  const store = useSyncDemo({ roomId: "learn-link-room" });
   const [files, setFiles] = useState([]);
   const [micOn, setMicOn] = useState(true); // Added state for mic
   const [aiContent, setAiContent] = useState(""); // Added state for AI content
@@ -504,7 +506,7 @@ const Profile = () => {
       duration: 2000,
       className: "logout-toast",
     });
-    
+
     // Short delay to allow toast to be visible before redirecting
     setTimeout(() => {
       logout({ returnTo: window.location.origin });
@@ -615,12 +617,7 @@ const Profile = () => {
                   />
                 </div>
               ) : (
-                <Tldraw
-                  onMount={(editor) => {
-                    editor.user.updateUserPreferences({ colorScheme: "dark" });
-                    editor.setCurrentTool("draw");
-                  }}
-                />
+                <Tldraw store={store} />
               )}
             </div>
           </motion.div>
