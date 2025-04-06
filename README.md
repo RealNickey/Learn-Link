@@ -33,9 +33,8 @@ Learn-Link is a web-based e-learning platform developed as a B.Tech Computer Sci
 - **Libraries/Frameworks**:
   - [List any libraries or frameworks used in the project]
 - **Backend**:
-  - [List backend technologies if applicable]
-- **Database**:
-  - [List database technology if applicable]
+  - Node.js
+
 
 ## Installation
 
