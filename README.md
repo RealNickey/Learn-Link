@@ -1,6 +1,5 @@
 # Learn-Link
 
-![Learn-Link Logo](https://raw.githubusercontent.com/RealNickey/Learn-Link/main/images/logo.png)
 
 ## Overview
 
